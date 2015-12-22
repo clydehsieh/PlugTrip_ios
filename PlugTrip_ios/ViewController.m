@@ -17,6 +17,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    //我想泡溫泉 吃羊肉爐 T^T
 }
 
 - (void)didReceiveMemoryWarning {

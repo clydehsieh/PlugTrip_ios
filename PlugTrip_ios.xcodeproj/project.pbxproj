@@ -10,12 +10,18 @@
 		3DD0FD0E461D75CD3BCD7A3C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BD3503176144C23B38431939 /* libPods.a */; };
 		ECD493B51C28E9370043BE54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493B41C28E9370043BE54 /* main.m */; };
 		ECD493B81C28E9370043BE54 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493B71C28E9370043BE54 /* AppDelegate.m */; };
-		ECD493BB1C28E9370043BE54 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493BA1C28E9370043BE54 /* ViewController.m */; };
 		ECD493BE1C28E9370043BE54 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ECD493BC1C28E9370043BE54 /* Main.storyboard */; };
 		ECD493C01C28E9370043BE54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ECD493BF1C28E9370043BE54 /* Assets.xcassets */; };
 		ECD493C31C28E9370043BE54 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ECD493C11C28E9370043BE54 /* LaunchScreen.storyboard */; };
 		ECD493CE1C28E9370043BE54 /* PlugTrip_iosTests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493CD1C28E9370043BE54 /* PlugTrip_iosTests.m */; };
 		ECD493D91C28E9370043BE54 /* PlugTrip_iosUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493D81C28E9370043BE54 /* PlugTrip_iosUITests.m */; };
+		ECD493E81C2A4E960043BE54 /* CHLoginVC.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493E71C2A4E960043BE54 /* CHLoginVC.m */; };
+		ECD493EB1C2A4EBC0043BE54 /* CHMapViewVC.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493EA1C2A4EBC0043BE54 /* CHMapViewVC.m */; };
+		ECD493F31C2A5A440043BE54 /* MapVCSearchView.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493EF1C2A5A440043BE54 /* MapVCSearchView.m */; };
+		ECD493F41C2A5A440043BE54 /* MapVCSearchView.xib in Resources */ = {isa = PBXBuildFile; fileRef = ECD493F01C2A5A440043BE54 /* MapVCSearchView.xib */; };
+		ECD493F51C2A5A440043BE54 /* SelectedLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493F21C2A5A440043BE54 /* SelectedLocation.m */; };
+		ECD493FA1C2A748C0043BE54 /* MapVCMenuView.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493F81C2A748C0043BE54 /* MapVCMenuView.m */; };
+		ECD493FB1C2A748C0043BE54 /* MapVCMenuView.xib in Resources */ = {isa = PBXBuildFile; fileRef = ECD493F91C2A748C0043BE54 /* MapVCMenuView.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,8 +49,6 @@
 		ECD493B41C28E9370043BE54 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		ECD493B61C28E9370043BE54 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		ECD493B71C28E9370043BE54 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		ECD493B91C28E9370043BE54 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		ECD493BA1C28E9370043BE54 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		ECD493BD1C28E9370043BE54 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		ECD493BF1C28E9370043BE54 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		ECD493C21C28E9370043BE54 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -55,6 +59,18 @@
 		ECD493D41C28E9370043BE54 /* PlugTrip_iosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlugTrip_iosUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECD493D81C28E9370043BE54 /* PlugTrip_iosUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PlugTrip_iosUITests.m; sourceTree = "<group>"; };
 		ECD493DA1C28E9370043BE54 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		ECD493E61C2A4E960043BE54 /* CHLoginVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHLoginVC.h; sourceTree = "<group>"; };
+		ECD493E71C2A4E960043BE54 /* CHLoginVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHLoginVC.m; sourceTree = "<group>"; };
+		ECD493E91C2A4EBC0043BE54 /* CHMapViewVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHMapViewVC.h; sourceTree = "<group>"; };
+		ECD493EA1C2A4EBC0043BE54 /* CHMapViewVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHMapViewVC.m; sourceTree = "<group>"; };
+		ECD493EE1C2A5A440043BE54 /* MapVCSearchView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapVCSearchView.h; sourceTree = "<group>"; };
+		ECD493EF1C2A5A440043BE54 /* MapVCSearchView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapVCSearchView.m; sourceTree = "<group>"; };
+		ECD493F01C2A5A440043BE54 /* MapVCSearchView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MapVCSearchView.xib; sourceTree = "<group>"; };
+		ECD493F11C2A5A440043BE54 /* SelectedLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SelectedLocation.h; sourceTree = "<group>"; };
+		ECD493F21C2A5A440043BE54 /* SelectedLocation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SelectedLocation.m; sourceTree = "<group>"; };
+		ECD493F71C2A748C0043BE54 /* MapVCMenuView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapVCMenuView.h; sourceTree = "<group>"; };
+		ECD493F81C2A748C0043BE54 /* MapVCMenuView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapVCMenuView.m; sourceTree = "<group>"; };
+		ECD493F91C2A748C0043BE54 /* MapVCMenuView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MapVCMenuView.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,12 +143,12 @@
 			children = (
 				ECD493B61C28E9370043BE54 /* AppDelegate.h */,
 				ECD493B71C28E9370043BE54 /* AppDelegate.m */,
-				ECD493B91C28E9370043BE54 /* ViewController.h */,
-				ECD493BA1C28E9370043BE54 /* ViewController.m */,
 				ECD493BC1C28E9370043BE54 /* Main.storyboard */,
-				ECD493BF1C28E9370043BE54 /* Assets.xcassets */,
-				ECD493C11C28E9370043BE54 /* LaunchScreen.storyboard */,
-				ECD493C41C28E9370043BE54 /* Info.plist */,
+				ECD493E61C2A4E960043BE54 /* CHLoginVC.h */,
+				ECD493E71C2A4E960043BE54 /* CHLoginVC.m */,
+				ECD493E91C2A4EBC0043BE54 /* CHMapViewVC.h */,
+				ECD493EA1C2A4EBC0043BE54 /* CHMapViewVC.m */,
+				ECD493EC1C2A59800043BE54 /* Classes */,
 				ECD493B31C28E9370043BE54 /* Supporting Files */,
 			);
 			path = PlugTrip_ios;
@@ -141,6 +157,9 @@
 		ECD493B31C28E9370043BE54 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				ECD493BF1C28E9370043BE54 /* Assets.xcassets */,
+				ECD493C11C28E9370043BE54 /* LaunchScreen.storyboard */,
+				ECD493C41C28E9370043BE54 /* Info.plist */,
 				ECD493B41C28E9370043BE54 /* main.m */,
 			);
 			name = "Supporting Files";
@@ -162,6 +181,39 @@
 				ECD493DA1C28E9370043BE54 /* Info.plist */,
 			);
 			path = PlugTrip_iosUITests;
+			sourceTree = "<group>";
+		};
+		ECD493EC1C2A59800043BE54 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				ECD493F61C2A748C0043BE54 /* MapVCMenuView */,
+				ECD493ED1C2A5A440043BE54 /* MapVCSearchView */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		ECD493ED1C2A5A440043BE54 /* MapVCSearchView */ = {
+			isa = PBXGroup;
+			children = (
+				ECD493EE1C2A5A440043BE54 /* MapVCSearchView.h */,
+				ECD493EF1C2A5A440043BE54 /* MapVCSearchView.m */,
+				ECD493F01C2A5A440043BE54 /* MapVCSearchView.xib */,
+				ECD493F11C2A5A440043BE54 /* SelectedLocation.h */,
+				ECD493F21C2A5A440043BE54 /* SelectedLocation.m */,
+			);
+			name = MapVCSearchView;
+			path = Classes/MapVCSearchView;
+			sourceTree = "<group>";
+		};
+		ECD493F61C2A748C0043BE54 /* MapVCMenuView */ = {
+			isa = PBXGroup;
+			children = (
+				ECD493F71C2A748C0043BE54 /* MapVCMenuView.h */,
+				ECD493F81C2A748C0043BE54 /* MapVCMenuView.m */,
+				ECD493F91C2A748C0043BE54 /* MapVCMenuView.xib */,
+			);
+			name = MapVCMenuView;
+			path = Classes/MapVCMenuView;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -269,7 +321,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ECD493F41C2A5A440043BE54 /* MapVCSearchView.xib in Resources */,
 				ECD493C31C28E9370043BE54 /* LaunchScreen.storyboard in Resources */,
+				ECD493FB1C2A748C0043BE54 /* MapVCMenuView.xib in Resources */,
 				ECD493C01C28E9370043BE54 /* Assets.xcassets in Resources */,
 				ECD493BE1C28E9370043BE54 /* Main.storyboard in Resources */,
 			);
@@ -329,9 +383,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ECD493BB1C28E9370043BE54 /* ViewController.m in Sources */,
 				ECD493B81C28E9370043BE54 /* AppDelegate.m in Sources */,
+				ECD493EB1C2A4EBC0043BE54 /* CHMapViewVC.m in Sources */,
 				ECD493B51C28E9370043BE54 /* main.m in Sources */,
+				ECD493F31C2A5A440043BE54 /* MapVCSearchView.m in Sources */,
+				ECD493E81C2A4E960043BE54 /* CHLoginVC.m in Sources */,
+				ECD493F51C2A5A440043BE54 /* SelectedLocation.m in Sources */,
+				ECD493FA1C2A748C0043BE54 /* MapVCMenuView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

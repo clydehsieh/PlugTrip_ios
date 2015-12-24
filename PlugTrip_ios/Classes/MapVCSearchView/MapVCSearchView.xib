@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9060" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9051"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="MapVCSearchView">
+            <rect key="frame" x="0.0" y="0.0" width="302" height="219"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <textField hidden="YES" opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="oen-cl-rep">
+                    <rect key="frame" x="0.0" y="88" width="25" height="44"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="44" id="DQL-i9-mce"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits"/>
+                </textField>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="LPI-Pv-1Zw">
+                    <rect key="frame" x="0.0" y="44" width="258" height="175"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                </tableView>
+                <searchBar contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="OEE-5K-6tZ">
+                    <rect key="frame" x="0.0" y="0.0" width="258" height="44"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="44" id="AA8-7N-P8d"/>
+                    </constraints>
+                    <textInputTraits key="textInputTraits"/>
+                </searchBar>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="LPI-Pv-1Zw" firstAttribute="trailing" secondItem="OEE-5K-6tZ" secondAttribute="trailing" id="GVd-Bw-U6j"/>
+                <constraint firstItem="oen-cl-rep" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="RZN-Be-Zph"/>
+                <constraint firstAttribute="bottom" secondItem="LPI-Pv-1Zw" secondAttribute="bottom" id="aJB-59-QjN"/>
+                <constraint firstItem="LPI-Pv-1Zw" firstAttribute="leading" secondItem="OEE-5K-6tZ" secondAttribute="leading" id="bJR-mL-Gi6"/>
+                <constraint firstAttribute="trailing" secondItem="OEE-5K-6tZ" secondAttribute="trailing" constant="44" id="cuV-z4-fVa"/>
+                <constraint firstItem="oen-cl-rep" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="cvo-PW-PQn"/>
+                <constraint firstItem="LPI-Pv-1Zw" firstAttribute="top" secondItem="OEE-5K-6tZ" secondAttribute="bottom" id="phd-Y7-MZa"/>
+                <constraint firstItem="OEE-5K-6tZ" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="sL9-dw-OZo"/>
+                <constraint firstItem="LPI-Pv-1Zw" firstAttribute="width" secondItem="OEE-5K-6tZ" secondAttribute="width" id="snd-Wv-VRP"/>
+                <constraint firstItem="OEE-5K-6tZ" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="zd3-R9-7Rx"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="inputSearchBar" destination="OEE-5K-6tZ" id="PMM-Wl-ljc"/>
+                <outlet property="inputText" destination="oen-cl-rep" id="tsO-Ho-W6E"/>
+                <outlet property="tableView" destination="LPI-Pv-1Zw" id="LzE-XI-1HJ"/>
+            </connections>
+            <point key="canvasLocation" x="639" y="140.5"/>
+        </view>
+    </objects>
+</document>

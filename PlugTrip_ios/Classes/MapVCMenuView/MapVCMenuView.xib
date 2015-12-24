@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9060" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9051"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="MapVCMenuView">
+            <rect key="frame" x="0.0" y="0.0" width="55" height="329"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <button opaque="NO" tag="1" contentMode="scaleAspectFit" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Dlp-KT-TXo">
+                    <rect key="frame" x="5" y="0.0" width="45" height="45"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="Dlp-KT-TXo" secondAttribute="height" id="sRa-H1-BA6"/>
+                    </constraints>
+                    <state key="normal" image="fbicon_02.png"/>
+                    <connections>
+                        <action selector="menuActions:" destination="iN0-l3-epB" eventType="touchUpInside" id="I1m-qQ-U6x"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="2" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="h74-xI-DpB">
+                    <rect key="frame" x="5" y="50" width="45" height="45"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="h74-xI-DpB" secondAttribute="height" id="U1t-Pl-PHT"/>
+                    </constraints>
+                    <state key="normal" title="AnA" image="airbnb_01.png"/>
+                    <connections>
+                        <action selector="menuActions:" destination="iN0-l3-epB" eventType="touchUpInside" id="TfX-pV-4KD"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="4" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Gqv-fK-Bd9">
+                    <rect key="frame" x="5" y="150" width="45" height="45"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="Gqv-fK-Bd9" secondAttribute="height" id="Kvk-3W-JbY"/>
+                    </constraints>
+                    <state key="normal" title="Mode" image="windowIcon.png"/>
+                    <connections>
+                        <action selector="menuActions:" destination="iN0-l3-epB" eventType="touchUpInside" id="6P7-bT-DhK"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="101" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4LV-gm-Xsh">
+                    <rect key="frame" x="5" y="284" width="45" height="45"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="4LV-gm-Xsh" secondAttribute="height" id="gb8-gs-hSX"/>
+                    </constraints>
+                    <state key="normal" title="Setting" image="settings-icon.png"/>
+                    <connections>
+                        <action selector="menuActions:" destination="iN0-l3-epB" eventType="touchUpInside" id="5Z1-LX-mFF"/>
+                    </connections>
+                </button>
+                <button opaque="NO" tag="3" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="oqV-hK-C9M">
+                    <rect key="frame" x="5" y="100" width="45" height="45"/>
+                    <constraints>
+                        <constraint firstAttribute="width" secondItem="oqV-hK-C9M" secondAttribute="height" id="VPO-po-dKa"/>
+                    </constraints>
+                    <state key="normal" title="F" image="3peopleIcon.png"/>
+                    <connections>
+                        <action selector="menuActions:" destination="iN0-l3-epB" eventType="touchUpInside" id="iF2-76-DcO"/>
+                    </connections>
+                </button>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="Dlp-KT-TXo" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="0ca-ZW-hkD"/>
+                <constraint firstAttribute="trailing" secondItem="oqV-hK-C9M" secondAttribute="trailing" constant="5" id="1yb-hx-i5A"/>
+                <constraint firstItem="oqV-hK-C9M" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="3dw-od-IX5"/>
+                <constraint firstItem="Dlp-KT-TXo" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="IAJ-v3-c6B"/>
+                <constraint firstAttribute="trailing" secondItem="Gqv-fK-Bd9" secondAttribute="trailing" constant="5" id="MY7-zT-zFL"/>
+                <constraint firstItem="h74-xI-DpB" firstAttribute="top" secondItem="Dlp-KT-TXo" secondAttribute="bottom" constant="5" id="QSS-U9-y5w"/>
+                <constraint firstItem="Gqv-fK-Bd9" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="Rsf-yG-N7A"/>
+                <constraint firstItem="4LV-gm-Xsh" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="T6I-oE-CSM"/>
+                <constraint firstItem="h74-xI-DpB" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="Wht-eQ-QWn"/>
+                <constraint firstAttribute="trailing" secondItem="4LV-gm-Xsh" secondAttribute="trailing" constant="5" id="atw-EN-Aek"/>
+                <constraint firstAttribute="bottom" secondItem="4LV-gm-Xsh" secondAttribute="bottom" id="kXe-8P-21l"/>
+                <constraint firstItem="Gqv-fK-Bd9" firstAttribute="top" secondItem="oqV-hK-C9M" secondAttribute="bottom" constant="5" id="qmw-48-aKo"/>
+                <constraint firstItem="oqV-hK-C9M" firstAttribute="top" secondItem="h74-xI-DpB" secondAttribute="bottom" constant="5" id="sax-2Q-Bcz"/>
+                <constraint firstAttribute="trailing" secondItem="Dlp-KT-TXo" secondAttribute="trailing" constant="5" id="uqx-6c-KB2"/>
+                <constraint firstAttribute="trailing" secondItem="h74-xI-DpB" secondAttribute="trailing" constant="5" id="veY-ll-vW4"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="290.5" y="222.5"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="3peopleIcon.png" width="128" height="128"/>
+        <image name="airbnb_01.png" width="534" height="712"/>
+        <image name="fbicon_02.png" width="512" height="512"/>
+        <image name="settings-icon.png" width="512" height="512"/>
+        <image name="windowIcon.png" width="300" height="300"/>
+    </resources>
+</document>

@@ -14,11 +14,50 @@
 
 @implementation AppDelegate
 
+- (NSString *)GetDBPath
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentPath = [paths firstObject];
+    NSString *dbPath = [documentPath stringByAppendingPathComponent:@"mydatabase.sqlite"];
+    
+    return dbPath;
+}
+
+- (void)CopyDBtoDocumentIfNeeded
+{
+    //可讀寫 db: Document 內 實際資料
+    NSString *dbPath = [self GetDBPath];
+    NSLog(@"dbPath: %@",dbPath);
+    
+    //發佈安裝時，在套件 Bundle 的原始 db, 只可以讀取
+    NSString *defaultDBPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"mydatabase.sqlite"];
+    NSLog(@"defaultDBPath: %@",defaultDBPath);
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSError *error;
+    
+    BOOL success = [fileManager fileExistsAtPath:dbPath];
+    if (!success) {
+        success = [fileManager copyItemAtPath:defaultDBPath toPath:dbPath error:&error];
+        if (!success) {
+            NSLog(@"Error: %@", [error description]);
+        }
+    } else {
+        /*
+         異動 db/table 資料結構 用
+         1.連上 db server 詢問 db 版本
+         2.如果需要更新，alert 問 user
+         3.user 確定更新，下載新的 db 下來，並處理資料異動
+         */
+    }
+}
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
     [GMSServices provideAPIKey:@"AIzaSyAzolK7vi8CRudWzw42AoYsGH6PDEic8bA"];
+    
+     [self CopyDBtoDocumentIfNeeded];
     
     return YES;
 }

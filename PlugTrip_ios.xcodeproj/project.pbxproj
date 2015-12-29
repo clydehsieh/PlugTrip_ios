@@ -8,6 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		3DD0FD0E461D75CD3BCD7A3C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BD3503176144C23B38431939 /* libPods.a */; };
+		EC8C8EF01C326430005BADBC /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8EEF1C326430005BADBC /* libsqlite3.tbd */; };
+		EC8C8EF61C327193005BADBC /* mydatabase.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EC8C8EF51C327193005BADBC /* mydatabase.sqlite */; };
+		EC8C8EF71C327193005BADBC /* mydatabase.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EC8C8EF51C327193005BADBC /* mydatabase.sqlite */; };
+		EC8C8EF81C327193005BADBC /* mydatabase.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EC8C8EF51C327193005BADBC /* mydatabase.sqlite */; };
+		EC8C8EFA1C3271CE005BADBC /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8EF91C3271CE005BADBC /* libsqlite3.0.tbd */; };
+		EC8C8F071C327788005BADBC /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8EFD1C327788005BADBC /* FMDatabase.m */; };
+		EC8C8F081C327788005BADBC /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8EFF1C327788005BADBC /* FMDatabaseAdditions.m */; };
+		EC8C8F091C327788005BADBC /* FMDatabasePool.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8F011C327788005BADBC /* FMDatabasePool.m */; };
+		EC8C8F0A1C327788005BADBC /* FMDatabaseQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8F031C327788005BADBC /* FMDatabaseQueue.m */; };
+		EC8C8F0B1C327788005BADBC /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8F061C327788005BADBC /* FMResultSet.m */; };
+		EC8C8F0E1C3277B7005BADBC /* myDB.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8F0D1C3277B7005BADBC /* myDB.m */; };
 		ECD493B51C28E9370043BE54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493B41C28E9370043BE54 /* main.m */; };
 		ECD493B81C28E9370043BE54 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493B71C28E9370043BE54 /* AppDelegate.m */; };
 		ECD493BE1C28E9370043BE54 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ECD493BC1C28E9370043BE54 /* Main.storyboard */; };
@@ -22,6 +33,18 @@
 		ECD493F51C2A5A440043BE54 /* SelectedLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493F21C2A5A440043BE54 /* SelectedLocation.m */; };
 		ECD493FA1C2A748C0043BE54 /* MapVCMenuView.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493F81C2A748C0043BE54 /* MapVCMenuView.m */; };
 		ECD493FB1C2A748C0043BE54 /* MapVCMenuView.xib in Resources */ = {isa = PBXBuildFile; fileRef = ECD493F91C2A748C0043BE54 /* MapVCMenuView.xib */; };
+		ECD494061C30BE010043BE54 /* CHImagePickerHeaderView.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493FE1C30BE010043BE54 /* CHImagePickerHeaderView.m */; };
+		ECD494071C30BE010043BE54 /* CHImagePickerHeaderView.xib in Resources */ = {isa = PBXBuildFile; fileRef = ECD493FF1C30BE010043BE54 /* CHImagePickerHeaderView.xib */; };
+		ECD494081C30BE010043BE54 /* CHImagePickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD494011C30BE010043BE54 /* CHImagePickerView.m */; };
+		ECD494091C30BE010043BE54 /* CHImagePickerView.xib in Resources */ = {isa = PBXBuildFile; fileRef = ECD494021C30BE010043BE54 /* CHImagePickerView.xib */; };
+		ECD4940A1C30BE010043BE54 /* CHImagePickerViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD494041C30BE010043BE54 /* CHImagePickerViewCell.m */; };
+		ECD4940B1C30BE010043BE54 /* CHImagePickerViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = ECD494051C30BE010043BE54 /* CHImagePickerViewCell.xib */; };
+		ECD494141C30CBD60043BE54 /* 1_checked.png in Resources */ = {isa = PBXBuildFile; fileRef = ECD4940E1C30CBD60043BE54 /* 1_checked.png */; };
+		ECD494151C30CBD60043BE54 /* 1_uncheck.png in Resources */ = {isa = PBXBuildFile; fileRef = ECD4940F1C30CBD60043BE54 /* 1_uncheck.png */; };
+		ECD494161C30CBD60043BE54 /* 2_checked.png in Resources */ = {isa = PBXBuildFile; fileRef = ECD494101C30CBD60043BE54 /* 2_checked.png */; };
+		ECD494171C30CBD60043BE54 /* 2_unchecked.png in Resources */ = {isa = PBXBuildFile; fileRef = ECD494111C30CBD60043BE54 /* 2_unchecked.png */; };
+		ECD494181C30CBD60043BE54 /* allCheck@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = ECD494121C30CBD60043BE54 /* allCheck@2x.png */; };
+		ECD494191C30CBD60043BE54 /* checked@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = ECD494131C30CBD60043BE54 /* checked@2x.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +68,22 @@
 		683A63D2D4AF3E9A491058A9 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		92DA014E37C9787200AD1D99 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		BD3503176144C23B38431939 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		EC8C8EEF1C326430005BADBC /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		EC8C8EF51C327193005BADBC /* mydatabase.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = mydatabase.sqlite; sourceTree = "<group>"; };
+		EC8C8EF91C3271CE005BADBC /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
+		EC8C8EFC1C327788005BADBC /* FMDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabase.h; sourceTree = "<group>"; };
+		EC8C8EFD1C327788005BADBC /* FMDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabase.m; sourceTree = "<group>"; };
+		EC8C8EFE1C327788005BADBC /* FMDatabaseAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabaseAdditions.h; sourceTree = "<group>"; };
+		EC8C8EFF1C327788005BADBC /* FMDatabaseAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseAdditions.m; sourceTree = "<group>"; };
+		EC8C8F001C327788005BADBC /* FMDatabasePool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabasePool.h; sourceTree = "<group>"; };
+		EC8C8F011C327788005BADBC /* FMDatabasePool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabasePool.m; sourceTree = "<group>"; };
+		EC8C8F021C327788005BADBC /* FMDatabaseQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabaseQueue.h; sourceTree = "<group>"; };
+		EC8C8F031C327788005BADBC /* FMDatabaseQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseQueue.m; sourceTree = "<group>"; };
+		EC8C8F041C327788005BADBC /* FMDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDB.h; sourceTree = "<group>"; };
+		EC8C8F051C327788005BADBC /* FMResultSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMResultSet.h; sourceTree = "<group>"; };
+		EC8C8F061C327788005BADBC /* FMResultSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMResultSet.m; sourceTree = "<group>"; };
+		EC8C8F0C1C3277B7005BADBC /* myDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = myDB.h; sourceTree = "<group>"; };
+		EC8C8F0D1C3277B7005BADBC /* myDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = myDB.m; sourceTree = "<group>"; };
 		ECD493B01C28E9370043BE54 /* PlugTrip_ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlugTrip_ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECD493B41C28E9370043BE54 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		ECD493B61C28E9370043BE54 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -71,6 +110,21 @@
 		ECD493F71C2A748C0043BE54 /* MapVCMenuView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapVCMenuView.h; sourceTree = "<group>"; };
 		ECD493F81C2A748C0043BE54 /* MapVCMenuView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapVCMenuView.m; sourceTree = "<group>"; };
 		ECD493F91C2A748C0043BE54 /* MapVCMenuView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MapVCMenuView.xib; sourceTree = "<group>"; };
+		ECD493FD1C30BE010043BE54 /* CHImagePickerHeaderView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHImagePickerHeaderView.h; sourceTree = "<group>"; };
+		ECD493FE1C30BE010043BE54 /* CHImagePickerHeaderView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHImagePickerHeaderView.m; sourceTree = "<group>"; };
+		ECD493FF1C30BE010043BE54 /* CHImagePickerHeaderView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CHImagePickerHeaderView.xib; sourceTree = "<group>"; };
+		ECD494001C30BE010043BE54 /* CHImagePickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHImagePickerView.h; sourceTree = "<group>"; };
+		ECD494011C30BE010043BE54 /* CHImagePickerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHImagePickerView.m; sourceTree = "<group>"; };
+		ECD494021C30BE010043BE54 /* CHImagePickerView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CHImagePickerView.xib; sourceTree = "<group>"; };
+		ECD494031C30BE010043BE54 /* CHImagePickerViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHImagePickerViewCell.h; sourceTree = "<group>"; };
+		ECD494041C30BE010043BE54 /* CHImagePickerViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHImagePickerViewCell.m; sourceTree = "<group>"; };
+		ECD494051C30BE010043BE54 /* CHImagePickerViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CHImagePickerViewCell.xib; sourceTree = "<group>"; };
+		ECD4940E1C30CBD60043BE54 /* 1_checked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 1_checked.png; sourceTree = "<group>"; };
+		ECD4940F1C30CBD60043BE54 /* 1_uncheck.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 1_uncheck.png; sourceTree = "<group>"; };
+		ECD494101C30CBD60043BE54 /* 2_checked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 2_checked.png; sourceTree = "<group>"; };
+		ECD494111C30CBD60043BE54 /* 2_unchecked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 2_unchecked.png; sourceTree = "<group>"; };
+		ECD494121C30CBD60043BE54 /* allCheck@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "allCheck@2x.png"; sourceTree = "<group>"; };
+		ECD494131C30CBD60043BE54 /* checked@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "checked@2x.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +132,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC8C8EFA1C3271CE005BADBC /* libsqlite3.0.tbd in Frameworks */,
+				EC8C8EF01C326430005BADBC /* libsqlite3.tbd in Frameworks */,
 				3DD0FD0E461D75CD3BCD7A3C /* libPods.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -111,14 +167,36 @@
 		A2161D033C13957A4D375534 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				EC8C8EF91C3271CE005BADBC /* libsqlite3.0.tbd */,
+				EC8C8EEF1C326430005BADBC /* libsqlite3.tbd */,
 				BD3503176144C23B38431939 /* libPods.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		EC8C8EFB1C327788005BADBC /* fmdb */ = {
+			isa = PBXGroup;
+			children = (
+				EC8C8EFC1C327788005BADBC /* FMDatabase.h */,
+				EC8C8EFD1C327788005BADBC /* FMDatabase.m */,
+				EC8C8EFE1C327788005BADBC /* FMDatabaseAdditions.h */,
+				EC8C8EFF1C327788005BADBC /* FMDatabaseAdditions.m */,
+				EC8C8F001C327788005BADBC /* FMDatabasePool.h */,
+				EC8C8F011C327788005BADBC /* FMDatabasePool.m */,
+				EC8C8F021C327788005BADBC /* FMDatabaseQueue.h */,
+				EC8C8F031C327788005BADBC /* FMDatabaseQueue.m */,
+				EC8C8F041C327788005BADBC /* FMDB.h */,
+				EC8C8F051C327788005BADBC /* FMResultSet.h */,
+				EC8C8F061C327788005BADBC /* FMResultSet.m */,
+			);
+			name = fmdb;
+			path = Classes/fmdb;
+			sourceTree = "<group>";
+		};
 		ECD493A71C28E9370043BE54 = {
 			isa = PBXGroup;
 			children = (
+				EC8C8EF51C327193005BADBC /* mydatabase.sqlite */,
 				ECD493B21C28E9370043BE54 /* PlugTrip_ios */,
 				ECD493CC1C28E9370043BE54 /* PlugTrip_iosTests */,
 				ECD493D71C28E9370043BE54 /* PlugTrip_iosUITests */,
@@ -141,6 +219,8 @@
 		ECD493B21C28E9370043BE54 /* PlugTrip_ios */ = {
 			isa = PBXGroup;
 			children = (
+				EC8C8F0C1C3277B7005BADBC /* myDB.h */,
+				EC8C8F0D1C3277B7005BADBC /* myDB.m */,
 				ECD493B61C28E9370043BE54 /* AppDelegate.h */,
 				ECD493B71C28E9370043BE54 /* AppDelegate.m */,
 				ECD493BC1C28E9370043BE54 /* Main.storyboard */,
@@ -157,6 +237,7 @@
 		ECD493B31C28E9370043BE54 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				ECD4940D1C30CBD60043BE54 /* Images */,
 				ECD493BF1C28E9370043BE54 /* Assets.xcassets */,
 				ECD493C11C28E9370043BE54 /* LaunchScreen.storyboard */,
 				ECD493C41C28E9370043BE54 /* Info.plist */,
@@ -186,6 +267,8 @@
 		ECD493EC1C2A59800043BE54 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				EC8C8EFB1C327788005BADBC /* fmdb */,
+				ECD493FC1C30BE010043BE54 /* CHImagePicker */,
 				ECD493F61C2A748C0043BE54 /* MapVCMenuView */,
 				ECD493ED1C2A5A440043BE54 /* MapVCSearchView */,
 			);
@@ -216,6 +299,36 @@
 			path = Classes/MapVCMenuView;
 			sourceTree = "<group>";
 		};
+		ECD493FC1C30BE010043BE54 /* CHImagePicker */ = {
+			isa = PBXGroup;
+			children = (
+				ECD494001C30BE010043BE54 /* CHImagePickerView.h */,
+				ECD494011C30BE010043BE54 /* CHImagePickerView.m */,
+				ECD494021C30BE010043BE54 /* CHImagePickerView.xib */,
+				ECD493FD1C30BE010043BE54 /* CHImagePickerHeaderView.h */,
+				ECD493FE1C30BE010043BE54 /* CHImagePickerHeaderView.m */,
+				ECD493FF1C30BE010043BE54 /* CHImagePickerHeaderView.xib */,
+				ECD494031C30BE010043BE54 /* CHImagePickerViewCell.h */,
+				ECD494041C30BE010043BE54 /* CHImagePickerViewCell.m */,
+				ECD494051C30BE010043BE54 /* CHImagePickerViewCell.xib */,
+			);
+			name = CHImagePicker;
+			path = Classes/CHImagePicker;
+			sourceTree = "<group>";
+		};
+		ECD4940D1C30CBD60043BE54 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				ECD4940E1C30CBD60043BE54 /* 1_checked.png */,
+				ECD4940F1C30CBD60043BE54 /* 1_uncheck.png */,
+				ECD494101C30CBD60043BE54 /* 2_checked.png */,
+				ECD494111C30CBD60043BE54 /* 2_unchecked.png */,
+				ECD494121C30CBD60043BE54 /* allCheck@2x.png */,
+				ECD494131C30CBD60043BE54 /* checked@2x.png */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -228,7 +341,6 @@
 				ECD493AD1C28E9370043BE54 /* Frameworks */,
 				ECD493AE1C28E9370043BE54 /* Resources */,
 				B2E4FAD7978387D36CF231B2 /* Copy Pods Resources */,
-				E2236012C2461AC941112D52 /* Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -323,10 +435,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				ECD493F41C2A5A440043BE54 /* MapVCSearchView.xib in Resources */,
+				ECD494171C30CBD60043BE54 /* 2_unchecked.png in Resources */,
+				ECD4940B1C30BE010043BE54 /* CHImagePickerViewCell.xib in Resources */,
 				ECD493C31C28E9370043BE54 /* LaunchScreen.storyboard in Resources */,
+				ECD494071C30BE010043BE54 /* CHImagePickerHeaderView.xib in Resources */,
+				ECD494161C30CBD60043BE54 /* 2_checked.png in Resources */,
+				ECD494091C30BE010043BE54 /* CHImagePickerView.xib in Resources */,
 				ECD493FB1C2A748C0043BE54 /* MapVCMenuView.xib in Resources */,
+				EC8C8EF61C327193005BADBC /* mydatabase.sqlite in Resources */,
+				ECD494141C30CBD60043BE54 /* 1_checked.png in Resources */,
 				ECD493C01C28E9370043BE54 /* Assets.xcassets in Resources */,
 				ECD493BE1C28E9370043BE54 /* Main.storyboard in Resources */,
+				ECD494151C30CBD60043BE54 /* 1_uncheck.png in Resources */,
+				ECD494191C30CBD60043BE54 /* checked@2x.png in Resources */,
+				ECD494181C30CBD60043BE54 /* allCheck@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -334,6 +456,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC8C8EF71C327193005BADBC /* mydatabase.sqlite in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -341,6 +464,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC8C8EF81C327193005BADBC /* mydatabase.sqlite in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -377,21 +501,6 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods/Pods-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E2236012C2461AC941112D52 /* Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods/Pods-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -401,11 +510,20 @@
 			files = (
 				ECD493B81C28E9370043BE54 /* AppDelegate.m in Sources */,
 				ECD493EB1C2A4EBC0043BE54 /* CHMapViewVC.m in Sources */,
+				EC8C8F091C327788005BADBC /* FMDatabasePool.m in Sources */,
+				EC8C8F0A1C327788005BADBC /* FMDatabaseQueue.m in Sources */,
 				ECD493B51C28E9370043BE54 /* main.m in Sources */,
 				ECD493F31C2A5A440043BE54 /* MapVCSearchView.m in Sources */,
+				ECD494081C30BE010043BE54 /* CHImagePickerView.m in Sources */,
+				ECD494061C30BE010043BE54 /* CHImagePickerHeaderView.m in Sources */,
 				ECD493E81C2A4E960043BE54 /* CHLoginVC.m in Sources */,
+				EC8C8F0B1C327788005BADBC /* FMResultSet.m in Sources */,
 				ECD493F51C2A5A440043BE54 /* SelectedLocation.m in Sources */,
 				ECD493FA1C2A748C0043BE54 /* MapVCMenuView.m in Sources */,
+				EC8C8F071C327788005BADBC /* FMDatabase.m in Sources */,
+				EC8C8F0E1C3277B7005BADBC /* myDB.m in Sources */,
+				ECD4940A1C30BE010043BE54 /* CHImagePickerViewCell.m in Sources */,
+				EC8C8F081C327788005BADBC /* FMDatabaseAdditions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

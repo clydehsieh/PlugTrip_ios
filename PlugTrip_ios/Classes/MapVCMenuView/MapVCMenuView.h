@@ -14,9 +14,10 @@
 
 @end
 
-@interface MapVCMenuView : UIView
+@interface MapVCMenuView : UIView <UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic) id<MapVCMenuViewDelegate>delegate;
+@property (strong, nonatomic) IBOutlet UITableView *tableView;
 
 - (id)initWithFrame:(CGRect)frame owner:(id)owner;
 @end

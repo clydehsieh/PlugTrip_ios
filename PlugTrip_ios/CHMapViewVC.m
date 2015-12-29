@@ -10,6 +10,8 @@
  0  _mapView
  4  sView (MapVCSearchView)
  
+ tags:
+ 101  menuBtn
  
  */
 
@@ -30,15 +32,26 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
+    
+    _isInitialLayout = NO;
+    
+    _modes = [[NSArray alloc]initWithObjects:@"紀錄",@"同夥",@"分析", nil];
+    _currentModeType = 0;
 
 }
 
 -(void)viewDidAppear:(BOOL)animated{
-    [self initMapView];
-    [self initSearchView];
-    [self initMenuView];
-    [self initButtons];
+    
+    if (!_isInitialLayout) {
+        [self initMapView];
+        [self initSearchView];
+        [self initMenuView];
+        [self initButtons];
+        
+        _isInitialLayout = YES;
+    }
+    
+
 }
 
 - (void)didReceiveMemoryWarning {
@@ -59,9 +72,9 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     [_mapDisplayView insertSubview:_mapView atIndex:0];
 
     //_mapView basic setting
-    _mapView.myLocationEnabled = YES;
+//    _mapView.myLocationEnabled = YES;
     _mapView.settings.compassButton = YES;
-    _mapView.settings.myLocationButton = YES;
+//    _mapView.settings.myLocationButton = YES;
     _mapView.delegate = self;
     
 }
@@ -70,7 +83,6 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     sView = [[MapVCSearchView alloc]initWithFrame:CGRectMake(54, 5, _mapDisplayView.frame.size.width-(54+5), 44*5) owner:nil andApiServerKey:apiKey];
     sView.delegate = self;
     [_mapDisplayView insertSubview:sView atIndex:4];
-    sView.hidden = YES;
 }
 
 -(void)initButtons{
@@ -81,6 +93,16 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     [menuBtn setBackgroundImage:[UIImage imageNamed:@"s1_1.png"] forState:UIControlStateNormal];
     menuBtn.tag = 101;
     [_mapDisplayView addSubview:menuBtn];
+    
+    //mode setting
+    float modeBtnWidth = 80;
+    float modeBtnHeight = 44;
+    UIButton *modeBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width-modeBtnWidth, _mapDisplayView.frame.size.height-modeBtnHeight, modeBtnWidth, modeBtnHeight)];
+    [modeBtn addTarget:self action:@selector(changeMode:) forControlEvents:UIControlEventTouchDown];
+    [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
+    [modeBtn setBackgroundColor:[UIColor blueColor]];
+//    [modeBtn setBackgroundImage:[UIImage imageNamed:@"s1_1.png"] forState:UIControlStateNormal];
+    [_mapDisplayView addSubview:modeBtn];
     
 }
 
@@ -99,12 +121,10 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     
     if (menuView.hidden) {
         menuView.hidden = NO;
-        sView.hidden = NO;
         NSLog(@"Show Menu");
     }else
     {
         menuView.hidden = YES;
-        sView.hidden = YES;
         NSLog(@"Hide Menu");
     }
     
@@ -113,6 +133,15 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
 
 }
 
+-(void)changeMode:(UIButton *)sender{
+    
+    _currentModeType +=1;
+    if (_currentModeType >= [_modes count]) {
+        _currentModeType = 0;
+    }
+    
+    [sender setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
+}
 
 
 
@@ -124,29 +153,50 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     
 }
 
-#pragma mark - MapVCIconOptionView
+#pragma mark - menu
 -(void)didSelectTheMenu:(UIButton *)btn;
 {
     
-    switch (btn.tag) {
-        case 1:
-        case 4:
-            NSLog(@"\n MAP VC Tapped:%ld",btn.tag);
-            break;
-        case 2:
-//            [self mapQueryWithKey:@"aribnb"];
-            break;
-        case 3:
-            
-            [sView searchBarCancelButtonClicked:nil];
-            break;
-            
-        default:
-            break;
-    }
+    NSLog(@"\n MAP VC Tapped:%ld",btn.tag);
+    
+    [self setImagePicker:nil];
+    
+    [[myDB sharedInstance]insertImagePath:@"Test1" andComments:@"Test2" andVoicePath:@"Test3" andHiddenState:YES];
+    
+    
+
     
 }
 
+#pragma mark - CHImagePickerView setting & delegate
+-(void)setImagePicker:(NSMutableArray *)assetArray
+{
+//    if (!_assets)
+//        _assets = [[NSMutableArray alloc] init];
+    
+    //CHImagePickerView
+    CGRect frame = CGRectMake(_mapDisplayView.frame.origin.x, _mapDisplayView.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height - _mapDisplayView.frame.origin.y);
+    
+    CHImagePickerView *imagePicker = [[CHImagePickerView alloc]initWithFrame:frame owner:self];
+    
+    if (assetArray)
+        [imagePicker loadPhotosFromAssetArray:assetArray];
+    else
+        [imagePicker loadPhotosFromAlbum];
+    
+    imagePicker.backgroundColor = [UIColor whiteColor];
+    imagePicker.layer.borderWidth = 2.0f;
+    imagePicker.layer.borderColor = [[UIColor blueColor]CGColor];
+    imagePicker.layer.cornerRadius = 10.0f;
+    
+    imagePicker.delegate = self;
+    [self.view addSubview:imagePicker];
+    
+}
+
+-(void)finishedPickingImages:(NSMutableArray *)assets{
+    //
+}
 
 /*
 #pragma mark - Navigation
@@ -159,3 +209,17 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
 */
 
 @end
+
+
+
+
+
+
+
+
+
+
+
+
+
+

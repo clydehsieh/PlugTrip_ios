@@ -11,9 +11,10 @@
 #import "MapVCSearchView.h"
 #import "MapVCMenuView.h"
 #import "CHImagePickerView.h"
+#import "CHScrollView.h"
 #import "myDB.h"
 
-@interface CHMapViewVC : UIViewController <GMSMapViewDelegate,MapVCSeachViewDelegate,MapVCMenuViewDelegate,CHImagePickerViewDelegate>
+@interface CHMapViewVC : UIViewController <GMSMapViewDelegate,MapVCSeachViewDelegate,MapVCMenuViewDelegate,CHImagePickerViewDelegate,CHScrollViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UIView *mapDisplayView;
 @property (strong, nonatomic) GMSMapView *mapView;

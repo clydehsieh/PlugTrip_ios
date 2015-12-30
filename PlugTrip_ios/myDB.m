@@ -161,24 +161,66 @@ myDB *sharedInstance;
     }
 }
 
-
--(void)insertImagePath:(NSString *)imagePath andComments:(NSString *)comments andVoicePath:(NSString *)voicePath andHiddenState:(BOOL)Hidden{
+#pragma mark - Images
+-(void)createTable:(NSString *)tableName{
     
-    if (![db executeUpdate:@"INSERT INTO tripInfo (imagePath,comments,voicePath) VALUES (?,?,?)",imagePath,comments,voicePath]) {
+    NSString *createInfo = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS %@ (imageLatitude TEXT, imageLongtitude TEXT, imagePath TEXT,comments TEXT,voicePath TEXT)",tableName];
+    
+    if(![db executeUpdate:createInfo])
+    {
+        NSLog(@"Could not create table: %@", [db lastErrorMessage]);
+    }
+}
+-(void)deleteTable:(NSString *)tableName{
+    
+    NSString *deleteInfo = [NSString stringWithFormat:@"DROP TABLE %@ ",tableName];
+    
+    if(![db executeUpdate:deleteInfo])
+    {
+        NSLog(@"Could not delete table: %@", [db lastErrorMessage]);
+    }
+}
+
+-(void)insertTable:(NSString *)tableName andImageLatitude:(NSString *)imageLatitude andImageLongtitude:(NSString *)imageLongtitude ImagePath:(NSString *)imagePath andComments:(NSString *)comments andVoicePath:(NSString *)voicePath andHiddenState:(NSString *)Hidden{
+    
+    NSString *insertInfo = [NSString stringWithFormat:@"INSERT INTO %@ (imageLatitude,imageLongtitude,imagePath,comments,voicePath) VALUES (?,?,?,?,?)",tableName];
+    
+    if (![db executeUpdate:insertInfo,imageLatitude,imageLongtitude,imagePath,comments,voicePath]) {
         NSLog(@"Could not insert data: %@", [db lastErrorMessage]);
     }
-
     
-//    if (![db executeUpdate:@"INSERT INTO cust (cust_no,cust_name,cust_tel,cust_addr,cust_email) VALUES (?,?,?,?,?)",custno,custname,custtel,custaddr,custemail]) {
+    
+//    if (![db executeUpdate:@"INSERT INTO tripInfo (imagePath,comments,voicePath) VALUES (?,?,?)",imagePath,comments,voicePath]) {
 //        NSLog(@"Could not insert data: %@", [db lastErrorMessage]);
-
-
+//    }
 
 }
 
+-(void)updateTable:(NSString *)tableName andRowid:(NSString *)rowid andImageLatitude:(NSString *)imageLatitude andImageLongtitude:(NSString *)imageLongtitude ImagePath:(NSString *)imagePath andComments:(NSString *)comments andVoicePath:(NSString *)voicePath andHiddenState:(NSString *)Hidden{
+    
+    NSString *insertInfo = [NSString stringWithFormat:@"UPDATE %@ SET imageLatitude=?,imageLongtitude=?, imagePath=?,comments=?,voicePath=? WHERE rowid=?",tableName];
 
+    if (![db executeUpdate:insertInfo,imageLatitude,imageLongtitude,imagePath,comments,voicePath,rowid]) {
+        NSLog(@"Could not update data: %@", [db lastErrorMessage]);
+    }
+    
+    
+//    if (![db executeUpdate:@"UPDATE tripInfo SET imagePath=?,comments=?,voicePath=? WHERE rowid=?",imagePath,comments,voicePath,rowid]) {
+//        NSLog(@"Could not update data: %@", [db lastErrorMessage]);
+//    }
+}
 
-
+- (void)deleteTripInfo:(NSString *)rowid{
+    
+//    if (![db executeUpdate:@"DELETE FROM tripInfo WHERE rowid=?", rowid]) {
+//        NSLog(@"Could not delete data: %@", [db lastErrorMessage]);
+//    }
+    
+    if (![db executeUpdate:@"DELETE FROM tripInfo WHERE rowid=?", rowid]) {
+        NSLog(@"Could not delete data: %@", [db lastErrorMessage]);
+    }
+    
+}
 
 
 

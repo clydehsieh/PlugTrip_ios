@@ -16,8 +16,13 @@
 
 + (myDB *)sharedInstance;
 
--(void)insertImagePath:(NSString *)imagePath andComments:(NSString *)comments andVoicePath:(NSString *)voicePath andHiddenState:(BOOL)Hidden;
--(void)updateImagePath:(NSString *)imagePath andComments:(NSString *)comments andVoicePath:(NSString *)voicePath andHiddenState:(BOOL)Hidden;
+-(void)createTable:(NSString *)tableName;
+-(void)deleteTable:(NSString *)tableName;
+-(void)insertTable:(NSString *)tableName andImageLatitude:(NSString *)imageLatitude andImageLongtitude:(NSString *)imageLongtitude ImagePath:(NSString *)imagePath andComments:(NSString *)comments andVoicePath:(NSString *)voicePath andHiddenState:(NSString *)Hidden;
+-(void)updateTable:(NSString *)tableName andRowid:(NSString *)rowid andImageLatitude:(NSString *)imageLatitude andImageLongtitude:(NSString *)imageLongtitude ImagePath:(NSString *)imagePath andComments:(NSString *)comments andVoicePath:(NSString *)voicePath andHiddenState:(NSString *)Hidden;
+
+- (void)deleteTripInfo:(NSString *)rowid;
+
 
 
 - (id)queryCust;

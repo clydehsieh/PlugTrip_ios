@@ -19,6 +19,7 @@
 		EC8C8F0A1C327788005BADBC /* FMDatabaseQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8F031C327788005BADBC /* FMDatabaseQueue.m */; };
 		EC8C8F0B1C327788005BADBC /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8F061C327788005BADBC /* FMResultSet.m */; };
 		EC8C8F0E1C3277B7005BADBC /* myDB.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8F0D1C3277B7005BADBC /* myDB.m */; };
+		EC8C8F121C33BD30005BADBC /* CHScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = EC8C8F111C33BD30005BADBC /* CHScrollView.m */; };
 		ECD493B51C28E9370043BE54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493B41C28E9370043BE54 /* main.m */; };
 		ECD493B81C28E9370043BE54 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493B71C28E9370043BE54 /* AppDelegate.m */; };
 		ECD493BE1C28E9370043BE54 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ECD493BC1C28E9370043BE54 /* Main.storyboard */; };
@@ -84,6 +85,8 @@
 		EC8C8F061C327788005BADBC /* FMResultSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMResultSet.m; sourceTree = "<group>"; };
 		EC8C8F0C1C3277B7005BADBC /* myDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = myDB.h; sourceTree = "<group>"; };
 		EC8C8F0D1C3277B7005BADBC /* myDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = myDB.m; sourceTree = "<group>"; };
+		EC8C8F101C33BD30005BADBC /* CHScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHScrollView.h; sourceTree = "<group>"; };
+		EC8C8F111C33BD30005BADBC /* CHScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHScrollView.m; sourceTree = "<group>"; };
 		ECD493B01C28E9370043BE54 /* PlugTrip_ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlugTrip_ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECD493B41C28E9370043BE54 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		ECD493B61C28E9370043BE54 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -193,6 +196,16 @@
 			path = Classes/fmdb;
 			sourceTree = "<group>";
 		};
+		EC8C8F0F1C33BD30005BADBC /* CHScrollView */ = {
+			isa = PBXGroup;
+			children = (
+				EC8C8F101C33BD30005BADBC /* CHScrollView.h */,
+				EC8C8F111C33BD30005BADBC /* CHScrollView.m */,
+			);
+			name = CHScrollView;
+			path = Classes/CHScrollView;
+			sourceTree = "<group>";
+		};
 		ECD493A71C28E9370043BE54 = {
 			isa = PBXGroup;
 			children = (
@@ -267,6 +280,7 @@
 		ECD493EC1C2A59800043BE54 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				EC8C8F0F1C33BD30005BADBC /* CHScrollView */,
 				EC8C8EFB1C327788005BADBC /* fmdb */,
 				ECD493FC1C30BE010043BE54 /* CHImagePicker */,
 				ECD493F61C2A748C0043BE54 /* MapVCMenuView */,
@@ -520,6 +534,7 @@
 				EC8C8F0B1C327788005BADBC /* FMResultSet.m in Sources */,
 				ECD493F51C2A5A440043BE54 /* SelectedLocation.m in Sources */,
 				ECD493FA1C2A748C0043BE54 /* MapVCMenuView.m in Sources */,
+				EC8C8F121C33BD30005BADBC /* CHScrollView.m in Sources */,
 				EC8C8F071C327788005BADBC /* FMDatabase.m in Sources */,
 				EC8C8F0E1C3277B7005BADBC /* myDB.m in Sources */,
 				ECD4940A1C30BE010043BE54 /* CHImagePickerViewCell.m in Sources */,

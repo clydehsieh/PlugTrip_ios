@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9060" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9051"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Constraints with non-1.0 multipliers" minToolsVersion="5.1"/>
     </dependencies>
@@ -38,23 +38,30 @@
                                 <constraint firstAttribute="height" constant="2" id="f0D-Yh-yOV"/>
                             </constraints>
                         </view>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Iha-bA-XUA">
+                            <rect key="frame" x="5" y="11" width="30" height="30"/>
+                            <state key="normal" title="全選"/>
+                            <connections>
+                                <action selector="allPickBtn:" destination="iN0-l3-epB" eventType="touchUpInside" id="qtq-oA-sFZ"/>
+                            </connections>
+                        </button>
                     </subviews>
-                    <animations/>
                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     <constraints>
                         <constraint firstItem="STs-1E-mJr" firstAttribute="centerY" secondItem="cgj-Of-XXT" secondAttribute="centerY" id="309-vD-TBI"/>
+                        <constraint firstItem="Iha-bA-XUA" firstAttribute="leading" secondItem="KsJ-fF-bsB" secondAttribute="leading" constant="5" id="4hA-lB-7Mj"/>
                         <constraint firstAttribute="trailing" secondItem="4nl-or-LoF" secondAttribute="trailing" id="72p-9B-a9x"/>
                         <constraint firstItem="cgj-Of-XXT" firstAttribute="centerX" secondItem="KsJ-fF-bsB" secondAttribute="centerX" id="7KA-12-07b"/>
                         <constraint firstItem="4nl-or-LoF" firstAttribute="leading" secondItem="KsJ-fF-bsB" secondAttribute="leading" id="CWb-MW-wbT"/>
                         <constraint firstItem="cgj-Of-XXT" firstAttribute="centerY" secondItem="KsJ-fF-bsB" secondAttribute="centerY" id="Wam-RP-vA2"/>
                         <constraint firstAttribute="bottom" secondItem="4nl-or-LoF" secondAttribute="bottom" id="g9i-od-Zgh"/>
+                        <constraint firstItem="Iha-bA-XUA" firstAttribute="centerY" secondItem="cgj-Of-XXT" secondAttribute="centerY" id="hu7-5E-S1b"/>
                         <constraint firstAttribute="trailing" secondItem="STs-1E-mJr" secondAttribute="trailing" constant="5" id="lzf-qk-UBh"/>
                         <constraint firstItem="STs-1E-mJr" firstAttribute="height" secondItem="KsJ-fF-bsB" secondAttribute="height" multiplier="0.5" id="rhS-N7-AyL"/>
                     </constraints>
                 </view>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rIX-aX-Rij">
                     <rect key="frame" x="0.0" y="468" width="390" height="52"/>
-                    <animations/>
                     <state key="normal" title="Start New"/>
                     <connections>
                         <action selector="okBtnAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="cZV-Uw-qyd"/>
@@ -62,7 +69,6 @@
                 </button>
                 <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="Hd1-YT-Ep8">
                     <rect key="frame" x="0.0" y="74" width="390" height="394"/>
-                    <animations/>
                     <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="JuX-0b-FTw">
                         <size key="itemSize" width="75" height="75"/>
                         <size key="headerReferenceSize" width="50" height="50"/>
@@ -78,7 +84,6 @@
                     </constraints>
                 </view>
             </subviews>
-            <animations/>
             <constraints>
                 <constraint firstAttribute="trailing" secondItem="Hd1-YT-Ep8" secondAttribute="trailing" id="33F-l7-FD3"/>
                 <constraint firstItem="rIX-aX-Rij" firstAttribute="height" secondItem="KsJ-fF-bsB" secondAttribute="height" id="4C9-cj-jIN"/>
@@ -102,8 +107,8 @@
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <connections>
-                <outlet property="autoUpdateSwitchBtn" destination="STs-1E-mJr" id="NqM-Ef-Rjc"/>
                 <outlet property="imageDisplayView" destination="Hd1-YT-Ep8" id="ofU-ry-DN8"/>
+                <outlet property="isShowImagesOnMap" destination="STs-1E-mJr" id="KFr-XB-nqt"/>
             </connections>
             <point key="canvasLocation" x="248" y="407"/>
         </view>

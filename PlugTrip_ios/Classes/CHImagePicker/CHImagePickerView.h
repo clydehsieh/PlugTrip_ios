@@ -20,19 +20,22 @@
 
 @interface CHImagePickerView : UIView  <UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout>
 {
-    __block NSMutableArray *allAssetArray;
+    __block NSMutableArray *allAssetArray;//row data
     NSUserDefaults *prefs;
+    BOOL isPickAllImage;
 }
 
 - (id)initWithFrame:(CGRect)frame owner:(id)owner;
-- (void)loadPhotosFromAlbum;//撈本機相簿
+- (void)loadPhotosFromAlbumAndCompareWithAssets:(NSMutableArray *)AssetArray;//撈本機相簿
 - (void)loadPhotosFromAssetArray:(NSMutableArray *)AssetArray;//撈外部資料
 
 @property (nonatomic, assign) id<CHImagePickerViewDelegate> delegate;
 
 @property (assign, nonatomic) IBOutlet UICollectionView *imageDisplayView;
 //@property (nonatomic) IBOutlet UIButton *autoUpdateSwitchBtn;
-@property (weak, nonatomic) IBOutlet UISwitch *autoUpdateSwitchBtn;
+//@property (weak, nonatomic) IBOutlet UISwitch *autoUpdateSwitchBtn;
+@property (weak, nonatomic) IBOutlet UISwitch *isShowImagesOnMap;
+
 @property (nonatomic) BOOL isAutoUpdate;
 
 @property (nonatomic) PHAsset *pickedAsset;

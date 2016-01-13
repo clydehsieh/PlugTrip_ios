@@ -24,12 +24,13 @@
         
         //initialize
         allAssetArray = [NSMutableArray new];
+        prefs = [NSUserDefaults standardUserDefaults];
+        isPickAllImage= YES;
         _pickedAsset = [[PHAsset alloc]init];
         _pickedAssets = [[NSMutableArray alloc]init];
         _pickedCountForSection = [[NSMutableArray alloc]init];
-        prefs = [NSUserDefaults standardUserDefaults];
-       [_autoUpdateSwitchBtn setOn:[[[NSUserDefaults standardUserDefaults] objectForKey:@"autoUpdate"] boolValue]];
-        
+//       [_autoUpdateSwitchBtn setOn:[[[NSUserDefaults standardUserDefaults] objectForKey:@"autoUpdate"] boolValue]];
+       [_isShowImagesOnMap setOn:[[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue]];
         
 //        [self loadPhotos];
 //        [self scrollViewSetting];
@@ -42,14 +43,20 @@
     
 }
 
--(void)loadPhotosFromAlbum
+
+-(void)loadPhotosFromAlbumAndCompareWithAssets:(NSMutableArray *)AssetArray
 {
+    if (AssetArray) {
+        _pickedAssets = AssetArray;
+    }
+    
     [self loadPhotos];
     [self scrollViewSetting];
 }
 
 -(void)loadPhotosFromAssetArray:(NSMutableArray *)AssetArray
 {
+
     allAssetArray = AssetArray;
     
     //依照日期分類
@@ -219,17 +226,19 @@
         label.text = [NSString stringWithFormat:@"%@", lastDate];
         
         UITapGestureRecognizer *singleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(pickAllSectionImages:)];
-        [label addGestureRecognizer:singleTapGestureRecognizer];
+//        [label addGestureRecognizer:singleTapGestureRecognizer];
 
         
         UIImageView *imageView = (UIImageView *)[header viewWithTag:2];
-        if ([_sectionPickedStatus[indexPath.section]  isEqual:@1])
-        {
-            imageView.hidden = NO;
-        }else
-        {
-            imageView.hidden = YES;
-        }
+        [imageView addGestureRecognizer:singleTapGestureRecognizer];
+        
+//        if ([_sectionPickedStatus[indexPath.section]  isEqual:@1])
+//        {
+//            imageView.hidden = NO;
+//        }else
+//        {
+//            imageView.hidden = YES;
+//        }
         
     }
     
@@ -381,17 +390,56 @@
     
     [self removeFromSuperview];
 }
+- (IBAction)allPickBtn:(UIButton *)sender {
+    
+    if (isPickAllImage) {
+        [_allAssetGroups enumerateObjectsUsingBlock:^(NSMutableArray *sectionArray, NSUInteger section, BOOL * _Nonnull stop) {
+            [sectionArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                if (![_pickedAssets containsObject:obj]) {
+                    [_pickedAssets addObject:obj];
+                    
+                    
+                    [_imageDisplayView selectItemAtIndexPath:[NSIndexPath indexPathForItem:idx inSection:section] animated:YES scrollPosition:UICollectionViewScrollPositionNone];
+                    
+                    [_imageDisplayView.delegate collectionView:_imageDisplayView didSelectItemAtIndexPath:[NSIndexPath indexPathForItem:idx inSection:section]];
+                }
+            }];
+        }];
+        
+        isPickAllImage=NO;
+        
+    }else{
+        [_allAssetGroups enumerateObjectsUsingBlock:^(NSMutableArray *sectionArray, NSUInteger section, BOOL * _Nonnull stop) {
+            [sectionArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                if ([_pickedAssets containsObject:obj]) {
+                    [_pickedAssets removeObject:obj];
+                    
+                    [_imageDisplayView deselectItemAtIndexPath:[NSIndexPath indexPathForItem:idx inSection:section] animated:YES];
+                    
+                    [_imageDisplayView.delegate collectionView:_imageDisplayView didDeselectItemAtIndexPath:[NSIndexPath indexPathForItem:idx inSection:section]];
+                }
+            }];
+        }];
+        
+        isPickAllImage=YES;
+    }
+    
+    
+    
+    
+}
 
 ///!!!:wait coding
 - (IBAction)changeAutoUpdateState:(id)sender {
+
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:_isShowImagesOnMap.isOn] forKey:@"isShowImagesOnMap"];
+
+    BOOL showImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
     
-    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:_autoUpdateSwitchBtn.isOn] forKey:@"autoUpdate"];
-    BOOL autoUpdate = [[[NSUserDefaults standardUserDefaults] objectForKey:@"autoUpdate"] boolValue];
-    
-    if (autoUpdate) {
-        NSLog(@"Auto update photo");
+    if (showImagesOnMap) {
+        NSLog(@"show Images On Map");
     }else{
-        NSLog(@"Manual update photo");
+        NSLog(@"Don't show Images On Map ");
     }
     
 }

@@ -210,6 +210,36 @@ myDB *sharedInstance;
 //    }
 }
 
+- (id)queryWithTableName:(NSString *)tableName{
+    
+    NSMutableArray *rows = [NSMutableArray arrayWithCapacity:0];
+    NSString *queryRequest = [NSString stringWithFormat:@"SELECT * FROM %@ ORDER BY rowid",tableName];
+    
+    FMResultSet *result = [db executeQuery:queryRequest];
+    while ([result next]) {
+        /*
+         NSString *cust_no = [result stringForColumn:@"cust_no"];
+         NSString *cust_name = [result stringForColumn:@"cust_name"];
+         NSString *cust_tel = [result stringForColumn:@"cust_tel"];
+         NSString *cust_addr = [result stringForColumn:@"cust_addr"];
+         NSString *cust_email = [result stringForColumn:@"cust_email"];
+         
+         NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
+         cust_no, @"cust_no",
+         cust_name, @"cust_name",
+         cust_tel, @"cust_tel",
+         cust_addr, @"cust_addr",
+         cust_email, @"cust_email",
+         nil];
+         [rows addObject:dict];
+         */
+        
+        [rows addObject:result.resultDictionary];
+    }
+    
+    return rows;
+}
+
 - (void)deleteTripInfo:(NSString *)rowid{
     
 //    if (![db executeUpdate:@"DELETE FROM tripInfo WHERE rowid=?", rowid]) {

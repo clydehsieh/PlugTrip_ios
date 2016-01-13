@@ -12,9 +12,12 @@
  
  tags:
  101  menuBtn
+ 102  modeBtn
  
  */
 #define IMAGEHEIGHT 80
+#define MODEBTN_WIDTH 80.0
+#define MODEBTN_HEIGHT 44.0
 
 #import "CHMapViewVC.h"
 
@@ -31,7 +34,7 @@
 @end
 
 NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
-
+NSString *const tableName = @"tripInfo";
 
 @implementation CHMapViewVC
 
@@ -40,8 +43,10 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     
     _isInitialLayout = NO;
     
-    _modes = [[NSArray alloc]initWithObjects:@"紀錄",@"同夥",@"分析", nil];
+    _modes = [[NSArray alloc]initWithObjects:@"分析",@"紀錄",@"同夥",@"旅程", nil];
     _currentModeType = 0;
+    
+    [self loadPhotosForInit];
 
 }
 
@@ -54,6 +59,7 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
         [self initButtons];
         [self initScrollView];
         
+        
         _isInitialLayout = YES;
     }
     
@@ -64,6 +70,38 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+
+-(void)loadPhotosForInit{
+    
+    NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
+    NSMutableArray *localIdentifier =[[NSMutableArray alloc]init];
+    queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName];
+    NSLog(@"%@",queryTableResult);
+    
+    if (queryTableResult) {
+//        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+        [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+            [localIdentifier addObject:dict[@"imagePath"]];
+        }];
+        
+        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
+        
+        _pickedAssets = [[NSMutableArray alloc]init];
+        
+        [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+            [_pickedAssets addObject:asset];
+            
+        }];
+        
+    }
+    
+    
+    
+    
+}
+
 
 
 -(void)initMapView{
@@ -101,9 +139,12 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     [_mapDisplayView addSubview:menuBtn];
     
     //mode setting
-    float modeBtnWidth = 80;
-    float modeBtnHeight = 44;
-    UIButton *modeBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width-modeBtnWidth, _mapDisplayView.frame.size.height-modeBtnHeight, modeBtnWidth, modeBtnHeight)];
+    UIView *modeBtnBackgroundView = [[UIView alloc]initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-MODEBTN_HEIGHT, _mapDisplayView.frame.size.width, MODEBTN_HEIGHT)];
+    modeBtnBackgroundView.backgroundColor = [UIColor blueColor];
+    [_mapDisplayView addSubview:modeBtnBackgroundView];
+    
+    UIButton *modeBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
+    modeBtn.tag = 102;
     [modeBtn addTarget:self action:@selector(changeMode:) forControlEvents:UIControlEventTouchDown];
     [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
     [modeBtn setBackgroundColor:[UIColor blueColor]];
@@ -125,10 +166,10 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
 {
  
     //底層照片scrollview, 設定參數
-    imageScrollView = [[CHScrollView alloc] initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width, IMAGEHEIGHT)];
+    imageScrollView = [[CHScrollView alloc] initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH, IMAGEHEIGHT)];
     imageScrollView.delegateImage = self;
     imageScrollView.isCentredFirstItem = YES;
-    imageScrollView.visibleImageNumber = 7;
+    imageScrollView.visibleImageNumber = 5;
     imageScrollView.downSizeRatio = 0.5;
     imageScrollView.imageChangeRange = 0.3;
     imageScrollView.backgroundColor = [UIColor clearColor];
@@ -138,13 +179,24 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     [_mapDisplayView addSubview:chsrollViewBackground];
     [_mapDisplayView addSubview:imageScrollView];
     
+    [self finishedPickingImages:_pickedAssets];
+    
 }
 
 -(void)scrollView:(UIScrollView *)scrollView didSelectedImage:(UIImageView *)selectedView{
     
-    NSInteger tag = selectedView.tag-1;
-    [self mapView:_mapView didTapMarker:markerArray[tag]];
-    NSLog(@"\nYou selected chScollView the no.%ld Image",(long)selectedView.tag);
+    
+    _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
+    if (_isShowImagesOnMap) {
+        NSInteger tag = selectedView.tag-1;
+        [self mapView:_mapView didTapMarker:markerArray[tag]];
+        NSLog(@"\nYou selected chScollView the no.%ld Image",(long)selectedView.tag);
+    }else{
+        //無marker, 不動作
+    }
+
+    
+    
     
 }
 
@@ -167,12 +219,94 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
 
 -(void)changeMode:(UIButton *)sender{
     
-    _currentModeType +=1;
-    if (_currentModeType >= [_modes count]) {
-        _currentModeType = 0;
+    if (_currentModeType == 0) {
+        //點選"分析"按鈕時, 跳出照片
+//        [self setImagePicker:_pickedAssets];
+        
+        UIAlertController * alert=   [UIAlertController
+                                      alertControllerWithTitle:@""
+                                      message:@"是否取用相簿照片"
+                                      preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction* yesButton = [UIAlertAction
+                                    actionWithTitle:@"Yes"
+                                    style:UIAlertActionStyleDefault
+                                    handler:^(UIAlertAction * action)
+                                    {
+                                        
+                                        //
+                                        switch ([PHPhotoLibrary authorizationStatus]) {
+                                            case PHAuthorizationStatusAuthorized:
+                                                [self setImagePicker:_pickedAssets];
+                                                break;
+                                                
+                                            default:
+                                                [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+                                                    switch (status) {
+                                                        case PHAuthorizationStatusAuthorized:
+                                                        case PHAuthorizationStatusNotDetermined:
+                                                            [self setImagePicker:_pickedAssets];
+                                                            break;
+                                                            
+                                                        case PHAuthorizationStatusDenied:
+                                                        case PHAuthorizationStatusRestricted:
+                                                        {
+                                                            //Tell user access to the photos are restricted
+                                                            UIAlertController * alertForRestricted=   [UIAlertController
+                                                                                          alertControllerWithTitle:@"錯誤"
+                                                                                          message:@"無法訪問相簿,請至設定開啟權限"
+                                                                                          preferredStyle:UIAlertControllerStyleAlert];
+                                                            
+                                                            UIAlertAction *okBtn = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                                                                [alertForRestricted dismissViewControllerAnimated:YES completion:nil];
+                                                            }];
+                                                            
+                                                            [alertForRestricted addAction:okBtn];
+                    
+                                                            [self presentViewController:alertForRestricted animated:YES completion:nil];
+                                                        }
+                                                            break;
+                                                            
+                                                        default:
+                                                            break;
+                                                    }
+                                                }];
+                                                break;
+                                        }
+                                        
+                                        
+                                        [alert dismissViewControllerAnimated:YES completion:nil];
+                                        
+                                    }];
+        
+        UIAlertAction* noButton = [UIAlertAction
+                                   actionWithTitle:@"No"
+                                   style:UIAlertActionStyleDefault
+                                   handler:^(UIAlertAction * action)
+                                   {
+                                       
+                                       [alert dismissViewControllerAnimated:YES completion:nil];
+                                       
+                                   }];
+        
+        [alert addAction:yesButton];
+        [alert addAction:noButton];
+        
+        [self presentViewController:alert animated:YES completion:nil];
+        
+        
+        
+        
+        
+
     }
     
-    [sender setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
+//    _currentModeType +=1;
+//    if (_currentModeType >= [_modes count]) {
+//        _currentModeType = 0;
+//    }
+//    
+//    [sender setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
 }
 
 
@@ -188,28 +322,43 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
 #pragma mark - menu
 -(void)didSelectTheMenu:(UIButton *)btn;
 {
+    switch (btn.tag) {
+        case 1:
+            //紀錄mode
+            _currentModeType = 1;
+            break;
+        case 2:
+            //同夥mode
+            _currentModeType = 2;
+            break;
+        case 3:
+            //旅程mode
+            break;
+        default:
+            break;
+    }
+
+    UIButton *modeBtn = (UIButton *)[_mapDisplayView viewWithTag:102];
+    [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
     
-    NSLog(@"\n MAP VC Tapped:%ld",btn.tag);
-    
-    [self setImagePicker:nil];
 
 }
 
 #pragma mark - CHImagePickerView setting & delegate
 -(void)setImagePicker:(NSMutableArray *)assetArray
 {
-//    if (!_assets)
-//        _assets = [[NSMutableArray alloc] init];
     
     //CHImagePickerView
     CGRect frame = CGRectMake(_mapDisplayView.frame.origin.x, _mapDisplayView.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height - _mapDisplayView.frame.origin.y);
     
     CHImagePickerView *imagePicker = [[CHImagePickerView alloc]initWithFrame:frame owner:self];
+
     
-    if (assetArray)
-        [imagePicker loadPhotosFromAssetArray:assetArray];
-    else
-        [imagePicker loadPhotosFromAlbum];
+    [imagePicker loadPhotosFromAlbumAndCompareWithAssets:assetArray];
+//    if (assetArray)
+//        [imagePicker loadPhotosFromAssetArray:assetArray];
+//    else
+//        [imagePicker loadPhotosFromAlbum];
     
     imagePicker.backgroundColor = [UIColor whiteColor];
     imagePicker.layer.borderWidth = 2.0f;
@@ -223,13 +372,14 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
 
 -(void)finishedPickingImages:(NSMutableArray *)assets{
     
+    _pickedAssets = assets;
     NSString *tableName =@"tripInfo";
     
     //Clear the table
     [[myDB sharedInstance] deleteTable:tableName];
     [[myDB sharedInstance] createTable:tableName];
     
-    //save to database
+    //ready to save to database
     __block NSString *imagePath = [[NSString alloc]init];
     NSString *imageLatitude     = [[NSString alloc]init];
     NSString *imageLongtitude   = [[NSString alloc]init];
@@ -241,6 +391,7 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
     NSMutableArray *images = [[NSMutableArray alloc] init];
     markerArray = [[NSMutableArray alloc]init];
     
+    [_mapView clear];
     
     //從PHAsset 解析出UIImage
     for (int i = 0; i < [assets count]; i++)
@@ -270,40 +421,49 @@ NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
          contentMode:PHImageContentModeAspectFill
          options:nil
          resultHandler:^(UIImage *result, NSDictionary *info) {
-
+             
              [images addObject:result];
              UIGraphicsBeginImageContextWithOptions(CGSizeMake(30, 40), NO, 0.0);
              [result drawInRect:CGRectMake(0, 0, 30, 40)];
              UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
              UIGraphicsEndImageContext();
              marker.icon = newImage;
-        }];
-        
+         }];
         
         //取值 - path
-        PHImageRequestOptions * imageRequestOptions = [[PHImageRequestOptions alloc] init];
-        imageRequestOptions.synchronous = YES;
-        [[PHImageManager defaultManager]
-         requestImageDataForAsset:asset
-         options:imageRequestOptions
-         resultHandler:^(NSData *imageData, NSString *dataUTI,
-                         UIImageOrientation orientation,
-                         NSDictionary *info)
-         {
-//             NSLog(@"info = %@", info);
-             if ([info objectForKey:@"PHImageFileURLKey"]) {
-                 // path looks like this -
-                 // file:///var/mobile/Media/DCIM/###APPLE/IMG_####.JPG
-                 NSURL *path = [info objectForKey:@"PHImageFileURLKey"];
-                 imagePath = [NSString stringWithFormat:@"%@",path];
-             }
-         }];
+        imagePath = asset.localIdentifier;
+        
+//        PHImageRequestOptions * imageRequestOptions = [[PHImageRequestOptions alloc] init];
+//        imageRequestOptions.synchronous = YES;
+//        [[PHImageManager defaultManager]
+//         requestImageDataForAsset:asset
+//         options:imageRequestOptions
+//         resultHandler:^(NSData *imageData, NSString *dataUTI,
+//                         UIImageOrientation orientation,
+//                         NSDictionary *info)
+//         {
+////             NSLog(@"info = %@", info);
+//             if ([info objectForKey:@"PHImageFileURLKey"]) {
+//                 // path looks like this -
+//                 // file:///var/mobile/Media/DCIM/###APPLE/IMG_####.JPG
+//                 NSURL *path = [info objectForKey:@"PHImageFileURLKey"];
+//                 imagePath = [NSString stringWithFormat:@"%@",path];
+//             }
+//         }];
 
         //存入table
         [[myDB sharedInstance]insertTable:tableName andImageLatitude:imageLatitude andImageLongtitude:imageLongtitude ImagePath:imagePath andComments:comment andVoicePath:voicePath andHiddenState:hiddenState];
         
     }
     
+    //是否放照片在地圖上
+    _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
+    if (_isShowImagesOnMap) {
+        NSLog(@"show Images On Map");
+    }else{
+        [_mapView clear];
+        NSLog(@"Don't show Images On Map ");
+    }
     
     [imageScrollView setImageAry:images];
 //    [self setImageDisplayScrollView:images];

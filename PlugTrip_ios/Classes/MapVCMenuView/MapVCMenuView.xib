@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9060" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9051"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
     </dependencies>
     <objects>
@@ -14,7 +14,7 @@
             <subviews>
                 <button opaque="NO" tag="1" contentMode="scaleAspectFit" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Dlp-KT-TXo">
                     <rect key="frame" x="5" y="0.0" width="78" height="34"/>
-                    <state key="normal" title="新建">
+                    <state key="normal" title="紀錄">
                         <color key="titleColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
                     <connections>
@@ -23,7 +23,7 @@
                 </button>
                 <button opaque="NO" tag="2" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="h74-xI-DpB">
                     <rect key="frame" x="5" y="39" width="78" height="34"/>
-                    <state key="normal" title="載入">
+                    <state key="normal" title="同夥">
                         <color key="titleColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                     </state>
                     <connections>
@@ -44,7 +44,7 @@
                 </button>
                 <button opaque="NO" tag="3" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="oqV-hK-C9M">
                     <rect key="frame" x="5" y="78" width="78" height="34"/>
-                    <state key="normal" title="儲存">
+                    <state key="normal" title="旅程">
                         <color key="titleColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
                     <connections>
@@ -52,7 +52,7 @@
                     </connections>
                 </button>
                 <tableView clipsSubviews="YES" tag="4" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="jv1-pr-gAc">
-                    <rect key="frame" x="5" y="188" width="78" height="214"/>
+                    <rect key="frame" x="5" y="120" width="78" height="282"/>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                 </tableView>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="XaC-ue-id3">
@@ -62,24 +62,6 @@
                         <constraint firstAttribute="height" constant="3" id="60w-4F-Jx3"/>
                     </constraints>
                 </view>
-                <button opaque="NO" tag="4" contentMode="scaleAspectFit" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Lq4-Z2-pED">
-                    <rect key="frame" x="5" y="115" width="78" height="34"/>
-                    <state key="normal" title="紀錄">
-                        <color key="titleColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                    </state>
-                    <connections>
-                        <action selector="menuActions:" destination="iN0-l3-epB" eventType="touchUpInside" id="0eL-1T-D3e"/>
-                    </connections>
-                </button>
-                <button opaque="NO" tag="5" contentMode="scaleAspectFit" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="afl-za-L8w">
-                    <rect key="frame" x="5" y="149" width="78" height="34"/>
-                    <state key="normal" title="同夥">
-                        <color key="titleColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
-                    </state>
-                    <connections>
-                        <action selector="menuActions:" destination="iN0-l3-epB" eventType="touchUpInside" id="JiR-pc-KAT"/>
-                    </connections>
-                </button>
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
             <constraints>
@@ -87,23 +69,17 @@
                 <constraint firstItem="XaC-ue-id3" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="1no-iS-ech"/>
                 <constraint firstAttribute="trailing" secondItem="oqV-hK-C9M" secondAttribute="trailing" constant="5" id="1yb-hx-i5A"/>
                 <constraint firstItem="oqV-hK-C9M" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="3dw-od-IX5"/>
-                <constraint firstItem="jv1-pr-gAc" firstAttribute="top" secondItem="afl-za-L8w" secondAttribute="bottom" constant="5" id="5NK-GU-XlI"/>
                 <constraint firstAttribute="trailing" secondItem="XaC-ue-id3" secondAttribute="trailing" constant="5" id="5xD-A5-aab"/>
-                <constraint firstItem="afl-za-L8w" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="8ZG-zp-bT6"/>
+                <constraint firstItem="jv1-pr-gAc" firstAttribute="top" secondItem="XaC-ue-id3" secondAttribute="bottom" constant="5" id="BVv-Tm-wNn"/>
                 <constraint firstItem="XaC-ue-id3" firstAttribute="top" secondItem="oqV-hK-C9M" secondAttribute="bottom" id="BZa-3U-sOE"/>
-                <constraint firstItem="Lq4-Z2-pED" firstAttribute="top" secondItem="XaC-ue-id3" secondAttribute="bottom" id="GGS-CW-ehs"/>
                 <constraint firstItem="Dlp-KT-TXo" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="IAJ-v3-c6B"/>
                 <constraint firstItem="jv1-pr-gAc" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="Kkw-I0-UHF"/>
-                <constraint firstAttribute="trailing" secondItem="afl-za-L8w" secondAttribute="trailing" constant="5" id="MkR-eC-Ch5"/>
                 <constraint firstItem="h74-xI-DpB" firstAttribute="top" secondItem="Dlp-KT-TXo" secondAttribute="bottom" constant="5" id="QSS-U9-y5w"/>
                 <constraint firstItem="4LV-gm-Xsh" firstAttribute="top" secondItem="jv1-pr-gAc" secondAttribute="bottom" constant="5" id="Qb7-V0-SXi"/>
                 <constraint firstAttribute="trailing" secondItem="jv1-pr-gAc" secondAttribute="trailing" constant="5" id="RI2-uf-Jwb"/>
                 <constraint firstItem="4LV-gm-Xsh" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="T6I-oE-CSM"/>
-                <constraint firstItem="afl-za-L8w" firstAttribute="top" secondItem="Lq4-Z2-pED" secondAttribute="bottom" id="Vtp-ku-xIa"/>
                 <constraint firstItem="h74-xI-DpB" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="Wht-eQ-QWn"/>
                 <constraint firstAttribute="trailing" secondItem="4LV-gm-Xsh" secondAttribute="trailing" constant="5" id="atw-EN-Aek"/>
-                <constraint firstAttribute="trailing" secondItem="Lq4-Z2-pED" secondAttribute="trailing" constant="5" id="gVu-8i-fut"/>
-                <constraint firstItem="Lq4-Z2-pED" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="5" id="jyN-Rp-WMM"/>
                 <constraint firstAttribute="bottom" secondItem="4LV-gm-Xsh" secondAttribute="bottom" id="kXe-8P-21l"/>
                 <constraint firstItem="oqV-hK-C9M" firstAttribute="top" secondItem="h74-xI-DpB" secondAttribute="bottom" constant="5" id="sax-2Q-Bcz"/>
                 <constraint firstAttribute="trailing" secondItem="Dlp-KT-TXo" secondAttribute="trailing" constant="5" id="uqx-6c-KB2"/>

@@ -22,5 +22,8 @@
 @property (nonatomic) BOOL isInitialLayout;
 @property (nonatomic) NSArray *modes; //紀錄 同夥 分析
 @property (nonatomic) int currentModeType;
+@property (nonatomic) NSMutableArray *pickedAssets;
+
+@property (nonatomic) BOOL isShowImagesOnMap;
 
 @end

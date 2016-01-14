@@ -161,16 +161,28 @@ myDB *sharedInstance;
     }
 }
 
+
 #pragma mark - Images
--(void)createTable:(NSString *)tableName{
+-(void)createTripTable:(NSString *)tableName{
     
-    NSString *createInfo = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS %@ (imageLatitude TEXT, imageLongtitude TEXT, imagePath TEXT,comments TEXT,voicePath TEXT)",tableName];
+    NSString *createInfo = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS %@ (imageLatitude TEXT, imageLongtitude TEXT, imagePath TEXT,comments TEXT,voicePath TEXT,interaction BOOL)",tableName];
     
     if(![db executeUpdate:createInfo])
     {
         NSLog(@"Could not create table: %@", [db lastErrorMessage]);
     }
 }
+
+-(void)createGPSTable:(NSString *)tableName{
+    
+    NSString *createInfo = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS %@ (imageLatitude TEXT, imageLongtitude TEXT, createTime TEXT)",tableName];
+    
+    if(![db executeUpdate:createInfo])
+    {
+        NSLog(@"Could not create table: %@", [db lastErrorMessage]);
+    }
+}
+
 -(void)deleteTable:(NSString *)tableName{
     
     NSString *deleteInfo = [NSString stringWithFormat:@"DROP TABLE %@ ",tableName];
@@ -188,13 +200,19 @@ myDB *sharedInstance;
     if (![db executeUpdate:insertInfo,imageLatitude,imageLongtitude,imagePath,comments,voicePath]) {
         NSLog(@"Could not insert data: %@", [db lastErrorMessage]);
     }
-    
-    
-//    if (![db executeUpdate:@"INSERT INTO tripInfo (imagePath,comments,voicePath) VALUES (?,?,?)",imagePath,comments,voicePath]) {
-//        NSLog(@"Could not insert data: %@", [db lastErrorMessage]);
-//    }
 
 }
+
+-(void)insertGPSTable:(NSString *)tableName andLatitude:(NSString *)latitude andLongtitude:(NSString *)longtitude{
+    
+    NSString *insertInfo = [NSString stringWithFormat:@"INSERT INTO %@ (imageLatitude,imageLongtitude) VALUES (?,?)",tableName];
+    
+    if (![db executeUpdate:insertInfo,latitude,longtitude]) {
+        NSLog(@"Could not insert data: %@", [db lastErrorMessage]);
+    }
+    
+}
+
 
 -(void)updateTable:(NSString *)tableName andRowid:(NSString *)rowid andImageLatitude:(NSString *)imageLatitude andImageLongtitude:(NSString *)imageLongtitude ImagePath:(NSString *)imagePath andComments:(NSString *)comments andVoicePath:(NSString *)voicePath andHiddenState:(NSString *)Hidden{
     
@@ -204,10 +222,6 @@ myDB *sharedInstance;
         NSLog(@"Could not update data: %@", [db lastErrorMessage]);
     }
     
-    
-//    if (![db executeUpdate:@"UPDATE tripInfo SET imagePath=?,comments=?,voicePath=? WHERE rowid=?",imagePath,comments,voicePath,rowid]) {
-//        NSLog(@"Could not update data: %@", [db lastErrorMessage]);
-//    }
 }
 
 - (id)queryWithTableName:(NSString *)tableName{

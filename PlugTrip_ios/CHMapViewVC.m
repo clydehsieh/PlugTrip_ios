@@ -13,8 +13,12 @@
  tags:
  101  menuBtn
  102  modeBtn
+ 103  addPhotoBtn
+ 
+ 201  modeBtnBackgroundView
  
  */
+
 #define IMAGEHEIGHT 80
 #define MODEBTN_WIDTH 80.0
 #define MODEBTN_HEIGHT 44.0
@@ -34,7 +38,8 @@
 @end
 
 NSString *const apiKey = @"AIzaSyDzElpxMxZ4_T7DP6LSYrGfoj8kpLAtgr4";
-NSString *const tableName = @"tripInfo";
+NSString *const tableName_tripPhoto = @"Trip_Photo_Info";
+NSString *const tableName_userGPS = @"user_GPS";
 
 @implementation CHMapViewVC
 
@@ -43,16 +48,42 @@ NSString *const tableName = @"tripInfo";
     
     _isInitialLayout = NO;
     
-    _modes = [[NSArray alloc]initWithObjects:@"分析",@"紀錄",@"同夥",@"旅程", nil];
-    _currentModeType = 0;
+    _isTripCreate =  [[[NSUserDefaults standardUserDefaults] objectForKey:@"isTripCreate"] boolValue];
     
-    [self loadPhotosForInit];
+    _modes = [[NSArray alloc]initWithObjects:@"分析",@"紀錄",@"同夥",@"旅程", nil];
+    
+    //GPS init
+    if (_locationManager == nil)
+    {
+        _locationManager = [[CLLocationManager alloc] init];
+        _locationManager.desiredAccuracy =
+        kCLLocationAccuracyNearestTenMeters;
+        _locationManager.delegate = self;
+        [_locationManager requestAlwaysAuthorization];
+        
+    }
+    
+    
+    if (!_isTripCreate) {
+        //尚未建立local旅程, 初始模式為分析
+        _currentModeType = 0;
+        NSLog(@"Trip Is Not Created!Start 分析 mode");
+    }else{
+        //建立local旅程, 初始模式為紀錄
+        _currentModeType = 1;
+        NSLog(@"Trip Created!Start 紀錄 mode");
+    }
+    
+    
+    
 
 }
 
 -(void)viewDidAppear:(BOOL)animated{
     
     if (!_isInitialLayout) {
+
+        //init layout
         [self initMapView];
         [self initSearchView];
         [self initMenuView];
@@ -60,10 +91,25 @@ NSString *const tableName = @"tripInfo";
         [self initScrollView];
         
         
+        //init data
+        if (!_isTripCreate) {
+            //mode setting
+            UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:201];
+            modeBtnBackgroundView.hidden = YES;
+        }else{
+            [self LoadInitData];
+            
+        }
+    
         _isInitialLayout = YES;
     }
     
+}
 
+- (void)viewWillDisappear:(BOOL)animated
+{
+    // Turn off the location manager to save power.
+    [_locationManager stopUpdatingLocation];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -71,36 +117,7 @@ NSString *const tableName = @"tripInfo";
     // Dispose of any resources that can be recreated.
 }
 
--(void)loadPhotosForInit{
-    
-    NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
-    NSMutableArray *localIdentifier =[[NSMutableArray alloc]init];
-    queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName];
-    NSLog(@"%@",queryTableResult);
-    
-    if (queryTableResult) {
-//        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
-        [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
-            
-            [localIdentifier addObject:dict[@"imagePath"]];
-        }];
-        
-        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
-        
-        _pickedAssets = [[NSMutableArray alloc]init];
-        
-        [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
-            
-            [_pickedAssets addObject:asset];
-            
-        }];
-        
-    }
-    
-    
-    
-    
-}
+
 
 
 
@@ -129,8 +146,10 @@ NSString *const tableName = @"tripInfo";
     [_mapDisplayView insertSubview:sView atIndex:4];
 }
 
+
 -(void)initButtons{
-    //
+    
+    // menu
     UIButton *menuBtn = [[UIButton alloc]initWithFrame:CGRectMake(5, 5, 44, 44)];
     [menuBtn addTarget:self action:@selector(showMenu:) forControlEvents:UIControlEventTouchDown];
     [menuBtn setTitle:@"Me" forState:UIControlStateNormal];
@@ -140,6 +159,7 @@ NSString *const tableName = @"tripInfo";
     
     //mode setting
     UIView *modeBtnBackgroundView = [[UIView alloc]initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-MODEBTN_HEIGHT, _mapDisplayView.frame.size.width, MODEBTN_HEIGHT)];
+    modeBtnBackgroundView.tag = 201;
     modeBtnBackgroundView.backgroundColor = [UIColor blueColor];
     [_mapDisplayView addSubview:modeBtnBackgroundView];
     
@@ -151,6 +171,14 @@ NSString *const tableName = @"tripInfo";
 //    [modeBtn setBackgroundImage:[UIImage imageNamed:@"s1_1.png"] forState:UIControlStateNormal];
     [_mapDisplayView addSubview:modeBtn];
     
+    //add photo btn
+    UIButton *addPhotoBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH*2, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
+    modeBtn.tag = 103;
+    [addPhotoBtn addTarget:self action:@selector(addPhotoBtnAction:) forControlEvents:UIControlEventTouchDown];
+    [addPhotoBtn setTitle:@"+" forState:UIControlStateNormal];
+    [addPhotoBtn setBackgroundColor:[UIColor blueColor]];
+    [_mapDisplayView addSubview:addPhotoBtn];
+    
 }
 
 -(void)initMenuView{
@@ -161,12 +189,63 @@ NSString *const tableName = @"tripInfo";
     menuView.hidden = YES;
 }
 
+-(void)LoadInitData{
+    
+    ///!!!:wait for coding
+    [self loadUserGps];
+    [self loadTripInfo];
+    [self loadPhotosForInit];
+
+    
+}
+
+#pragma mark - Load Data
+-(void)loadPhotosForInit{
+    
+    NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
+    NSMutableArray *localIdentifier =[[NSMutableArray alloc]init];
+    queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName_tripPhoto];
+    NSLog(@"%@",queryTableResult);
+    
+    if (queryTableResult) {
+        //        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+        [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+            [localIdentifier addObject:dict[@"imagePath"]];
+        }];
+        
+        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
+        
+        _pickedAssets = [[NSMutableArray alloc]init];
+        
+        [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+            [_pickedAssets addObject:asset];
+            
+        }];
+        
+    }
+    
+    [self finishedPickingImages:_pickedAssets];
+    
+}
+
+-(void)loadUserGps{
+    
+    ///!!!:wait for coding
+}
+
+-(void)loadTripInfo{
+    
+    ///!!!:wait for coding
+}
+
 #pragma mark - CHScrollView setting & setters & delegate
 -(void)initScrollView
 {
  
     //底層照片scrollview, 設定參數
-    imageScrollView = [[CHScrollView alloc] initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH, IMAGEHEIGHT)];
+    imageScrollView = [[CHScrollView alloc] initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH*2, IMAGEHEIGHT)];
     imageScrollView.delegateImage = self;
     imageScrollView.isCentredFirstItem = YES;
     imageScrollView.visibleImageNumber = 5;
@@ -178,8 +257,7 @@ NSString *const tableName = @"tripInfo";
     chsrollViewBackground.image = [UIImage imageNamed:@"tab_bar_bg.png"];
     [_mapDisplayView addSubview:chsrollViewBackground];
     [_mapDisplayView addSubview:imageScrollView];
-    
-    [self finishedPickingImages:_pickedAssets];
+
     
 }
 
@@ -309,7 +387,18 @@ NSString *const tableName = @"tripInfo";
 //    [sender setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
 }
 
-
+-(void)addPhotoBtnAction:(UIButton *)sender{
+    
+    NSLog(@"Adding photo");
+    
+    UIImagePickerController *imgPicker = [[UIImagePickerController alloc] init];
+    imgPicker.sourceType = UIImagePickerControllerCameraDeviceFront;
+    imgPicker.delegate = self;
+    [self presentViewController:imgPicker animated:YES completion:^{
+        //
+    }];
+    
+}
 
 
 #pragma mark - MapVCSeachViewDelegate
@@ -373,11 +462,13 @@ NSString *const tableName = @"tripInfo";
 -(void)finishedPickingImages:(NSMutableArray *)assets{
     
     _pickedAssets = assets;
-    NSString *tableName =@"tripInfo";
     
     //Clear the table
-    [[myDB sharedInstance] deleteTable:tableName];
-    [[myDB sharedInstance] createTable:tableName];
+    [[myDB sharedInstance] deleteTable:tableName_tripPhoto];
+    [[myDB sharedInstance] createTripTable:tableName_tripPhoto];
+    
+    [[myDB sharedInstance] deleteTable:tableName_userGPS];
+    [[myDB sharedInstance] createGPSTable:tableName_userGPS];
     
     //ready to save to database
     __block NSString *imagePath = [[NSString alloc]init];
@@ -452,7 +543,7 @@ NSString *const tableName = @"tripInfo";
 //         }];
 
         //存入table
-        [[myDB sharedInstance]insertTable:tableName andImageLatitude:imageLatitude andImageLongtitude:imageLongtitude ImagePath:imagePath andComments:comment andVoicePath:voicePath andHiddenState:hiddenState];
+        [[myDB sharedInstance]insertTable:tableName_tripPhoto andImageLatitude:imageLatitude andImageLongtitude:imageLongtitude ImagePath:imagePath andComments:comment andVoicePath:voicePath andHiddenState:hiddenState];
         
     }
     
@@ -465,8 +556,22 @@ NSString *const tableName = @"tripInfo";
         NSLog(@"Don't show Images On Map ");
     }
     
+    //show Image scrollView
+    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:201];
+    modeBtnBackgroundView.hidden = NO;
+    
     [imageScrollView setImageAry:images];
 //    [self setImageDisplayScrollView:images];
+
+
+    //Create  Trip
+    _isTripCreate = YES;
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:_isTripCreate] forKey:@"isTripCreate"];
+    NSLog(@"Trip Created!");
+    
+    //Start to record GPS
+    [_locationManager startUpdatingLocation];
+    NSLog(@"GPS recording start");
 }
 
 #pragma mark - GMSMapView Settings & Delegate
@@ -565,6 +670,46 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     // Pass the selected object to the new view controller.
 }
 */
+
+#pragma mark - UIImagePickerController
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(nullable NSDictionary<NSString *,id> *)editingInfo NS_DEPRECATED_IOS(2_0, 3_0){
+    
+}
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
+    
+    UIImage *img = [info objectForKey:@"UIImagePickerControllerOriginalImage"];
+    
+    // Save image
+    UIImageWriteToSavedPhotosAlbum(img, self, nil, nil);
+    
+    //等1秒後, 
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        
+        // get camera roll
+        PHAssetCollection *cameraRoll = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil].lastObject;
+        PHAsset *asset = [[PHAsset fetchAssetsInAssetCollection:cameraRoll options:nil] lastObject];
+        [_pickedAssets addObject:asset];
+        [self finishedPickingImages:_pickedAssets];
+        
+    });
+    
+    //圖庫選圖完之後，自動關閉圖庫
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    
+    
+}
+
+#pragma mark - locationManager Delegate
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
+    
+    NSLog(@"/n lat: %f",_locationManager.location.coordinate.latitude);
+    NSLog(@" lon: %f/n",_locationManager.location.coordinate.longitude);
+    
+    //存入table
+    [[myDB sharedInstance]insertGPSTable:tableName_userGPS andLatitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.latitude] andLongtitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.longitude]];
+
+}
 
 @end
 

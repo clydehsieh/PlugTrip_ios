@@ -32,9 +32,6 @@
                                     <constraint firstAttribute="width" secondItem="Tah-jx-0oi" secondAttribute="height" multiplier="3:2" id="Z7Y-OE-rW2"/>
                                 </constraints>
                                 <state key="normal" title="Button"/>
-                                <connections>
-                                    <segue destination="ZEV-Sb-A99" kind="show" id="GLW-zG-SDR"/>
-                                </connections>
                             </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>

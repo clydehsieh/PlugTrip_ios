@@ -161,6 +161,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC8C8F1E1C362F22005BADBC /* CoreLocation.framework in Frameworks */,
 				EC8C8F2C1C36AF54005BADBC /* Social.framework in Frameworks */,
 				EC8C8F2A1C36AF4B005BADBC /* Accounts.framework in Frameworks */,
 				EC8C8F281C362F4A005BADBC /* libz.tbd in Frameworks */,
@@ -168,7 +169,6 @@
 				EC8C8F241C362F36005BADBC /* StoreKit.framework in Frameworks */,
 				EC8C8F221C362F2F005BADBC /* Security.framework in Frameworks */,
 				EC8C8F201C362F29005BADBC /* QuartzCore.framework in Frameworks */,
-				EC8C8F1E1C362F22005BADBC /* CoreLocation.framework in Frameworks */,
 				EC8C8F1C1C362F1B005BADBC /* CoreGraphics.framework in Frameworks */,
 				EC8C8F1A1C362F14005BADBC /* CFNetwork.framework in Frameworks */,
 				EC8C8F181C362F0B005BADBC /* AudioToolbox.framework in Frameworks */,

@@ -15,11 +15,12 @@
 #import "CHScrollView.h"
 #import "myDB.h"
 
-@interface CHMapViewVC : UIViewController <GMSMapViewDelegate,MapVCSeachViewDelegate,MapVCMenuViewDelegate,CHImagePickerViewDelegate,CHScrollViewDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate,CLLocationManagerDelegate>
+@interface CHMapViewVC : UIViewController <GMSMapViewDelegate,MapVCSeachViewDelegate,MapVCMenuViewDelegate,CHImagePickerViewDelegate,CHScrollViewDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate,CLLocationManagerDelegate,UITextFieldDelegate>
 
 @property (nonatomic) BOOL isTripCreate;//確認是否已經建立local旅程, 初始化判斷用
 
 @property (nonatomic, retain) CLLocationManager *locationManager; // 紀錄GPS
+@property (nonatomic, retain) NSMutableDictionary *tripInfo; // 紀錄Trip 資料
 
 @property (weak, nonatomic) IBOutlet UIView *mapDisplayView;
 @property (strong, nonatomic) GMSMapView *mapView;

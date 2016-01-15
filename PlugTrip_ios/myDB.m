@@ -175,7 +175,7 @@ myDB *sharedInstance;
 
 -(void)createGPSTable:(NSString *)tableName{
     
-    NSString *createInfo = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS %@ (imageLatitude TEXT, imageLongtitude TEXT, createTime TEXT)",tableName];
+    NSString *createInfo = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS %@ (userLatitude TEXT, userLongtitude TEXT, createTime TEXT)",tableName];
     
     if(![db executeUpdate:createInfo])
     {
@@ -205,7 +205,7 @@ myDB *sharedInstance;
 
 -(void)insertGPSTable:(NSString *)tableName andLatitude:(NSString *)latitude andLongtitude:(NSString *)longtitude{
     
-    NSString *insertInfo = [NSString stringWithFormat:@"INSERT INTO %@ (imageLatitude,imageLongtitude) VALUES (?,?)",tableName];
+    NSString *insertInfo = [NSString stringWithFormat:@"INSERT INTO %@ (userLatitude,userLongtitude) VALUES (?,?)",tableName];
     
     if (![db executeUpdate:insertInfo,latitude,longtitude]) {
         NSLog(@"Could not insert data: %@", [db lastErrorMessage]);

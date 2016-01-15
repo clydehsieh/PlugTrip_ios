@@ -16,6 +16,9 @@
  103  addPhotoBtn
  
  201  modeBtnBackgroundView
+ 202  coverTripTitleView
+ 
+ 301  tripTitleText
  
  */
 
@@ -49,8 +52,14 @@ NSString *const tableName_userGPS = @"user_GPS";
     _isInitialLayout = NO;
     
     _isTripCreate =  [[[NSUserDefaults standardUserDefaults] objectForKey:@"isTripCreate"] boolValue];
+    _tripInfo = [[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"];
+    if (!_tripInfo) {
+        _tripInfo = [[NSMutableDictionary alloc]init];
+        [_tripInfo setObject:@"Trip title" forKey:@"tripTitle"];
+    }
     
     _modes = [[NSArray alloc]initWithObjects:@"分析",@"紀錄",@"同夥",@"旅程", nil];
+
     
     //GPS init
     if (_locationManager == nil)
@@ -86,6 +95,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         //init layout
         [self initMapView];
         [self initSearchView];
+        [self initTripTitleText];
         [self initMenuView];
         [self initButtons];
         [self initScrollView];
@@ -146,6 +156,27 @@ NSString *const tableName_userGPS = @"user_GPS";
     [_mapDisplayView insertSubview:sView atIndex:4];
 }
 
+-(void)initTripTitleText{
+    
+    UITextField *tripTitleText = [[UITextField alloc]initWithFrame:CGRectMake(54, 5 + 44 +5, 100, 22)];
+    tripTitleText.text = _tripInfo[@"tripTitle"];
+    tripTitleText.backgroundColor = [UIColor clearColor];
+    tripTitleText.layer.borderWidth = 0.5f;
+    tripTitleText.layer.borderColor = [[UIColor clearColor]CGColor];
+    tripTitleText.tag = 301;
+    tripTitleText.delegate = self;
+    tripTitleText.hidden = YES;
+//    tripTitleText.enabled = NO;
+    [_mapDisplayView addSubview:tripTitleText];
+    
+    UIView *coverTripTitleView = [[UIView alloc]initWithFrame:tripTitleText.frame];
+    coverTripTitleView.tag = 202;
+    coverTripTitleView.hidden = YES;
+    [_mapDisplayView addSubview:coverTripTitleView];
+    UILongPressGestureRecognizer *recog = [[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(editTripTitle:)];
+    [coverTripTitleView addGestureRecognizer:recog];
+    
+}
 
 -(void)initButtons{
     
@@ -400,6 +431,12 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
+-(void)editTripTitle:(UIGestureRecognizer *)recog{
+    
+    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
+    [tripTitleText becomeFirstResponder];
+    
+}
 
 #pragma mark - MapVCSeachViewDelegate
 -(void)didSelectTableSearchResultLocationAtLatitude:(NSString *)latitude andLongitude:(NSString *)longitude{
@@ -422,6 +459,7 @@ NSString *const tableName_userGPS = @"user_GPS";
             break;
         case 3:
             //旅程mode
+            [self drawPolyLinesOnMap];
             break;
         default:
             break;
@@ -563,11 +601,18 @@ NSString *const tableName_userGPS = @"user_GPS";
     [imageScrollView setImageAry:images];
 //    [self setImageDisplayScrollView:images];
 
+    //show Trip title text
+    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
+    tripTitleText.hidden = NO;
+    
+    UIView *coverTripTitleView = (UIView *)[_mapDisplayView viewWithTag:202];
+    coverTripTitleView.hidden = NO;
 
     //Create  Trip
     _isTripCreate = YES;
     [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:_isTripCreate] forKey:@"isTripCreate"];
     NSLog(@"Trip Created!");
+    
     
     //Start to record GPS
     [_locationManager startUpdatingLocation];
@@ -603,6 +648,11 @@ NSString *const tableName_userGPS = @"user_GPS";
 didChangeCameraPosition:(GMSCameraPosition *)position
 {
     //
+    
+    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
+    [tripTitleText resignFirstResponder];
+    
+
 }
 
 // 停止
@@ -658,7 +708,33 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     
 }
 
+-(void)drawPolyLinesOnMap{
+    
+    
+    NSMutableArray *queryGPSTableResult=[[NSMutableArray alloc]init];
+    __block float latitude;
+    __block float longitude;
 
+    
+    queryGPSTableResult = [[myDB sharedInstance]queryWithTableName:tableName_userGPS];
+//    NSLog(@"%@",queryGPSTableResult);
+    
+    GMSMutablePath *path = [GMSMutablePath path];
+    
+    if (queryGPSTableResult) {
+        [queryGPSTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
+            latitude  = [dict[@"userLatitude"]   floatValue];
+            longitude = [dict[@"userLongtitude"] floatValue];
+            [path addCoordinate:CLLocationCoordinate2DMake(latitude, longitude)];
+        }];
+        
+        GMSPolyline *rectangle = [GMSPolyline polylineWithPath:path];
+        rectangle.map = _mapView;
+        NSLog(@"Drawing path on map");
+    }
+
+
+}
 
 
 /*
@@ -710,6 +786,47 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     [[myDB sharedInstance]insertGPSTable:tableName_userGPS andLatitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.latitude] andLongtitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.longitude]];
 
 }
+
+#pragma mark - UIText hide keyboard & Delegates
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
+    
+    //touch other view
+    if (![tripTitleText isExclusiveTouch]) {
+        [tripTitleText resignFirstResponder];
+    }
+    
+
+    
+}
+
+-(BOOL) textFieldShouldReturn:(UITextField *)textField{
+    
+    [textField resignFirstResponder];
+    return YES;
+}
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField{
+    
+    textField.backgroundColor = [UIColor whiteColor];
+    textField.layer.borderColor = [[UIColor blackColor]CGColor];
+}
+
+- (void)textFieldDidEndEditing:(UITextField *)textField{
+    
+    textField.backgroundColor = [UIColor clearColor];
+    textField.layer.borderColor = [[UIColor clearColor]CGColor];
+    
+    if ([textField.text isEqualToString:@""]) {
+        textField.text = _tripInfo[@"tripTitle"];
+    }else{
+        [_tripInfo setObject:textField.text forKey:@"tripTitle"];
+        [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
+    }
+
+}
+
 
 @end
 

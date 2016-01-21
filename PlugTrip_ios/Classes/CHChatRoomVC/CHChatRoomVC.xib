@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="14F1605" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CHChatRoomVC">
+            <connections>
+                <outlet property="backBtn" destination="pir-fH-Kir" id="tZI-5c-ToU"/>
+                <outlet property="messageContentTableView" destination="6YE-5H-4ae" id="Cjd-AJ-5uf"/>
+                <outlet property="messageTextField" destination="xcr-5e-KHY" id="A6D-9f-uRY"/>
+                <outlet property="messageViewShiftForYaxis" destination="Mmc-dy-4Ms" id="0uO-9e-HrR"/>
+                <outlet property="sendMessageBtn" destination="PLe-kP-TgP" id="0Mp-JW-TI6"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="pas-po-kcD" userLabel="TopView">
+                    <rect key="frame" x="0.0" y="20" width="320" height="44"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pir-fH-Kir">
+                            <rect key="frame" x="10" y="7" width="34" height="30"/>
+                            <state key="normal" title="Back"/>
+                            <connections>
+                                <action selector="backBtnAction:" destination="-1" eventType="touchUpInside" id="Hff-hs-VzQ"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="44" id="N37-iy-9lv"/>
+                        <constraint firstItem="pir-fH-Kir" firstAttribute="centerY" secondItem="pas-po-kcD" secondAttribute="centerY" id="hPD-ae-MoB"/>
+                        <constraint firstItem="pir-fH-Kir" firstAttribute="leading" secondItem="pas-po-kcD" secondAttribute="leading" constant="10" id="qQg-2U-0BB"/>
+                    </constraints>
+                </view>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Thw-uj-ACR" userLabel="MassageView">
+                    <rect key="frame" x="0.0" y="524" width="320" height="44"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="PLe-kP-TgP">
+                            <rect key="frame" x="279" y="7" width="36" height="30"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="36" id="bTT-au-IkW"/>
+                            </constraints>
+                            <state key="normal" title="Send"/>
+                            <connections>
+                                <action selector="sendBtnAction:" destination="-1" eventType="touchUpInside" id="fxo-SA-YdW"/>
+                            </connections>
+                        </button>
+                        <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="xcr-5e-KHY">
+                            <rect key="frame" x="5" y="5" width="269" height="34"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <textInputTraits key="textInputTraits"/>
+                        </textField>
+                    </subviews>
+                    <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="PLe-kP-TgP" firstAttribute="leading" secondItem="xcr-5e-KHY" secondAttribute="trailing" constant="5" id="7Du-Jh-lnH"/>
+                        <constraint firstAttribute="height" constant="44" id="Kgc-Bc-3L6"/>
+                        <constraint firstItem="xcr-5e-KHY" firstAttribute="top" secondItem="Thw-uj-ACR" secondAttribute="top" constant="5" id="dqD-53-LUA"/>
+                        <constraint firstAttribute="trailing" secondItem="PLe-kP-TgP" secondAttribute="trailing" constant="5" id="jSJ-zG-buZ"/>
+                        <constraint firstItem="xcr-5e-KHY" firstAttribute="leading" secondItem="Thw-uj-ACR" secondAttribute="leading" constant="5" id="lSk-51-fSb"/>
+                        <constraint firstItem="PLe-kP-TgP" firstAttribute="centerY" secondItem="Thw-uj-ACR" secondAttribute="centerY" id="vdt-kr-KhI"/>
+                        <constraint firstAttribute="bottom" secondItem="xcr-5e-KHY" secondAttribute="bottom" constant="5" id="w6N-Og-xr5"/>
+                    </constraints>
+                </view>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="6YE-5H-4ae">
+                    <rect key="frame" x="0.0" y="64" width="320" height="460"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                </tableView>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="Thw-uj-ACR" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="1xa-hd-hKH"/>
+                <constraint firstItem="6YE-5H-4ae" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="8iJ-h1-unY"/>
+                <constraint firstItem="6YE-5H-4ae" firstAttribute="top" secondItem="pas-po-kcD" secondAttribute="bottom" id="DeB-H4-9Xz"/>
+                <constraint firstItem="pas-po-kcD" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="FEc-Lu-4bG"/>
+                <constraint firstItem="pas-po-kcD" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="20" id="Gh1-A2-uWB"/>
+                <constraint firstAttribute="bottom" secondItem="Thw-uj-ACR" secondAttribute="bottom" id="Mmc-dy-4Ms"/>
+                <constraint firstAttribute="trailing" secondItem="pas-po-kcD" secondAttribute="trailing" id="Roi-pQ-aIV"/>
+                <constraint firstAttribute="trailing" secondItem="Thw-uj-ACR" secondAttribute="trailing" id="cAx-Jt-hLo"/>
+                <constraint firstItem="Thw-uj-ACR" firstAttribute="top" secondItem="6YE-5H-4ae" secondAttribute="bottom" id="e6P-iu-gtV"/>
+                <constraint firstAttribute="trailing" secondItem="6YE-5H-4ae" secondAttribute="trailing" id="ja8-Rh-49S"/>
+            </constraints>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+        </view>
+    </objects>
+</document>

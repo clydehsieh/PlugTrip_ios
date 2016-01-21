@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		3DD0FD0E461D75CD3BCD7A3C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BD3503176144C23B38431939 /* libPods.a */; };
+		EC37A03F1C4FB1E600215003 /* BCKeychainManager.m in Sources */ = {isa = PBXBuildFile; fileRef = EC37A03E1C4FB1E600215003 /* BCKeychainManager.m */; };
+		EC37A0451C50881400215003 /* CHChatRoomSettingVC.m in Sources */ = {isa = PBXBuildFile; fileRef = EC37A0431C50881400215003 /* CHChatRoomSettingVC.m */; };
+		EC37A0461C50881400215003 /* CHChatRoomSettingVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC37A0441C50881400215003 /* CHChatRoomSettingVC.xib */; };
 		EC8C8EF01C326430005BADBC /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8EEF1C326430005BADBC /* libsqlite3.tbd */; };
 		EC8C8EF61C327193005BADBC /* mydatabase.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EC8C8EF51C327193005BADBC /* mydatabase.sqlite */; };
 		EC8C8EF71C327193005BADBC /* mydatabase.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EC8C8EF51C327193005BADBC /* mydatabase.sqlite */; };
@@ -33,6 +36,8 @@
 		EC8C8F281C362F4A005BADBC /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8F271C362F4A005BADBC /* libz.tbd */; };
 		EC8C8F2A1C36AF4B005BADBC /* Accounts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8F291C36AF4B005BADBC /* Accounts.framework */; };
 		EC8C8F2C1C36AF54005BADBC /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8F2B1C36AF54005BADBC /* Social.framework */; };
+		ECD302831C4F334F00AFE746 /* CHChatRoomVC.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD302811C4F334F00AFE746 /* CHChatRoomVC.m */; };
+		ECD302841C4F334F00AFE746 /* CHChatRoomVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = ECD302821C4F334F00AFE746 /* CHChatRoomVC.xib */; };
 		ECD493B51C28E9370043BE54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493B41C28E9370043BE54 /* main.m */; };
 		ECD493B81C28E9370043BE54 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493B71C28E9370043BE54 /* AppDelegate.m */; };
 		ECD493BE1C28E9370043BE54 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ECD493BC1C28E9370043BE54 /* Main.storyboard */; };
@@ -82,6 +87,11 @@
 		683A63D2D4AF3E9A491058A9 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		92DA014E37C9787200AD1D99 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		BD3503176144C23B38431939 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		EC37A03D1C4FB1E600215003 /* BCKeychainManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BCKeychainManager.h; sourceTree = "<group>"; };
+		EC37A03E1C4FB1E600215003 /* BCKeychainManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BCKeychainManager.m; sourceTree = "<group>"; };
+		EC37A0421C50881400215003 /* CHChatRoomSettingVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHChatRoomSettingVC.h; path = Classes/CHChatRoomSettingVC/CHChatRoomSettingVC.h; sourceTree = "<group>"; };
+		EC37A0431C50881400215003 /* CHChatRoomSettingVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHChatRoomSettingVC.m; path = Classes/CHChatRoomSettingVC/CHChatRoomSettingVC.m; sourceTree = "<group>"; };
+		EC37A0441C50881400215003 /* CHChatRoomSettingVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = CHChatRoomSettingVC.xib; path = Classes/CHChatRoomSettingVC/CHChatRoomSettingVC.xib; sourceTree = "<group>"; };
 		EC8C8EEF1C326430005BADBC /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		EC8C8EF51C327193005BADBC /* mydatabase.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = mydatabase.sqlite; sourceTree = "<group>"; };
 		EC8C8EF91C3271CE005BADBC /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
@@ -113,6 +123,9 @@
 		EC8C8F271C362F4A005BADBC /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		EC8C8F291C36AF4B005BADBC /* Accounts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accounts.framework; path = System/Library/Frameworks/Accounts.framework; sourceTree = SDKROOT; };
 		EC8C8F2B1C36AF54005BADBC /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
+		ECD302801C4F334F00AFE746 /* CHChatRoomVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHChatRoomVC.h; path = Classes/CHChatRoomVC/CHChatRoomVC.h; sourceTree = "<group>"; };
+		ECD302811C4F334F00AFE746 /* CHChatRoomVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHChatRoomVC.m; path = Classes/CHChatRoomVC/CHChatRoomVC.m; sourceTree = "<group>"; };
+		ECD302821C4F334F00AFE746 /* CHChatRoomVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = CHChatRoomVC.xib; path = Classes/CHChatRoomVC/CHChatRoomVC.xib; sourceTree = "<group>"; };
 		ECD493B01C28E9370043BE54 /* PlugTrip_ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlugTrip_ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ECD493B41C28E9370043BE54 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		ECD493B61C28E9370043BE54 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -229,6 +242,26 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		EC37A03C1C4FB1E600215003 /* BCKeychainManager */ = {
+			isa = PBXGroup;
+			children = (
+				EC37A03D1C4FB1E600215003 /* BCKeychainManager.h */,
+				EC37A03E1C4FB1E600215003 /* BCKeychainManager.m */,
+			);
+			name = BCKeychainManager;
+			path = Classes/BCKeychainManager;
+			sourceTree = "<group>";
+		};
+		EC37A0411C5087D800215003 /* CHChatRoomSettingVC */ = {
+			isa = PBXGroup;
+			children = (
+				EC37A0421C50881400215003 /* CHChatRoomSettingVC.h */,
+				EC37A0431C50881400215003 /* CHChatRoomSettingVC.m */,
+				EC37A0441C50881400215003 /* CHChatRoomSettingVC.xib */,
+			);
+			name = CHChatRoomSettingVC;
+			sourceTree = "<group>";
+		};
 		EC8C8EFB1C327788005BADBC /* fmdb */ = {
 			isa = PBXGroup;
 			children = (
@@ -256,6 +289,16 @@
 			);
 			name = CHScrollView;
 			path = Classes/CHScrollView;
+			sourceTree = "<group>";
+		};
+		ECD3027F1C4F333100AFE746 /* CHChatRoomVC */ = {
+			isa = PBXGroup;
+			children = (
+				ECD302801C4F334F00AFE746 /* CHChatRoomVC.h */,
+				ECD302811C4F334F00AFE746 /* CHChatRoomVC.m */,
+				ECD302821C4F334F00AFE746 /* CHChatRoomVC.xib */,
+			);
+			name = CHChatRoomVC;
 			sourceTree = "<group>";
 		};
 		ECD493A71C28E9370043BE54 = {
@@ -332,6 +375,9 @@
 		ECD493EC1C2A59800043BE54 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				EC37A03C1C4FB1E600215003 /* BCKeychainManager */,
+				EC37A0411C5087D800215003 /* CHChatRoomSettingVC */,
+				ECD3027F1C4F333100AFE746 /* CHChatRoomVC */,
 				EC8C8F0F1C33BD30005BADBC /* CHScrollView */,
 				EC8C8EFB1C327788005BADBC /* fmdb */,
 				ECD493FC1C30BE010043BE54 /* CHImagePicker */,
@@ -502,7 +548,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				ECD493F41C2A5A440043BE54 /* MapVCSearchView.xib in Resources */,
+				EC37A0461C50881400215003 /* CHChatRoomSettingVC.xib in Resources */,
 				ECD494171C30CBD60043BE54 /* 2_unchecked.png in Resources */,
+				ECD302841C4F334F00AFE746 /* CHChatRoomVC.xib in Resources */,
 				ECD4940B1C30BE010043BE54 /* CHImagePickerViewCell.xib in Resources */,
 				ECD493C31C28E9370043BE54 /* LaunchScreen.storyboard in Resources */,
 				ECD494071C30BE010043BE54 /* CHImagePickerHeaderView.xib in Resources */,
@@ -585,13 +633,16 @@
 				ECD494061C30BE010043BE54 /* CHImagePickerHeaderView.m in Sources */,
 				ECD493E81C2A4E960043BE54 /* CHLoginVC.m in Sources */,
 				EC8C8F0B1C327788005BADBC /* FMResultSet.m in Sources */,
+				EC37A03F1C4FB1E600215003 /* BCKeychainManager.m in Sources */,
 				ECD493F51C2A5A440043BE54 /* SelectedLocation.m in Sources */,
 				ECD493FA1C2A748C0043BE54 /* MapVCMenuView.m in Sources */,
+				ECD302831C4F334F00AFE746 /* CHChatRoomVC.m in Sources */,
 				EC8C8F121C33BD30005BADBC /* CHScrollView.m in Sources */,
 				EC8C8F071C327788005BADBC /* FMDatabase.m in Sources */,
 				EC8C8F0E1C3277B7005BADBC /* myDB.m in Sources */,
 				ECD4940A1C30BE010043BE54 /* CHImagePickerViewCell.m in Sources */,
 				EC8C8F081C327788005BADBC /* FMDatabaseAdditions.m in Sources */,
+				EC37A0451C50881400215003 /* CHChatRoomSettingVC.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

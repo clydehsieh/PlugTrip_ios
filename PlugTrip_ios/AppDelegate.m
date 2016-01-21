@@ -61,6 +61,7 @@
     
 
     // Initialize Parse.
+    [Parse enableLocalDatastore];
     [Parse setApplicationId:@"nGE6doL5SP4k9DJTWRUeevqVM6iANkL1XFavb7X0"
                   clientKey:@"ZAbh6NUI53puW5CbSDzTq3yksrTp5kTozDKOoyNa"];
     // Register for Push Notitications
@@ -72,10 +73,12 @@
     [application registerUserNotificationSettings:settings];
     [application registerForRemoteNotifications];
     
+    
     return YES;
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+    
     // Store the deviceToken in the current installation and save it to Parse.
     PFInstallation *currentInstallation = [PFInstallation currentInstallation];
     [currentInstallation setDeviceTokenFromData:deviceToken];
@@ -83,7 +86,9 @@
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    [PFPush handlePush:userInfo];
+//    [PFPush handlePush:userInfo];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"ChatRoomInfo" object:nil userInfo:userInfo];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {

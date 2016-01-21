@@ -9,15 +9,20 @@
 #import <UIKit/UIKit.h>
 #import <GoogleMaps/GoogleMaps.h>
 #import <CoreLocation/CoreLocation.h>
+#import <Parse/Parse.h>
 #import "MapVCSearchView.h"
 #import "MapVCMenuView.h"
 #import "CHImagePickerView.h"
 #import "CHScrollView.h"
 #import "myDB.h"
+#import "CHChatRoomSettingVC.h"
+#import "CHChatRoomVC.h"
 
 @interface CHMapViewVC : UIViewController <GMSMapViewDelegate,MapVCSeachViewDelegate,MapVCMenuViewDelegate,CHImagePickerViewDelegate,CHScrollViewDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate,CLLocationManagerDelegate,UITextFieldDelegate>
 
 @property (nonatomic) BOOL isTripCreate;//確認是否已經建立local旅程, 初始化判斷用
+@property (nonatomic) BOOL isChatRoomJoin;//確認是否已經加入聊天室, 初始化判斷用
+@property (nonatomic) BOOL isCheckChatRoomJoin;//確認是否完成加入聊天室判斷, 初始化判斷用
 
 @property (nonatomic, retain) CLLocationManager *locationManager; // 紀錄GPS
 @property (nonatomic, retain) NSMutableDictionary *tripInfo; // 紀錄Trip 資料

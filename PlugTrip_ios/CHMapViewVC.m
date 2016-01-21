@@ -14,6 +14,7 @@
  101  menuBtn
  102  modeBtn
  103  addPhotoBtn
+ 104  chatRoomBtn
  
  201  modeBtnBackgroundView
  202  coverTripTitleView
@@ -49,14 +50,21 @@ NSString *const tableName_userGPS = @"user_GPS";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    //
     _isInitialLayout = NO;
     
+    // check is trip created or not
     _isTripCreate =  [[[NSUserDefaults standardUserDefaults] objectForKey:@"isTripCreate"] boolValue];
     _tripInfo = [[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"];
     if (!_tripInfo) {
         _tripInfo = [[NSMutableDictionary alloc]init];
         [_tripInfo setObject:@"Trip title" forKey:@"tripTitle"];
     }
+    
+    // check is chatRoom joined or not
+    _isCheckChatRoomJoin = NO;
+    [self checkJoinChatRoomState:@"000A"];
+//     _isChatRoomJoin =  [[[NSUserDefaults standardUserDefaults] objectForKey:@"isChatRoomJoin"] boolValue];
     
     _modes = [[NSArray alloc]initWithObjects:@"分析",@"紀錄",@"同夥",@"旅程", nil];
 
@@ -72,7 +80,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         
     }
     
-    
+    //init trip state
     if (!_isTripCreate) {
         //尚未建立local旅程, 初始模式為分析
         _currentModeType = 0;
@@ -83,7 +91,8 @@ NSString *const tableName_userGPS = @"user_GPS";
         NSLog(@"Trip Created!Start 紀錄 mode");
     }
     
-    
+    // to receive push notification info
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveChatRoomMessage:) name:@"ChatRoomInfo" object:nil];
     
 
 }
@@ -196,7 +205,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     UIButton *modeBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
     modeBtn.tag = 102;
-    [modeBtn addTarget:self action:@selector(changeMode:) forControlEvents:UIControlEventTouchDown];
+    [modeBtn addTarget:self action:@selector(didSelectModeBtn:) forControlEvents:UIControlEventTouchDown];
     [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
     [modeBtn setBackgroundColor:[UIColor blueColor]];
 //    [modeBtn setBackgroundImage:[UIImage imageNamed:@"s1_1.png"] forState:UIControlStateNormal];
@@ -204,11 +213,19 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     //add photo btn
     UIButton *addPhotoBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH*2, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
-    modeBtn.tag = 103;
+    addPhotoBtn.tag = 103;
     [addPhotoBtn addTarget:self action:@selector(addPhotoBtnAction:) forControlEvents:UIControlEventTouchDown];
     [addPhotoBtn setTitle:@"+" forState:UIControlStateNormal];
     [addPhotoBtn setBackgroundColor:[UIColor blueColor]];
     [_mapDisplayView addSubview:addPhotoBtn];
+    
+    // chat room btn
+    UIButton *chatRoomBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT*2, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
+    chatRoomBtn.tag = 104;
+    [chatRoomBtn addTarget:self action:@selector(showChatRoom:) forControlEvents:UIControlEventTouchDown];
+    [chatRoomBtn setTitle:@"聊天室" forState:UIControlStateNormal];
+    [chatRoomBtn setBackgroundColor:[UIColor blueColor]];
+    [_mapDisplayView addSubview:chatRoomBtn];
     
 }
 
@@ -326,7 +343,7 @@ NSString *const tableName_userGPS = @"user_GPS";
 
 }
 
--(void)changeMode:(UIButton *)sender{
+-(void)didSelectModeBtn:(UIButton *)sender{
     
     if (_currentModeType == 0) {
         //點選"分析"按鈕時, 跳出照片
@@ -402,12 +419,19 @@ NSString *const tableName_userGPS = @"user_GPS";
         [alert addAction:noButton];
         
         [self presentViewController:alert animated:YES completion:nil];
-        
-        
-        
-        
-        
 
+    }else if(_currentModeType == 1){
+        //紀錄
+        NSLog(@"紀錄mode");
+        
+    }else if(_currentModeType == 2){
+        //同夥
+        NSLog(@"同夥mode");
+        
+    }else if(_currentModeType == 3){
+        //旅程
+        NSLog(@"旅程mode");
+        
     }
     
 //    _currentModeType +=1;
@@ -431,6 +455,13 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
+-(void)showChatRoom:(UIButton *)sender{
+    
+    CHChatRoomVC *vc = [[CHChatRoomVC alloc]init];
+    [self presentViewController:vc animated:YES completion:nil];
+    
+}
+
 -(void)editTripTitle:(UIGestureRecognizer *)recog{
     
     UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
@@ -448,6 +479,8 @@ NSString *const tableName_userGPS = @"user_GPS";
 #pragma mark - menu
 -(void)didSelectTheMenu:(UIButton *)btn;
 {
+    
+    // Change mode button
     switch (btn.tag) {
         case 1:
             //紀錄mode
@@ -456,9 +489,24 @@ NSString *const tableName_userGPS = @"user_GPS";
         case 2:
             //同夥mode
             _currentModeType = 2;
+            
+            // check if in chatroom when viewdidload
+            // when finish check block, isCheckChatRoomJoin = YES
+            // if not finish check block yet, unable to call action sheet
+            // if not in chatroom, show action sheet to start to join
+            if (_isCheckChatRoomJoin) {
+                if (!_isChatRoomJoin) {
+                    [self showChatRoomActionSheet];
+                }
+            }else{
+                NSLog(@"尚未完成ChatRoomJoin block");
+            }
+            
             break;
+            
         case 3:
             //旅程mode
+            _currentModeType = 3;
             [self drawPolyLinesOnMap];
             break;
         default:
@@ -467,8 +515,8 @@ NSString *const tableName_userGPS = @"user_GPS";
 
     UIButton *modeBtn = (UIButton *)[_mapDisplayView viewWithTag:102];
     [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
-    
 
+  
 }
 
 #pragma mark - CHImagePickerView setting & delegate
@@ -779,8 +827,8 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
     
-    NSLog(@"/n lat: %f",_locationManager.location.coordinate.latitude);
-    NSLog(@" lon: %f/n",_locationManager.location.coordinate.longitude);
+//    NSLog(@"/n lat: %f",_locationManager.location.coordinate.latitude);
+//    NSLog(@" lon: %f/n",_locationManager.location.coordinate.longitude);
     
     //存入table
     [[myDB sharedInstance]insertGPSTable:tableName_userGPS andLatitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.latitude] andLongtitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.longitude]];
@@ -827,6 +875,93 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 
 }
 
+#pragma mark - Notification 
+-(void)didReceiveChatRoomMessage:(NSNotification *)notification{
+    
+    NSDictionary *userInfo = [notification userInfo];
+    NSString *receivedMessage = userInfo[@"aps"][@"alert"];
+    
+    NSLog(@"%@", receivedMessage);
+}
+
+#pragma mark - Chat room actions
+
+-(void)checkJoinChatRoomState:(NSString *)userID{
+    
+    //retrive data from cloud
+    PFQuery *query = [PFQuery queryWithClassName:@"Member"];
+    [query whereKey:@"userID" equalTo:userID];
+    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+
+        if (objects.count ==0) {
+            _isChatRoomJoin = NO;
+            NSLog(@"使用者%@ 尚未加入聊天室",userID);
+        }else if (objects.count ==1) {
+            
+            // get the roomID
+            PFObject *memberObject = objects[0];
+            NSLog(@"使用者%@ 已加入%@聊天室",[memberObject objectForKey:@"userID"],[memberObject objectForKey:@"roomID"]);
+            
+            // use roomID to get host
+            PFQuery *queryHost = [PFQuery queryWithClassName:@"Rooms"];
+            [queryHost whereKey:@"roomID" equalTo:[memberObject objectForKey:@"roomID"]];
+            NSString* host = [[[queryHost findObjects] firstObject] objectForKey:@"roomHostID"];
+            NSLog(@"The %@ room host is %@",[memberObject objectForKey:@"roomID"],host);
+            
+            // use roomID to get all the members
+            PFQuery *queryForAllMember = [PFQuery queryWithClassName:@"Member"];
+            [queryForAllMember whereKey:@"roomID" equalTo:[memberObject objectForKey:@"roomID"]];
+            NSArray* allMembers = [queryForAllMember findObjects];
+            [allMembers enumerateObjectsUsingBlock:^(PFObject *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                NSLog(@"The %@ room member is %@",[memberObject objectForKey:@"roomID"],[obj objectForKey:@"userID"]);
+            }];
+            
+            _isChatRoomJoin = YES;
+        }else{
+            NSLog(@"錯誤：使用者同時存在%lu個聊天室",(unsigned long)objects.count);
+        }
+
+    }];
+    
+    
+}
+
+-(void)showChatRoomActionSheet{
+    
+//    UIAlertController *allyChatRoom = [UIAlertController alertControllerWithTitle:@"Test" message:@"Mes" preferredStyle:UIAlertControllerStyleActionSheet];
+    
+    UIAlertController *allyChatRoom = [[UIAlertController alloc]init];
+    
+    UIAlertAction *joinChatRoom = [UIAlertAction actionWithTitle:@"加入" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        NSLog(@"Join chat room  Action");
+        [self showChatRoomSettingVC];
+        
+    }];
+    
+    UIAlertAction *createChatRoom = [UIAlertAction actionWithTitle:@"新開群組" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        NSLog(@"Create chat room  Action");
+        [self showChatRoomSettingVC];
+        
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        NSLog(@"cancel chat room Action");
+    }];
+    
+    [allyChatRoom addAction:joinChatRoom];
+    [allyChatRoom addAction:createChatRoom];
+    [allyChatRoom addAction:cancel];
+    
+    [self presentViewController:allyChatRoom animated:YES completion:nil];
+
+}
+
+-(void)showChatRoomSettingVC{
+    
+    CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
+    [self presentViewController:vc animated:YES completion:nil];
+    
+}
 
 @end
 

@@ -21,9 +21,15 @@
 @interface CHMapViewVC : UIViewController <GMSMapViewDelegate,MapVCSeachViewDelegate,MapVCMenuViewDelegate,CHImagePickerViewDelegate,CHScrollViewDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate,CLLocationManagerDelegate,UITextFieldDelegate>
 
 @property (nonatomic) BOOL isTripCreate;//確認是否已經建立local旅程, 初始化判斷用
+
+// Chating room
 @property (nonatomic) BOOL isChatRoomJoin;//確認是否已經加入聊天室, 初始化判斷用
 @property (nonatomic) BOOL isCheckChatRoomJoin;//確認是否完成加入聊天室判斷, 初始化判斷用
+@property (nonatomic) NSString *chatRoomID;//現有加入的聊天室ID
+@property (nonatomic) NSMutableArray *chatRoomMembers;//現有加入的聊天室成員, 內包PFObject資料
+@property (nonatomic) NSString *deviceUserIDOfChatRoom;//裝置持有人ID or UUID?
 
+//GPS
 @property (nonatomic, retain) CLLocationManager *locationManager; // 紀錄GPS
 @property (nonatomic, retain) NSMutableDictionary *tripInfo; // 紀錄Trip 資料
 

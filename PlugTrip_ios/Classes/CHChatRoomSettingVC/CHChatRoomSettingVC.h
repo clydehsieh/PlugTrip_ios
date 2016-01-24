@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <Parse/Parse.h>
 
 @interface CHChatRoomSettingVC : UIViewController <UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate>
 
@@ -18,6 +19,8 @@
 @property (weak, nonatomic) IBOutlet UITextField *userNicknameTF;
 @property (weak, nonatomic) IBOutlet UILabel *roomIDLabel;
 @property (weak, nonatomic) IBOutlet UILabel *userNicknameLabel;
+
+@property (nonatomic)NSMutableArray *chatRoomMembers;
 @property (weak, nonatomic) IBOutlet UITableView *usersTableView;
 
 @end

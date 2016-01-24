@@ -55,7 +55,8 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     // check is trip created or not
     _isTripCreate =  [[[NSUserDefaults standardUserDefaults] objectForKey:@"isTripCreate"] boolValue];
-    _tripInfo = [[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"];
+    
+    _tripInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"]];
     if (!_tripInfo) {
         _tripInfo = [[NSMutableDictionary alloc]init];
         [_tripInfo setObject:@"Trip title" forKey:@"tripTitle"];
@@ -63,7 +64,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     // check is chatRoom joined or not
     _isCheckChatRoomJoin = NO;
-    [self checkJoinChatRoomState:@"000A"];
+//    [self checkJoinChatRoomStateWithUserID:_deviceUserIDOfChatRoom];
 //     _isChatRoomJoin =  [[[NSUserDefaults standardUserDefaults] objectForKey:@"isChatRoomJoin"] boolValue];
     
     _modes = [[NSArray alloc]initWithObjects:@"分析",@"紀錄",@"同夥",@"旅程", nil];
@@ -184,6 +185,10 @@ NSString *const tableName_userGPS = @"user_GPS";
     [_mapDisplayView addSubview:coverTripTitleView];
     UILongPressGestureRecognizer *recog = [[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(editTripTitle:)];
     [coverTripTitleView addGestureRecognizer:recog];
+    
+    ///!!!:待刪除, 測試用
+    _deviceUserIDOfChatRoom = tripTitleText.text;
+    [self checkJoinChatRoomStateWithUserID:_deviceUserIDOfChatRoom];
     
 }
 
@@ -492,12 +497,17 @@ NSString *const tableName_userGPS = @"user_GPS";
             
             // check if in chatroom when viewdidload
             // when finish check block, isCheckChatRoomJoin = YES
-            // if not finish check block yet, unable to call action sheet
+            // if not finish check block yet, unable to call actions
             // if not in chatroom, show action sheet to start to join
+            // if already in chatroom, show setting VC
             if (_isCheckChatRoomJoin) {
+                
                 if (!_isChatRoomJoin) {
                     [self showChatRoomActionSheet];
+                }else{
+                    [self showChatRoomSettingVC];
                 }
+                
             }else{
                 NSLog(@"尚未完成ChatRoomJoin block");
             }
@@ -869,10 +879,20 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     if ([textField.text isEqualToString:@""]) {
         textField.text = _tripInfo[@"tripTitle"];
     }else{
-        [_tripInfo setObject:textField.text forKey:@"tripTitle"];
+        NSString *string = textField.text;
+        [_tripInfo setObject:string forKey:@"tripTitle"];
         [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
     }
 
+    
+    if (textField.tag == 301) {
+        ///!!!:待刪除, 測試用
+        _deviceUserIDOfChatRoom = textField.text;
+        _isCheckChatRoomJoin = NO;
+        [self checkJoinChatRoomStateWithUserID:_deviceUserIDOfChatRoom];
+    }
+    
+    
 }
 
 #pragma mark - Notification 
@@ -886,7 +906,8 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 
 #pragma mark - Chat room actions
 
--(void)checkJoinChatRoomState:(NSString *)userID{
+//確認是否已加入聊天室
+-(void)checkJoinChatRoomStateWithUserID:(NSString *)userID{
     
     //retrive data from cloud
     PFQuery *query = [PFQuery queryWithClassName:@"Member"];
@@ -900,28 +921,118 @@ idleAtCameraPosition:(GMSCameraPosition *)position
             
             // get the roomID
             PFObject *memberObject = objects[0];
+            _chatRoomID = [memberObject objectForKey:@"roomID"];
             NSLog(@"使用者%@ 已加入%@聊天室",[memberObject objectForKey:@"userID"],[memberObject objectForKey:@"roomID"]);
-            
-            // use roomID to get host
-            PFQuery *queryHost = [PFQuery queryWithClassName:@"Rooms"];
-            [queryHost whereKey:@"roomID" equalTo:[memberObject objectForKey:@"roomID"]];
-            NSString* host = [[[queryHost findObjects] firstObject] objectForKey:@"roomHostID"];
-            NSLog(@"The %@ room host is %@",[memberObject objectForKey:@"roomID"],host);
-            
-            // use roomID to get all the members
-            PFQuery *queryForAllMember = [PFQuery queryWithClassName:@"Member"];
-            [queryForAllMember whereKey:@"roomID" equalTo:[memberObject objectForKey:@"roomID"]];
-            NSArray* allMembers = [queryForAllMember findObjects];
-            [allMembers enumerateObjectsUsingBlock:^(PFObject *obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                NSLog(@"The %@ room member is %@",[memberObject objectForKey:@"roomID"],[obj objectForKey:@"userID"]);
-            }];
-            
+           
+            // 第一次開啟app, 只確認狀態不開啟setting
+            if (_isCheckChatRoomJoin) {
+                [self showChatRoomSettingVC];
+            }
             _isChatRoomJoin = YES;
+            
         }else{
             NSLog(@"錯誤：使用者同時存在%lu個聊天室",(unsigned long)objects.count);
         }
+        
+        _isCheckChatRoomJoin = YES;
 
     }];
+    
+    
+}
+
+-(void)createChatRoom{
+    
+    PFObject *newRoom = [PFObject objectWithClassName:@"Rooms"];
+    newRoom[@"roomHostID"] = _deviceUserIDOfChatRoom;
+    [newRoom saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+        if (succeeded) {
+            // The object has been saved.
+            NSLog(@"New room created");
+            [self createMember:nil];
+            
+        } else {
+            // There was a problem, check error.description
+            NSLog(@"Fail room created\n\n%@",error.description);
+        }
+        
+    }];
+    
+}
+
+-(void)joinChatRoom:(NSString *)roomID{
+    
+    PFQuery *query = [PFQuery queryWithClassName:@"Member"];
+    [query whereKey:@"roomID" equalTo:roomID];
+    NSArray *result = [query findObjects];
+    
+    if (result.count!=0) {
+        PFObject *newMember = [PFObject objectWithClassName:@"Member"];
+        newMember[@"userID"] = _deviceUserIDOfChatRoom;
+        newMember[@"isHost"] = [NSNumber numberWithBool:NO];
+        newMember[@"roomID"] = roomID;
+        
+        [newMember saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+            if (succeeded) {
+                // The object has been saved.
+                NSLog(@"New member created");
+                
+                //update the deviceUserState
+                [self checkJoinChatRoomStateWithUserID:_deviceUserIDOfChatRoom];
+                
+            } else {
+                // There was a problem, check error.description
+                NSLog(@"Fail room created\n\n%@",error.description);
+            }
+        }];
+    }
+}
+
+-(void)createMember:(NSString*)userID{
+    
+    PFQuery *queryRoomObjectID = [PFQuery queryWithClassName:@"Rooms"];
+    [queryRoomObjectID whereKey:@"roomHostID" equalTo:_deviceUserIDOfChatRoom];
+    PFObject *roomObj = [[queryRoomObjectID findObjects] firstObject];
+    _chatRoomID = roomObj.objectId;
+    
+    PFObject *newMember = [PFObject objectWithClassName:@"Member"];
+    newMember[@"userID"] = _deviceUserIDOfChatRoom;
+    newMember[@"isHost"] = [NSNumber numberWithBool:YES];
+    newMember[@"roomID"] = _chatRoomID;
+    
+    [newMember saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+        if (succeeded) {
+            // The object has been saved.
+            NSLog(@"New member created");
+            
+            [self checkJoinChatRoomStateWithUserID:_deviceUserIDOfChatRoom];
+        } else {
+            // There was a problem, check error.description
+            NSLog(@"Fail room created\n\n%@",error.description);
+        }
+    }];
+    
+}
+
+// 下載聊天室使用者資料
+-(void)loadChatRoomMemberInfo:(NSString *)roomID{
+    
+    // Query members
+    PFQuery *queryResult = [PFQuery queryWithClassName:@"Member"];
+    
+    // query all members
+    [queryResult whereKey:@"roomID" equalTo:_chatRoomID];
+    _chatRoomMembers = [NSMutableArray arrayWithArray:[queryResult findObjects]];
+    NSArray* allMembersArray = [queryResult findObjects];
+    [allMembersArray enumerateObjectsUsingBlock:^(PFObject *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSLog(@"The %@ room member is %@",_chatRoomID,[obj objectForKey:@"userID"]);
+    }];
+    
+    // find the host
+    [queryResult whereKey:@"isHost" equalTo:[NSNumber numberWithBool:YES]];
+    NSArray* hostArray = [queryResult findObjects];
+    NSString* host = [hostArray[0] objectForKey:@"userID"];
+    NSLog(@"The %@ room host is %@",_chatRoomID,host);
     
     
 }
@@ -934,17 +1045,22 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     
     UIAlertAction *joinChatRoom = [UIAlertAction actionWithTitle:@"加入" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         NSLog(@"Join chat room  Action");
-        [self showChatRoomSettingVC];
+        
+        [self showJoinAlert];
+        
+//        [self showChatRoomSettingVC];
         
     }];
     
     UIAlertAction *createChatRoom = [UIAlertAction actionWithTitle:@"新開群組" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         NSLog(@"Create chat room  Action");
-        [self showChatRoomSettingVC];
+        
+        [self createChatRoom];
+       
         
     }];
     
-    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
         NSLog(@"cancel chat room Action");
     }];
     
@@ -956,10 +1072,50 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 
 }
 
+-(void)showJoinAlert{
+    
+    UIAlertController *joinRoomAC = [UIAlertController alertControllerWithTitle:@"輸入聊天室代號" message:nil preferredStyle:UIAlertControllerStyleAlert];
+    
+    // set textfield to AC
+    [joinRoomAC addTextFieldWithConfigurationHandler:^(UITextField *textField){
+        textField.placeholder = @"enter room code";
+    }];
+    
+    // set cancel btn to AC
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        //
+    }];
+    
+    // set ok btn to AC
+    UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"加入" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        UITextField *roomCodeTF = joinRoomAC.textFields.firstObject;
+        NSLog(@"You are search room code:%@",roomCodeTF.text);
+        
+        [self joinChatRoom:roomCodeTF.text];
+        
+    }];
+    
+    // apply btns to AC
+    [joinRoomAC addAction:cancelAction];
+    [joinRoomAC addAction:okAction];
+    
+    // show AC
+    [self presentViewController:joinRoomAC animated:YES completion:nil];
+}
+
 -(void)showChatRoomSettingVC{
     
     CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
-    [self presentViewController:vc animated:YES completion:nil];
+    [self loadChatRoomMemberInfo:_chatRoomID];
+    
+    if (_chatRoomMembers.count !=0) {
+        vc.chatRoomMembers = _chatRoomMembers;
+        [self presentViewController:vc animated:YES completion:nil];
+        vc.roomIDLabel.text =_chatRoomID;
+        vc.userNicknameLabel.text = _deviceUserIDOfChatRoom;
+
+    }
+    
     
 }
 

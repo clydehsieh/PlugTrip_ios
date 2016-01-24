@@ -47,7 +47,7 @@ static NSString *cellIdentifier = @"cell";
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     
-    return users.count;
+    return _chatRoomMembers.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -70,14 +70,9 @@ static NSString *cellIdentifier = @"cell";
         }
     }
     
-
-    
-    
-    
-    
-    
     UILabel *userName = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, 200, cell.frame.size.height)];
-    userName.text = users[indexPath.row];
+    PFObject *obj = _chatRoomMembers[indexPath.row];
+    userName.text = [obj objectForKey:@"userID"];
     [cell addSubview:userName];
     
     return cell;

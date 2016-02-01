@@ -10,7 +10,7 @@
 #import <GoogleMaps/GoogleMaps.h>
 #import <sqlite3.h>
 #import <Parse/Parse.h>
-#import "BCKeychainManager.h"
+
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 

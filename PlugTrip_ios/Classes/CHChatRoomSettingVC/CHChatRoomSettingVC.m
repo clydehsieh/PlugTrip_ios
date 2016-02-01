@@ -21,10 +21,10 @@ static NSString *cellIdentifier = @"cell";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-
     
-    users = [NSMutableArray arrayWithObjects:@"鄭博文",@"謝啟大",@"謝錦輝", nil];
-    
+    _userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"userInfo"]];
+    _userNicknameTF.text = _userInfo[@"nickName"];
+    _userNicknameLabel.text = _userNicknameTF.text;
     _userNicknameTF.delegate = self;
     
     [self initUserTableView];
@@ -72,8 +72,13 @@ static NSString *cellIdentifier = @"cell";
     
     UILabel *userName = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, 200, cell.frame.size.height)];
     PFObject *obj = _chatRoomMembers[indexPath.row];
-    userName.text = [obj objectForKey:@"userID"];
-    [cell addSubview:userName];
+    
+    //不是房主時
+    if (![[obj objectForKey:@"isHost"]boolValue]) {
+        userName.text = [obj objectForKey:@"nickName"];
+        [cell addSubview:userName];
+
+    }
     
     return cell;
 }
@@ -93,6 +98,66 @@ static NSString *cellIdentifier = @"cell";
     
     [textField resignFirstResponder];
     return YES;
+}
+
+-(void)textFieldDidEndEditing:(UITextField *)textField{
+    
+    
+    if ([textField.text isEqualToString:@""]) {
+        _userNicknameTF.text = _userInfo[@"nickName"];
+    }else{
+        
+        PFQuery *query = [PFQuery queryWithClassName:@"Member"];
+        [query whereKey:@"userID" equalTo:_userInfo[@"userID"]];
+        [query findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
+            
+            if (!error) {
+                
+                PFObject *obj = [objects firstObject];
+                [obj setObject:_userNicknameTF.text forKey:@"nickName"];
+                [obj saveInBackgroundWithBlock:^(BOOL succeeded, NSError * _Nullable error) {
+                    if (succeeded) {
+                        
+                        _userNicknameLabel.text = _userNicknameTF.text;
+                        [_userInfo setValue: _userNicknameTF.text forKey:@"nickName"];
+                        [[NSUserDefaults standardUserDefaults]setObject:_userInfo forKey:@"userInfo"];
+                        NSLog(@"nickName updated!");
+                    }else{
+                         NSLog(@"fait to update nickName. Error:\n");
+                        _userNicknameTF.text = _userInfo[@"nickName"];
+                    }
+                }];
+                
+                
+                
+            }else{
+                NSLog(@"fait to update nickName. Error:\n");
+                _userNicknameTF.text = _userInfo[@"nickName"];
+            }
+        }];
+        
+        
+//        PFObject *obj = [PFObject objectWithClassName:@"Users"];
+//        
+//        [obj setValue:_userNicknameTF.text forKey:@"nickName"];
+//        [obj saveInBackgroundWithBlock:^(BOOL succeeded, NSError * _Nullable error) {
+//            if (succeeded) {
+//                NSLog(@"nickName updated!");
+//                
+//                _userNicknameLabel.text = _userNicknameTF.text;
+//                [_userInfo setValue: _userNicknameTF.text forKey:@"nickName"];
+//                [[NSUserDefaults standardUserDefaults]setObject:_userInfo forKey:@"userInfo"];
+//                
+//            }else{
+//                NSLog(@"fait to update nickName. Error:\n");
+//            }
+//        }];
+        
+
+    }
+    
+    
+    
 }
 
 #pragma mark - switch actions

@@ -36,6 +36,7 @@
 		EC8C8F281C362F4A005BADBC /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8F271C362F4A005BADBC /* libz.tbd */; };
 		EC8C8F2A1C36AF4B005BADBC /* Accounts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8F291C36AF4B005BADBC /* Accounts.framework */; };
 		EC8C8F2C1C36AF54005BADBC /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8F2B1C36AF54005BADBC /* Social.framework */; };
+		EC98B6931C5765A5000C75F1 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EC98B6921C5765A5000C75F1 /* libresolv.tbd */; };
 		ECD302831C4F334F00AFE746 /* CHChatRoomVC.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD302811C4F334F00AFE746 /* CHChatRoomVC.m */; };
 		ECD302841C4F334F00AFE746 /* CHChatRoomVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = ECD302821C4F334F00AFE746 /* CHChatRoomVC.xib */; };
 		ECD493B51C28E9370043BE54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = ECD493B41C28E9370043BE54 /* main.m */; };
@@ -64,6 +65,7 @@
 		ECD494171C30CBD60043BE54 /* 2_unchecked.png in Resources */ = {isa = PBXBuildFile; fileRef = ECD494111C30CBD60043BE54 /* 2_unchecked.png */; };
 		ECD494181C30CBD60043BE54 /* allCheck@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = ECD494121C30CBD60043BE54 /* allCheck@2x.png */; };
 		ECD494191C30CBD60043BE54 /* checked@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = ECD494131C30CBD60043BE54 /* checked@2x.png */; };
+		ECFA88E41C5A613C00A24A85 /* CHParseAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = ECFA88E31C5A613C00A24A85 /* CHParseAdaptor.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,6 +125,7 @@
 		EC8C8F271C362F4A005BADBC /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		EC8C8F291C36AF4B005BADBC /* Accounts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accounts.framework; path = System/Library/Frameworks/Accounts.framework; sourceTree = SDKROOT; };
 		EC8C8F2B1C36AF54005BADBC /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
+		EC98B6921C5765A5000C75F1 /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
 		ECD302801C4F334F00AFE746 /* CHChatRoomVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHChatRoomVC.h; path = Classes/CHChatRoomVC/CHChatRoomVC.h; sourceTree = "<group>"; };
 		ECD302811C4F334F00AFE746 /* CHChatRoomVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHChatRoomVC.m; path = Classes/CHChatRoomVC/CHChatRoomVC.m; sourceTree = "<group>"; };
 		ECD302821C4F334F00AFE746 /* CHChatRoomVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = CHChatRoomVC.xib; path = Classes/CHChatRoomVC/CHChatRoomVC.xib; sourceTree = "<group>"; };
@@ -167,6 +170,8 @@
 		ECD494111C30CBD60043BE54 /* 2_unchecked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 2_unchecked.png; sourceTree = "<group>"; };
 		ECD494121C30CBD60043BE54 /* allCheck@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "allCheck@2x.png"; sourceTree = "<group>"; };
 		ECD494131C30CBD60043BE54 /* checked@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "checked@2x.png"; sourceTree = "<group>"; };
+		ECFA88E21C5A613C00A24A85 /* CHParseAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHParseAdaptor.h; path = Classes/CHParseAdaptor/CHParseAdaptor.h; sourceTree = "<group>"; };
+		ECFA88E31C5A613C00A24A85 /* CHParseAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHParseAdaptor.m; path = Classes/CHParseAdaptor/CHParseAdaptor.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +179,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC98B6931C5765A5000C75F1 /* libresolv.tbd in Frameworks */,
 				EC8C8F1E1C362F22005BADBC /* CoreLocation.framework in Frameworks */,
 				EC8C8F2C1C36AF54005BADBC /* Social.framework in Frameworks */,
 				EC8C8F2A1C36AF4B005BADBC /* Accounts.framework in Frameworks */,
@@ -222,6 +228,7 @@
 		A2161D033C13957A4D375534 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				EC98B6921C5765A5000C75F1 /* libresolv.tbd */,
 				EC8C8F2B1C36AF54005BADBC /* Social.framework */,
 				EC8C8F291C36AF4B005BADBC /* Accounts.framework */,
 				EC8C8F271C362F4A005BADBC /* libz.tbd */,
@@ -375,6 +382,7 @@
 		ECD493EC1C2A59800043BE54 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				ECFA88E11C5A611000A24A85 /* CHParseAdaptor */,
 				EC37A03C1C4FB1E600215003 /* BCKeychainManager */,
 				EC37A0411C5087D800215003 /* CHChatRoomSettingVC */,
 				ECD3027F1C4F333100AFE746 /* CHChatRoomVC */,
@@ -439,6 +447,15 @@
 				ECD494131C30CBD60043BE54 /* checked@2x.png */,
 			);
 			path = Images;
+			sourceTree = "<group>";
+		};
+		ECFA88E11C5A611000A24A85 /* CHParseAdaptor */ = {
+			isa = PBXGroup;
+			children = (
+				ECFA88E21C5A613C00A24A85 /* CHParseAdaptor.h */,
+				ECFA88E31C5A613C00A24A85 /* CHParseAdaptor.m */,
+			);
+			name = CHParseAdaptor;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -633,6 +650,7 @@
 				ECD494061C30BE010043BE54 /* CHImagePickerHeaderView.m in Sources */,
 				ECD493E81C2A4E960043BE54 /* CHLoginVC.m in Sources */,
 				EC8C8F0B1C327788005BADBC /* FMResultSet.m in Sources */,
+				ECFA88E41C5A613C00A24A85 /* CHParseAdaptor.m in Sources */,
 				EC37A03F1C4FB1E600215003 /* BCKeychainManager.m in Sources */,
 				ECD493F51C2A5A440043BE54 /* SelectedLocation.m in Sources */,
 				ECD493FA1C2A748C0043BE54 /* MapVCMenuView.m in Sources */,

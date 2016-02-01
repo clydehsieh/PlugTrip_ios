@@ -20,7 +20,9 @@
 @property (weak, nonatomic) IBOutlet UILabel *roomIDLabel;
 @property (weak, nonatomic) IBOutlet UILabel *userNicknameLabel;
 
-@property (nonatomic)NSMutableArray *chatRoomMembers;
+@property (nonatomic)NSMutableArray *chatRoomMembers;//contain PFObject
 @property (weak, nonatomic) IBOutlet UITableView *usersTableView;
+
+@property (nonatomic, retain) NSMutableDictionary *userInfo; // 紀錄user 資料
 
 @end

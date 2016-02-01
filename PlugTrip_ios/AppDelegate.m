@@ -52,14 +52,17 @@
     }
 }
 
+
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
+    //Google map api key
     [GMSServices provideAPIKey:@"AIzaSyAzolK7vi8CRudWzw42AoYsGH6PDEic8bA"];
     
+    //local db
      [self CopyDBtoDocumentIfNeeded];
     
-
     // Initialize Parse.
     [Parse enableLocalDatastore];
     [Parse setApplicationId:@"nGE6doL5SP4k9DJTWRUeevqVM6iANkL1XFavb7X0"
@@ -72,7 +75,6 @@
                                                                              categories:nil];
     [application registerUserNotificationSettings:settings];
     [application registerForRemoteNotifications];
-    
     
     return YES;
 }

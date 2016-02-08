@@ -70,32 +70,41 @@ NSString *const tableName_userGPS = @"user_GPS";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    //
-    _isInitialLayout = NO;
-    
-    // check is trip created or not
-    _isTripCreate =  [[[NSUserDefaults standardUserDefaults] objectForKey:@"isTripCreate"] boolValue];
-    
-    _tripInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"]];
-    if (!_tripInfo) {
-        _tripInfo = [[NSMutableDictionary alloc]init];
-        [_tripInfo setObject:@"Trip title" forKey:@"tripTitle"];
-    }
 
-    //
+    _isInitialLayout = NO;//for first load view
+    
+    //Trip Info
+    _tripInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"]];
+    [_tripInfo count];
+    if ([_tripInfo count]==0) {
+        _tripInfo = [[NSMutableDictionary alloc]init];
+        [_tripInfo setObject:@"New Trip Title"            forKey:@"tripTitle"];
+        [_tripInfo setObject:[NSNumber numberWithBool:NO] forKey:@"isTripCreate"];
+        [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
+        
+        NSLog(@"Trip info is not exist, create new one");
+    }else{
+        NSLog(@"Load TripInfo success");
+    }
+    
+    //User Info
     _userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"userInfo"]];
+    if ([_userInfo count]==0) {
+        _userInfo = [[NSMutableDictionary alloc]init];
+        [_userInfo setObject:@"New User"     forKey:@"userID"];
+        [_userInfo setObject:[self loadUUID] forKey:@"UUID"];
+        [_userInfo setObject:@"New User"     forKey:@"nickName"];
+        [[NSUserDefaults standardUserDefaults] setObject:_userInfo forKey:@"userInfo"];
+        NSLog(@"User info is not exist, create new one");
+    }else{
+        NSLog(@"Load UserInfo success");
+    }
+    
+    
     _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
-    
-    //UUDI
-    [self loadUUID];
-    
     
     // check is chatRoom joined or not
     _isCheckChatRoomJoin = NO;
-//    [self checkJoinChatRoomStateWithUserID:_deviceUserIDOfChatRoom];
-//     _isChatRoomJoin =  [[[NSUserDefaults standardUserDefaults] objectForKey:@"isChatRoomJoin"] boolValue];
-    
     _modes = [[NSArray alloc]initWithObjects:@"分析",@"紀錄",@"同夥",@"旅程", nil];
 
     
@@ -108,17 +117,6 @@ NSString *const tableName_userGPS = @"user_GPS";
         _locationManager.delegate = self;
         [_locationManager requestAlwaysAuthorization];
         
-    }
-    
-    //init trip state
-    if (!_isTripCreate) {
-        //尚未建立local旅程, 初始模式為分析
-        _currentModeType = 0;
-        NSLog(@"Trip Is Not Created!Start 分析 mode");
-    }else{
-        //建立local旅程, 初始模式為紀錄
-        _currentModeType = 1;
-        NSLog(@"Trip Created!Start 紀錄 mode");
     }
     
     // to receive push notification info
@@ -141,17 +139,10 @@ NSString *const tableName_userGPS = @"user_GPS";
         [self initButtons];
         [self initScrollView];
         
-        
         //init data
-        if (!_isTripCreate) {
-            //mode setting
-            UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:201];
-            modeBtnBackgroundView.hidden = YES;
-        }else{
-            [self LoadInitData];
-            
-        }
+        [self updateTripCreateState];
     
+        
         _isInitialLayout = YES;
     }
     
@@ -168,80 +159,181 @@ NSString *const tableName_userGPS = @"user_GPS";
     // Dispose of any resources that can be recreated.
 }
 
-- (void)loadUUID {
+#pragma mark
+#pragma mark - TripInfo
+-(void)tripInfoUpdateObjec:(id)object forKey:(id)key{
     
-    [self indicatorStart];
+    [_tripInfo setObject:object forKey:key];
+    [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
     
+}
+
+-(void)updateTripCreateState{
+    
+    BOOL isTripCreate = [[_tripInfo objectForKey:@"isTripCreate"] boolValue];
+    
+    if (!isTripCreate) {
+        
+        //尚未建立local旅程, 初始模式為分析
+        _currentModeType = 0;
+        NSLog(@"尚未建立旅程, 開始分析模式");
+        
+    }else{
+        
+        //建立local旅程, 初始模式為紀錄
+        _currentModeType = 1;
+        NSLog(@"已經建立旅程, 開始紀錄模式");
+        
+        //開啟menuBtn
+        UIButton *menuBtn = (UIButton *)[_mapDisplayView viewWithTag:101];
+        menuBtn.hidden = NO;
+        NSLog(@"開啟menuBtn");
+        
+        //show Trip title text
+        UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
+        tripTitleText.hidden = NO;
+        
+        UIView *coverTripTitleView = (UIView *)[_mapDisplayView viewWithTag:202];
+        coverTripTitleView.hidden = NO;
+     
+        [self loadDBPhotos];
+    }
+    
+    [self updateModeBtnState];
+    
+}
+
+-(void)initTripTitleText{
+    
+    UITextField *tripTitleText = [[UITextField alloc]initWithFrame:CGRectMake(54, 5 + 44 +5, 100, 22)];
+    tripTitleText.text = _tripInfo[@"tripTitle"];
+    tripTitleText.backgroundColor = [UIColor clearColor];
+    tripTitleText.layer.borderWidth = 0.5f;
+    tripTitleText.layer.borderColor = [[UIColor clearColor]CGColor];
+    tripTitleText.tag = 301;
+    tripTitleText.delegate = self;
+    tripTitleText.hidden = YES;
+    //    tripTitleText.enabled = NO;
+    [_mapDisplayView addSubview:tripTitleText];
+    
+    UIView *coverTripTitleView = [[UIView alloc]initWithFrame:tripTitleText.frame];
+    coverTripTitleView.tag = 202;
+    coverTripTitleView.hidden = YES;
+    [_mapDisplayView addSubview:coverTripTitleView];
+    UILongPressGestureRecognizer *recog = [[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(editTripTitle:)];
+    [coverTripTitleView addGestureRecognizer:recog];
+    
+}
+
+#pragma mark
+#pragma mark - UserInfo
+-(NSString *)loadUUID{
     
     //load UUID
-    _userUUID = [BCKeychainManager loadUUID];
-    if (!_userUUID) {
-        _userUUID = [[NSUUID UUID]UUIDString];
-        [BCKeychainManager saveUUID:_userUUID];
+    NSString *uuid;
+    uuid = [BCKeychainManager loadUUID];
+    if (!uuid) {
+        uuid = [[NSUUID UUID]UUIDString];
+        [BCKeychainManager saveUUID:uuid];
     }
-    NSLog(@"UUID:%@",_userUUID);
+    NSLog(@"UUID:%@",uuid);
     
-    
-    // User registration by using uuid, send back user.objectID
-    PFQuery *query_Users = [PFQuery queryWithClassName:@"Users"];
-    
-    [query_Users whereKey:@"UUID" equalTo:_userUUID];
-    [query_Users findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
-       
-        [self indicatorStop];
-        
-        if (!error) {
-            
-            if (objects.count==0) {
-                
-                NSLog(@"\nCreate new Users by UUID:\n%@\n\n",_userUUID);
-    
-                // regist new user
-                [self indicatorStart];
-                
-                PFObject *newUser = [PFObject objectWithClassName:@"Users"];
-                newUser[@"UUID"] = _userUUID;
-                newUser[@"nickName"] = @"New User";
-                
-                [newUser saveInBackgroundWithBlock:^(BOOL succeeded, NSError * _Nullable error) {
-                    
-                    [self indicatorStop];
-                    
-                    if (succeeded) {
-                        NSLog(@"\ncreate new user succeeded");
-                        NSLog(@"userID:%@",newUser.objectId);
-                        NSLog(@"nickName:%@",[newUser objectForKey:@"nickName"]);
-                        
-                        [self updateUserInfoWithUserID:newUser.objectId andUserNickName:[newUser objectForKey:@"nickName"] andUUID:_userUUID];
-                        
-//                        [self updateUserInfoWhereKey:@"UUID" equalTo:_userUUID];
-                    }else{
-                        NSLog(@"fail to create new user,error:\n%@\n\n",error.description);
-                    }
-                }];
-                
-            }else if (objects.count ==1){
-                
-                PFObject *newUser = [objects firstObject];
-                [self updateUserInfoWithUserID:newUser.objectId andUserNickName:[newUser objectForKey:@"nickName"] andUUID:_userUUID];
-                
-//                [self updateUserInfoWhereKey:@"UUID" equalTo:_userUUID];
-            }else{
-                NSLog(@"Error:UUID is repeat");
-            }
-
-            
-        }else{
-            NSLog(@"\nError:\n%@\n",error.debugDescription);
-            if (error.code == 100) {
-                [self showOfflineAlert:error];
-            }
-        }
-        
-    
-    }];
-
+    return uuid;
 }
+
+-(void)updateUserInfoWithUserID:(NSString *)userID andUserNickName:(NSString *)userNickName andUUID:(NSString *)UUID{
+    
+    if (userID) {
+        _userInfo[@"userID"]=userID;
+    }
+    
+    if (userNickName) {
+        _userInfo[@"nickName"]=userNickName;
+    }
+    
+    if (UUID) {
+        _userInfo[@"UUID"]=UUID;
+    }
+    
+    [[NSUserDefaults standardUserDefaults]setObject:_userInfo forKey:@"userInfo"];
+    
+}
+
+
+//- (void)loadUUID {
+//    
+//    [self indicatorStart];
+//    
+//    
+//    //load UUID
+//    _userUUID = [BCKeychainManager loadUUID];
+//    if (!_userUUID) {
+//        _userUUID = [[NSUUID UUID]UUIDString];
+//        [BCKeychainManager saveUUID:_userUUID];
+//    }
+//    NSLog(@"UUID:%@",_userUUID);
+//    
+//    
+//    // User registration by using uuid, send back user.objectID
+//    PFQuery *query_Users = [PFQuery queryWithClassName:@"Users"];
+//    
+//    [query_Users whereKey:@"UUID" equalTo:_userUUID];
+//    [query_Users findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
+//       
+//        [self indicatorStop];
+//        
+//        if (!error) {
+//            
+//            if (objects.count==0) {
+//                
+//                NSLog(@"\nCreate new Users by UUID:\n%@\n\n",_userUUID);
+//    
+//                // regist new user
+//                [self indicatorStart];
+//                
+//                PFObject *newUser = [PFObject objectWithClassName:@"Users"];
+//                newUser[@"UUID"] = _userUUID;
+//                newUser[@"nickName"] = @"New User";
+//                
+//                [newUser saveInBackgroundWithBlock:^(BOOL succeeded, NSError * _Nullable error) {
+//                    
+//                    [self indicatorStop];
+//                    
+//                    if (succeeded) {
+//                        NSLog(@"\ncreate new user succeeded");
+//                        NSLog(@"userID:%@",newUser.objectId);
+//                        NSLog(@"nickName:%@",[newUser objectForKey:@"nickName"]);
+//                        
+//                        [self updateUserInfoWithUserID:newUser.objectId andUserNickName:[newUser objectForKey:@"nickName"] andUUID:_userUUID];
+//                        
+////                        [self updateUserInfoWhereKey:@"UUID" equalTo:_userUUID];
+//                    }else{
+//                        NSLog(@"fail to create new user,error:\n%@\n\n",error.description);
+//                    }
+//                }];
+//                
+//            }else if (objects.count ==1){
+//                
+//                PFObject *newUser = [objects firstObject];
+//                [self updateUserInfoWithUserID:newUser.objectId andUserNickName:[newUser objectForKey:@"nickName"] andUUID:_userUUID];
+//                
+////                [self updateUserInfoWhereKey:@"UUID" equalTo:_userUUID];
+//            }else{
+//                NSLog(@"Error:UUID is repeat");
+//            }
+//
+//            
+//        }else{
+//            NSLog(@"\nError:\n%@\n",error.debugDescription);
+//            if (error.code == 100) {
+//                [self showOfflineAlert:error];
+//            }
+//        }
+//        
+//    
+//    }];
+//
+//}
 
 -(void)updateUserInfoWhereKey:(NSString *)keyValue equalTo:(NSString *)objectValue{
 
@@ -297,175 +389,23 @@ NSString *const tableName_userGPS = @"user_GPS";
 }
 
 
-
--(void)initMapView{
-    
-    int initalZoomLevel = 14;
-    // init mapView
-    GMSCameraPosition *camera = [GMSCameraPosition cameraWithLatitude:24.081446
-                                                            longitude:120.538854
-                                                                 zoom:initalZoomLevel];
-    
-    _mapView = [GMSMapView mapWithFrame:_mapDisplayView.bounds camera:camera];
-    [_mapDisplayView insertSubview:_mapView atIndex:0];
-
-    //_mapView basic setting
-//    _mapView.myLocationEnabled = YES;
-    _mapView.settings.compassButton = YES;
-//    _mapView.settings.myLocationButton = YES;
-    _mapView.delegate = self;
-    
-}
-
+#pragma mark 
+#pragma mark - Search View
 -(void)initSearchView{
     sView = [[MapVCSearchView alloc]initWithFrame:CGRectMake(54, 5, _mapDisplayView.frame.size.width-(54+5), 44*5) owner:nil andApiServerKey:apiKey];
     sView.delegate = self;
     [_mapDisplayView insertSubview:sView atIndex:4];
 }
-
--(void)initTripTitleText{
+#pragma mark - MapVCSeachViewDelegate
+-(void)didSelectTableSearchResultLocationAtLatitude:(NSString *)latitude andLongitude:(NSString *)longitude{
+    [_mapView animateToLocation:CLLocationCoordinate2DMake(latitude.doubleValue, longitude.doubleValue)];
     
-    UITextField *tripTitleText = [[UITextField alloc]initWithFrame:CGRectMake(54, 5 + 44 +5, 100, 22)];
-    tripTitleText.text = _tripInfo[@"tripTitle"];
-    tripTitleText.backgroundColor = [UIColor clearColor];
-    tripTitleText.layer.borderWidth = 0.5f;
-    tripTitleText.layer.borderColor = [[UIColor clearColor]CGColor];
-    tripTitleText.tag = 301;
-    tripTitleText.delegate = self;
-    tripTitleText.hidden = YES;
-//    tripTitleText.enabled = NO;
-    [_mapDisplayView addSubview:tripTitleText];
-    
-    UIView *coverTripTitleView = [[UIView alloc]initWithFrame:tripTitleText.frame];
-    coverTripTitleView.tag = 202;
-    coverTripTitleView.hidden = YES;
-    [_mapDisplayView addSubview:coverTripTitleView];
-    UILongPressGestureRecognizer *recog = [[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(editTripTitle:)];
-    [coverTripTitleView addGestureRecognizer:recog];
     
 }
 
--(void)initButtons{
-    
-    // menu
-    UIButton *menuBtn = [[UIButton alloc]initWithFrame:CGRectMake(5, 5, 44, 44)];
-    [menuBtn addTarget:self action:@selector(showMenu:) forControlEvents:UIControlEventTouchDown];
-    [menuBtn setTitle:@"Me" forState:UIControlStateNormal];
-    [menuBtn setBackgroundImage:[UIImage imageNamed:@"s1_1.png"] forState:UIControlStateNormal];
-    menuBtn.tag = 101;
-    [_mapDisplayView addSubview:menuBtn];
-    
-    //mode setting
-    UIView *modeBtnBackgroundView = [[UIView alloc]initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-MODEBTN_HEIGHT, _mapDisplayView.frame.size.width, MODEBTN_HEIGHT)];
-    modeBtnBackgroundView.tag = 201;
-    modeBtnBackgroundView.backgroundColor = [UIColor blueColor];
-    [_mapDisplayView addSubview:modeBtnBackgroundView];
-    
-    UIButton *modeBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
-    modeBtn.tag = 102;
-    [modeBtn addTarget:self action:@selector(didSelectModeBtn:) forControlEvents:UIControlEventTouchDown];
-    [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
-    [modeBtn setBackgroundColor:[UIColor blueColor]];
-//    [modeBtn setBackgroundImage:[UIImage imageNamed:@"s1_1.png"] forState:UIControlStateNormal];
-    [_mapDisplayView addSubview:modeBtn];
-    
-    //add photo btn
-    UIButton *addPhotoBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH*2, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
-    addPhotoBtn.tag = 103;
-    [addPhotoBtn addTarget:self action:@selector(addPhotoBtnAction:) forControlEvents:UIControlEventTouchDown];
-    [addPhotoBtn setTitle:@"+" forState:UIControlStateNormal];
-    [addPhotoBtn setBackgroundColor:[UIColor blueColor]];
-    [_mapDisplayView addSubview:addPhotoBtn];
-    
-    // chat room btn
-    UIButton *chatRoomBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT*2, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
-    chatRoomBtn.tag = 104;
-    [chatRoomBtn addTarget:self action:@selector(showChatRoom:) forControlEvents:UIControlEventTouchDown];
-    [chatRoomBtn setTitle:@"聊天室" forState:UIControlStateNormal];
-    [chatRoomBtn setBackgroundColor:[UIColor blueColor]];
-    [_mapDisplayView addSubview:chatRoomBtn];
-    
-}
 
--(void)initMenuView{
-    
-    menuView = [[MapVCMenuView alloc]initWithFrame:CGRectMake(5, 54, 44, _mapDisplayView.frame.size.height - (54+80)) owner:nil];
-    menuView.delegate = self;
-    [_mapDisplayView addSubview: menuView];
-    menuView.hidden = YES;
-}
-
--(void)LoadInitData{
-    
-    ///!!!:wait for coding
-    [self loadUserGps];
-    [self loadTripInfo];
-    [self loadPhotosForInit];
-
-    
-}
 #pragma mark
-#pragma mark - update local data
--(void)updateUserInfoWithUserID:(NSString *)userID andUserNickName:(NSString *)userNickName andUUID:(NSString *)UUID{
-    
-    if (userID) {
-        _userInfo[@"userID"]=userID;
-    }
-    
-    if (userNickName) {
-        _userInfo[@"nickName"]=userNickName;
-    }
-    
-    if (UUID) {
-        _userInfo[@"UUID"]=UUID;
-    }
-    
-    [[NSUserDefaults standardUserDefaults]setObject:_userInfo forKey:@"userInfo"];
-    
-}
-
-#pragma mark - Load Data
--(void)loadPhotosForInit{
-    
-    NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
-    NSMutableArray *localIdentifier =[[NSMutableArray alloc]init];
-    queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName_tripPhoto];
-    NSLog(@"%@",queryTableResult);
-    
-    if (queryTableResult) {
-        //        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
-        [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
-            
-            [localIdentifier addObject:dict[@"imagePath"]];
-        }];
-        
-        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
-        
-        _pickedAssets = [[NSMutableArray alloc]init];
-        
-        [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
-            
-            [_pickedAssets addObject:asset];
-            
-        }];
-        
-    }
-    
-    [self finishedPickingImages:_pickedAssets];
-    
-}
-
--(void)loadUserGps{
-    
-    ///!!!:wait for coding
-}
-
--(void)loadTripInfo{
-    
-    ///!!!:wait for coding
-}
-
-#pragma mark - CHScrollView setting & setters & delegate
+#pragma mark - CHScrollView
 -(void)initScrollView
 {
  
@@ -486,6 +426,16 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
+-(void)showImageDisplayScrollViewWithImages:(NSArray *)images {
+    
+    //show Image scrollView
+    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:201];
+    modeBtnBackgroundView.hidden = NO;
+    
+    [imageScrollView setImageAry:images];
+    //    [self setImageDisplayScrollView:images];
+    
+}
 -(void)scrollView:(UIScrollView *)scrollView didSelectedImage:(UIImageView *)selectedView{
     
     
@@ -503,7 +453,53 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
-#pragma mark - Btn Actions
+
+#pragma mark
+#pragma mark - Button
+-(void)initButtons{
+    
+    // menu
+    UIButton *menuBtn = [[UIButton alloc]initWithFrame:CGRectMake(5, 5, 44, 44)];
+    [menuBtn addTarget:self action:@selector(showMenu:) forControlEvents:UIControlEventTouchDown];
+    [menuBtn setTitle:@"Me" forState:UIControlStateNormal];
+    [menuBtn setBackgroundColor:[UIColor lightGrayColor]];
+//    [menuBtn setBackgroundImage:[UIImage imageNamed:@"s1_1.png"] forState:UIControlStateNormal];
+    menuBtn.tag = 101;
+    menuBtn.hidden = YES;//旅程建立, 才顯示
+    [_mapDisplayView addSubview:menuBtn];
+    
+    //mode setting
+    UIView *modeBtnBackgroundView = [[UIView alloc]initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-MODEBTN_HEIGHT, _mapDisplayView.frame.size.width, MODEBTN_HEIGHT)];
+    modeBtnBackgroundView.tag = 201;
+    modeBtnBackgroundView.backgroundColor = [UIColor blueColor];
+    [_mapDisplayView addSubview:modeBtnBackgroundView];
+    
+    UIButton *modeBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
+    modeBtn.tag = 102;
+    [modeBtn addTarget:self action:@selector(didSelectModeBtn:) forControlEvents:UIControlEventTouchDown];
+    [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
+    [modeBtn setBackgroundColor:[UIColor blueColor]];
+    //    [modeBtn setBackgroundImage:[UIImage imageNamed:@"s1_1.png"] forState:UIControlStateNormal];
+    [_mapDisplayView addSubview:modeBtn];
+    
+    //add photo btn
+    UIButton *addPhotoBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH*2, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
+    addPhotoBtn.tag = 103;
+    [addPhotoBtn addTarget:self action:@selector(addPhotoBtnAction:) forControlEvents:UIControlEventTouchDown];
+    [addPhotoBtn setTitle:@"+" forState:UIControlStateNormal];
+    [addPhotoBtn setBackgroundColor:[UIColor blueColor]];
+    [_mapDisplayView addSubview:addPhotoBtn];
+    
+    // chat room btn
+    UIButton *chatRoomBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT*2, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
+    chatRoomBtn.tag = 104;
+    [chatRoomBtn addTarget:self action:@selector(showChatRoom:) forControlEvents:UIControlEventTouchDown];
+    [chatRoomBtn setTitle:@"聊天室" forState:UIControlStateNormal];
+    [chatRoomBtn setBackgroundColor:[UIColor blueColor]];
+    [_mapDisplayView addSubview:chatRoomBtn];
+    
+}
+
 -(void)showMenu:(UIButton *)sender{
     
     if (menuView.hidden) {
@@ -523,83 +519,89 @@ NSString *const tableName_userGPS = @"user_GPS";
 -(void)didSelectModeBtn:(UIButton *)sender{
     
     if (_currentModeType == 0) {
-        //點選"分析"按鈕時, 跳出照片
-//        [self setImagePicker:_pickedAssets];
         
-        UIAlertController * alert=   [UIAlertController
-                                      alertControllerWithTitle:@""
-                                      message:@"是否取用相簿照片"
-                                      preferredStyle:UIAlertControllerStyleAlert];
+        [self showImagePickerAlert];
         
-        UIAlertAction* yesButton = [UIAlertAction
-                                    actionWithTitle:@"Yes"
-                                    style:UIAlertActionStyleDefault
-                                    handler:^(UIAlertAction * action)
-                                    {
-                                        
-                                        //
-                                        switch ([PHPhotoLibrary authorizationStatus]) {
-                                            case PHAuthorizationStatusAuthorized:
-                                                [self setImagePicker:_pickedAssets];
-                                                break;
-                                                
-                                            default:
-                                                [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
-                                                    switch (status) {
-                                                        case PHAuthorizationStatusAuthorized:
-                                                        case PHAuthorizationStatusNotDetermined:
-                                                            [self setImagePicker:_pickedAssets];
-                                                            break;
-                                                            
-                                                        case PHAuthorizationStatusDenied:
-                                                        case PHAuthorizationStatusRestricted:
-                                                        {
-                                                            //Tell user access to the photos are restricted
-                                                            UIAlertController * alertForRestricted=   [UIAlertController
-                                                                                          alertControllerWithTitle:@"錯誤"
-                                                                                          message:@"無法訪問相簿,請至設定開啟權限"
-                                                                                          preferredStyle:UIAlertControllerStyleAlert];
-                                                            
-                                                            UIAlertAction *okBtn = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                                                                [alertForRestricted dismissViewControllerAnimated:YES completion:nil];
-                                                            }];
-                                                            
-                                                            [alertForRestricted addAction:okBtn];
-                    
-                                                            [self presentViewController:alertForRestricted animated:YES completion:nil];
-                                                        }
-                                                            break;
-                                                            
-                                                        default:
-                                                            break;
-                                                    }
-                                                }];
-                                                break;
-                                        }
-                                        
-                                        
-                                        [alert dismissViewControllerAnimated:YES completion:nil];
-                                        
-                                    }];
-        
-        UIAlertAction* noButton = [UIAlertAction
-                                   actionWithTitle:@"No"
-                                   style:UIAlertActionStyleDefault
-                                   handler:^(UIAlertAction * action)
-                                   {
-                                       
-                                       [alert dismissViewControllerAnimated:YES completion:nil];
-                                       
-                                   }];
-        
-        [alert addAction:yesButton];
-        [alert addAction:noButton];
-        
-        [self presentViewController:alert animated:YES completion:nil];
+//        //點選"分析"按鈕時, 跳出照片
+////        [self setImagePicker:_pickedAssets];
+//        
+//        UIAlertController * alert=   [UIAlertController
+//                                      alertControllerWithTitle:@""
+//                                      message:@"是否取用相簿照片"
+//                                      preferredStyle:UIAlertControllerStyleAlert];
+//        
+//        UIAlertAction* yesButton = [UIAlertAction
+//                                    actionWithTitle:@"Yes"
+//                                    style:UIAlertActionStyleDefault
+//                                    handler:^(UIAlertAction * action)
+//                                    {
+//                                        
+//                                        //
+//                                        switch ([PHPhotoLibrary authorizationStatus]) {
+//                                            case PHAuthorizationStatusAuthorized:
+//                                                [self setImagePicker:_pickedAssets];
+//                                                break;
+//                                                
+//                                            default:
+//                                                [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+//                                                    switch (status) {
+//                                                        case PHAuthorizationStatusAuthorized:
+//                                                        case PHAuthorizationStatusNotDetermined:
+//                                                            [self setImagePicker:_pickedAssets];
+//                                                            break;
+//                                                            
+//                                                        case PHAuthorizationStatusDenied:
+//                                                        case PHAuthorizationStatusRestricted:
+//                                                        {
+//                                                            //Tell user access to the photos are restricted
+//                                                            UIAlertController * alertForRestricted=   [UIAlertController
+//                                                                                          alertControllerWithTitle:@"錯誤"
+//                                                                                          message:@"無法訪問相簿,請至設定開啟權限"
+//                                                                                          preferredStyle:UIAlertControllerStyleAlert];
+//                                                            
+//                                                            UIAlertAction *okBtn = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+//                                                                [alertForRestricted dismissViewControllerAnimated:YES completion:nil];
+//                                                            }];
+//                                                            
+//                                                            [alertForRestricted addAction:okBtn];
+//                    
+//                                                            [self presentViewController:alertForRestricted animated:YES completion:nil];
+//                                                        }
+//                                                            break;
+//                                                            
+//                                                        default:
+//                                                            break;
+//                                                    }
+//                                                }];
+//                                                break;
+//                                        }
+//                                        
+//                                        
+//                                        [alert dismissViewControllerAnimated:YES completion:nil];
+//                                        
+//                                    }];
+//        
+//        UIAlertAction* noButton = [UIAlertAction
+//                                   actionWithTitle:@"No"
+//                                   style:UIAlertActionStyleDefault
+//                                   handler:^(UIAlertAction * action)
+//                                   {
+//                                       
+//                                       [alert dismissViewControllerAnimated:YES completion:nil];
+//                                       
+//                                   }];
+//        
+//        [alert addAction:yesButton];
+//        [alert addAction:noButton];
+//        
+//        [self presentViewController:alert animated:YES completion:nil];
 
     }else if(_currentModeType == 1){
         //紀錄
         NSLog(@"紀錄mode");
+        
+        //開啟相簿
+        [self setImagePicker:_pickedAssets];
         
     }else if(_currentModeType == 2){
         //同夥
@@ -611,12 +613,34 @@ NSString *const tableName_userGPS = @"user_GPS";
         
     }
     
+    [self updateModeBtnState];
+    
 //    _currentModeType +=1;
 //    if (_currentModeType >= [_modes count]) {
 //        _currentModeType = 0;
 //    }
 //    
 //    [sender setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
+}
+
+-(void)updateModeBtnState{
+    
+    //
+    UIButton *modeBtn = (UIButton *)[_mapDisplayView viewWithTag:102];
+    [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
+    
+   
+    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:201];
+    modeBtnBackgroundView.hidden = (_currentModeType == 0)? YES: NO;
+    
+    UIButton *addPhotoBtn = (UIButton *)[_mapDisplayView viewWithTag:103];
+    addPhotoBtn.hidden = (_currentModeType == 1)? NO: YES;
+
+    UIButton *chatRoomBtn = (UIButton *)[_mapDisplayView viewWithTag:104];
+    chatRoomBtn.hidden = (_currentModeType == 2)? NO: YES;
+
+    
+    
 }
 
 -(void)addPhotoBtnAction:(UIButton *)sender{
@@ -646,14 +670,18 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
-#pragma mark - MapVCSeachViewDelegate
--(void)didSelectTableSearchResultLocationAtLatitude:(NSString *)latitude andLongitude:(NSString *)longitude{
-    [_mapView animateToLocation:CLLocationCoordinate2DMake(latitude.doubleValue, longitude.doubleValue)];
+
+
+#pragma mark
+#pragma mark - menu
+-(void)initMenuView{
     
-    
+    menuView = [[MapVCMenuView alloc]initWithFrame:CGRectMake(5, 54, 44, _mapDisplayView.frame.size.height - (54+80)) owner:nil];
+    menuView.delegate = self;
+    [_mapDisplayView addSubview: menuView];
+    menuView.hidden = YES;
 }
 
-#pragma mark - menu
 -(void)didSelectTheMenu:(UIButton *)btn;
 {
     
@@ -662,6 +690,10 @@ NSString *const tableName_userGPS = @"user_GPS";
         case 1:
             //紀錄mode
             _currentModeType = 1;
+            
+            //開啟相簿
+            [self setImagePicker:_pickedAssets];
+            
             break;
         case 2:
             //同夥mode
@@ -672,19 +704,223 @@ NSString *const tableName_userGPS = @"user_GPS";
         case 3:
             //旅程mode
             _currentModeType = 3;
+            [self showReadTripCodeVC];
+            
             [self drawPolyLinesOnMap];
             break;
         default:
             break;
     }
 
-    UIButton *modeBtn = (UIButton *)[_mapDisplayView viewWithTag:102];
-    [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
-
+    [self updateModeBtnState];
   
 }
+#pragma mark
+#pragma mark - 照片相關管理
+-(void)savePickedPhotoToDB{
+   
+    //Clear the table
+    [[myDB sharedInstance] deleteTable:tableName_tripPhoto];
+    [[myDB sharedInstance] createTripTable:tableName_tripPhoto];
+    
+    [[myDB sharedInstance] deleteTable:tableName_userGPS];
+    [[myDB sharedInstance] createGPSTable:tableName_userGPS];
+    
+    //ready to save to database
+    __block NSString *imagePath = [[NSString alloc]init];
+    NSString *imageLatitude     = [[NSString alloc]init];
+    NSString *imageLongtitude   = [[NSString alloc]init];
+    NSString *comment           = [[NSString alloc]init];
+    NSString *voicePath         = [[NSString alloc]init];
+    NSString *hiddenState       = [[NSString alloc]init];
+    
+    //
+    NSMutableArray *images = [[NSMutableArray alloc] init];
+    markerArray = [[NSMutableArray alloc]init];
+    
+    [_mapView clear];
+    
+    //從PHAsset 解析出UIImage
+    for (int i = 0; i < [_pickedAssets count]; i++)
+    {
+        PHAsset *asset = _pickedAssets[i];
+        
+        //取值 - 地圖座標
+        CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
+        imageLatitude   = [NSString stringWithFormat:@"%f",asset.location.coordinate.latitude];
+        imageLongtitude = [NSString stringWithFormat:@"%f",asset.location.coordinate.longitude];
+        NSLog(@"imageLatitue:%@,imageLongtitude:%@",imageLatitude,imageLongtitude);
+        
+        
+        ///!!!:建立markers
+        GMSMarker *marker = [GMSMarker markerWithPosition:position];
+        marker.title =[NSString stringWithFormat:@"%d",i];
+        marker.snippet = @"Population: 8,174,100";
+        marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+        marker.map = _mapView;
+        [markerArray addObject:marker];
+        
+        // marker 上放照片
+        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
+        NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
+        CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
+        [[PHImageManager defaultManager]
+         requestImageForAsset:_pickedAssets[i]
+         targetSize:retinaSquare
+         contentMode:PHImageContentModeAspectFill
+         options:nil
+         resultHandler:^(UIImage *result, NSDictionary *info) {
+             
+             [images addObject:result];
+             UIGraphicsBeginImageContextWithOptions(CGSizeMake(30, 40), NO, 0.0);
+             [result drawInRect:CGRectMake(0, 0, 30, 40)];
+             UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+             UIGraphicsEndImageContext();
+             marker.icon = newImage;
+         }];
+        ///
+        
+        //取值 - path
+        imagePath = asset.localIdentifier;
+        
+        //存入table
+        [[myDB sharedInstance]insertTable:tableName_tripPhoto andImageLatitude:imageLatitude andImageLongtitude:imageLongtitude ImagePath:imagePath andComments:comment andVoicePath:voicePath andHiddenState:hiddenState];
+    }
+    
+    NSLog(@"save photo to DB success");
+}
+
+-(void)loadDBPhotos{
+    
+    //從資料庫撈assets
+    NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
+    NSMutableArray *localIdentifier =[[NSMutableArray alloc]init];
+    queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName_tripPhoto];
+    NSLog(@"%@",queryTableResult);
+    
+    if (queryTableResult) {
+        //        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+        [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+            [localIdentifier addObject:dict[@"imagePath"]];
+        }];
+        
+        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
+        
+        _pickedAssets = [[NSMutableArray alloc]init];
+        
+        [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+            [_pickedAssets addObject:asset];
+            
+        }];
+    }
+    
+    //從assets解析出照片images
+    NSMutableArray *images = [[NSMutableArray alloc]init];
+    
+    for (int i = 0; i < [_pickedAssets count]; i++)
+    {
+        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
+        NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
+        CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
+        [[PHImageManager defaultManager]
+         requestImageForAsset:_pickedAssets[i]
+         targetSize:retinaSquare
+         contentMode:PHImageContentModeAspectFill
+         options:nil
+         resultHandler:^(UIImage *result, NSDictionary *info) {
+             
+             [images addObject:result];
+             
+         }];
+    }
+    
+    //展示照片scroll view
+    [self showImageDisplayScrollViewWithImages:images];
+    
+}
+
 
 #pragma mark - CHImagePickerView setting & delegate
+
+-(void)showImagePickerAlert{
+    //點選"分析"按鈕時, 跳出照片
+    //        [self setImagePicker:_pickedAssets];
+    
+    UIAlertController * alert=   [UIAlertController
+                                  alertControllerWithTitle:@""
+                                  message:@"是否取用相簿照片"
+                                  preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction* yesButton = [UIAlertAction
+                                actionWithTitle:@"Yes"
+                                style:UIAlertActionStyleDefault
+                                handler:^(UIAlertAction * action)
+                                {
+                                    
+                                    //
+                                    switch ([PHPhotoLibrary authorizationStatus]) {
+                                        case PHAuthorizationStatusAuthorized:
+                                            [self setImagePicker:_pickedAssets];
+                                            break;
+                                            
+                                        default:
+                                            [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+                                                switch (status) {
+                                                    case PHAuthorizationStatusAuthorized:
+                                                    case PHAuthorizationStatusNotDetermined:
+                                                        [self setImagePicker:_pickedAssets];
+                                                        break;
+                                                        
+                                                    case PHAuthorizationStatusDenied:
+                                                    case PHAuthorizationStatusRestricted:
+                                                    {
+                                                        //Tell user access to the photos are restricted
+                                                        UIAlertController * alertForRestricted=   [UIAlertController
+                                                                                                   alertControllerWithTitle:@"錯誤"
+                                                                                                   message:@"無法訪問相簿,請至設定開啟權限"
+                                                                                                   preferredStyle:UIAlertControllerStyleAlert];
+                                                        
+                                                        UIAlertAction *okBtn = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                                                            [alertForRestricted dismissViewControllerAnimated:YES completion:nil];
+                                                        }];
+                                                        
+                                                        [alertForRestricted addAction:okBtn];
+                                                        
+                                                        [self presentViewController:alertForRestricted animated:YES completion:nil];
+                                                    }
+                                                        break;
+                                                        
+                                                    default:
+                                                        break;
+                                                }
+                                            }];
+                                            break;
+                                    }
+                                    
+                                    
+                                    [alert dismissViewControllerAnimated:YES completion:nil];
+                                    
+                                }];
+    
+    UIAlertAction* noButton = [UIAlertAction
+                               actionWithTitle:@"No"
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction * action)
+                               {
+                                   
+                                   [alert dismissViewControllerAnimated:YES completion:nil];
+                                   
+                               }];
+    
+    [alert addAction:yesButton];
+    [alert addAction:noButton];
+    
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+//show Image picker
 -(void)setImagePicker:(NSMutableArray *)assetArray
 {
     
@@ -712,127 +948,212 @@ NSString *const tableName_userGPS = @"user_GPS";
 
 -(void)finishedPickingImages:(NSMutableArray *)assets{
     
+    //存照片
     _pickedAssets = assets;
+    [self savePickedPhotoToDB];
     
-    //Clear the table
-    [[myDB sharedInstance] deleteTable:tableName_tripPhoto];
-    [[myDB sharedInstance] createTripTable:tableName_tripPhoto];
-    
-    [[myDB sharedInstance] deleteTable:tableName_userGPS];
-    [[myDB sharedInstance] createGPSTable:tableName_userGPS];
-    
-    //ready to save to database
-    __block NSString *imagePath = [[NSString alloc]init];
-    NSString *imageLatitude     = [[NSString alloc]init];
-    NSString *imageLongtitude   = [[NSString alloc]init];
-    NSString *comment           = [[NSString alloc]init];
-    NSString *voicePath         = [[NSString alloc]init];
-    NSString *hiddenState       = [[NSString alloc]init];
-    
-    //
-    NSMutableArray *images = [[NSMutableArray alloc] init];
-    markerArray = [[NSMutableArray alloc]init];
-    
-    [_mapView clear];
-    
-    //從PHAsset 解析出UIImage
-    for (int i = 0; i < [assets count]; i++)
-    {
-        PHAsset *asset = assets[i];
+    //建立旅程, 如已經存在, 直接開照片
+    BOOL isTripCreate = [[_tripInfo objectForKey:@"isTripCreate"]boolValue];
+    if (!isTripCreate) {
         
-        //取值 - 地圖座標
-        CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
-        imageLatitude   = [NSString stringWithFormat:@"%f",asset.location.coordinate.latitude];
-        imageLongtitude = [NSString stringWithFormat:@"%f",asset.location.coordinate.longitude];
-        NSLog(@"imageLatitue:%@,imageLongtitude:%@",imageLatitude,imageLongtitude);
-        
-        GMSMarker *marker = [GMSMarker markerWithPosition:position];
-        marker.title =[NSString stringWithFormat:@"%d",i];
-        marker.snippet = @"Population: 8,174,100";
-        marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
-        marker.map = _mapView;
-        [markerArray addObject:marker];
-        
-        //取值 - 圖片 & marker
-        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
-        NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
-        CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
-        [[PHImageManager defaultManager]
-         requestImageForAsset:assets[i]
-         targetSize:retinaSquare
-         contentMode:PHImageContentModeAspectFill
-         options:nil
-         resultHandler:^(UIImage *result, NSDictionary *info) {
-             
-             [images addObject:result];
-             UIGraphicsBeginImageContextWithOptions(CGSizeMake(30, 40), NO, 0.0);
-             [result drawInRect:CGRectMake(0, 0, 30, 40)];
-             UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
-             UIGraphicsEndImageContext();
-             marker.icon = newImage;
-         }];
-        
-        //取值 - path
-        imagePath = asset.localIdentifier;
-        
-//        PHImageRequestOptions * imageRequestOptions = [[PHImageRequestOptions alloc] init];
-//        imageRequestOptions.synchronous = YES;
-//        [[PHImageManager defaultManager]
-//         requestImageDataForAsset:asset
-//         options:imageRequestOptions
-//         resultHandler:^(NSData *imageData, NSString *dataUTI,
-//                         UIImageOrientation orientation,
-//                         NSDictionary *info)
-//         {
-////             NSLog(@"info = %@", info);
-//             if ([info objectForKey:@"PHImageFileURLKey"]) {
-//                 // path looks like this -
-//                 // file:///var/mobile/Media/DCIM/###APPLE/IMG_####.JPG
-//                 NSURL *path = [info objectForKey:@"PHImageFileURLKey"];
-//                 imagePath = [NSString stringWithFormat:@"%@",path];
-//             }
-//         }];
+        [self tripInfoUpdateObjec:[NSNumber numberWithBool:YES] forKey:@"isTripCreate"];
+       
+        [self updateTripCreateState];
 
-        //存入table
-        [[myDB sharedInstance]insertTable:tableName_tripPhoto andImageLatitude:imageLatitude andImageLongtitude:imageLongtitude ImagePath:imagePath andComments:comment andVoicePath:voicePath andHiddenState:hiddenState];
-        
-    }
-    
-    //是否放照片在地圖上
-    _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
-    if (_isShowImagesOnMap) {
-        NSLog(@"show Images On Map");
     }else{
-        [_mapView clear];
-        NSLog(@"Don't show Images On Map ");
+        
+        [self loadDBPhotos];
     }
     
-    //show Image scrollView
-    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:201];
-    modeBtnBackgroundView.hidden = NO;
     
-    [imageScrollView setImageAry:images];
-//    [self setImageDisplayScrollView:images];
-
-    //show Trip title text
-    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
-    tripTitleText.hidden = NO;
-    
-    UIView *coverTripTitleView = (UIView *)[_mapDisplayView viewWithTag:202];
-    coverTripTitleView.hidden = NO;
-
-    //Create  Trip
-    _isTripCreate = YES;
-    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:_isTripCreate] forKey:@"isTripCreate"];
-    NSLog(@"Trip Created!");
-    
-    
-    //Start to record GPS
-    [_locationManager startUpdatingLocation];
-    NSLog(@"GPS recording start");
 }
 
-#pragma mark - GMSMapView Settings & Delegate
+//-(void)finishedPickingImages:(NSMutableArray *)assets{
+//    
+//    _pickedAssets = assets;
+//    
+//    //Clear the table
+//    [[myDB sharedInstance] deleteTable:tableName_tripPhoto];
+//    [[myDB sharedInstance] createTripTable:tableName_tripPhoto];
+//    
+//    [[myDB sharedInstance] deleteTable:tableName_userGPS];
+//    [[myDB sharedInstance] createGPSTable:tableName_userGPS];
+//    
+//    //ready to save to database
+//    __block NSString *imagePath = [[NSString alloc]init];
+//    NSString *imageLatitude     = [[NSString alloc]init];
+//    NSString *imageLongtitude   = [[NSString alloc]init];
+//    NSString *comment           = [[NSString alloc]init];
+//    NSString *voicePath         = [[NSString alloc]init];
+//    NSString *hiddenState       = [[NSString alloc]init];
+//    
+//    //
+//    NSMutableArray *images = [[NSMutableArray alloc] init];
+//    markerArray = [[NSMutableArray alloc]init];
+//    
+//    [_mapView clear];
+//    
+//    //從PHAsset 解析出UIImage
+//    for (int i = 0; i < [assets count]; i++)
+//    {
+//        PHAsset *asset = assets[i];
+//        
+//        //取值 - 地圖座標
+//        CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
+//        imageLatitude   = [NSString stringWithFormat:@"%f",asset.location.coordinate.latitude];
+//        imageLongtitude = [NSString stringWithFormat:@"%f",asset.location.coordinate.longitude];
+//        NSLog(@"imageLatitue:%@,imageLongtitude:%@",imageLatitude,imageLongtitude);
+//        
+//        GMSMarker *marker = [GMSMarker markerWithPosition:position];
+//        marker.title =[NSString stringWithFormat:@"%d",i];
+//        marker.snippet = @"Population: 8,174,100";
+//        marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+//        marker.map = _mapView;
+//        [markerArray addObject:marker];
+//        
+//        //取值 - 圖片 & marker
+//        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
+//        NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
+//        CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
+//        [[PHImageManager defaultManager]
+//         requestImageForAsset:assets[i]
+//         targetSize:retinaSquare
+//         contentMode:PHImageContentModeAspectFill
+//         options:nil
+//         resultHandler:^(UIImage *result, NSDictionary *info) {
+//             
+//             [images addObject:result];
+//             UIGraphicsBeginImageContextWithOptions(CGSizeMake(30, 40), NO, 0.0);
+//             [result drawInRect:CGRectMake(0, 0, 30, 40)];
+//             UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+//             UIGraphicsEndImageContext();
+//             marker.icon = newImage;
+//         }];
+//        
+//        //取值 - path
+//        imagePath = asset.localIdentifier;
+//        
+////        PHImageRequestOptions * imageRequestOptions = [[PHImageRequestOptions alloc] init];
+////        imageRequestOptions.synchronous = YES;
+////        [[PHImageManager defaultManager]
+////         requestImageDataForAsset:asset
+////         options:imageRequestOptions
+////         resultHandler:^(NSData *imageData, NSString *dataUTI,
+////                         UIImageOrientation orientation,
+////                         NSDictionary *info)
+////         {
+//////             NSLog(@"info = %@", info);
+////             if ([info objectForKey:@"PHImageFileURLKey"]) {
+////                 // path looks like this -
+////                 // file:///var/mobile/Media/DCIM/###APPLE/IMG_####.JPG
+////                 NSURL *path = [info objectForKey:@"PHImageFileURLKey"];
+////                 imagePath = [NSString stringWithFormat:@"%@",path];
+////             }
+////         }];
+//
+//        //存入table
+//        [[myDB sharedInstance]insertTable:tableName_tripPhoto andImageLatitude:imageLatitude andImageLongtitude:imageLongtitude ImagePath:imagePath andComments:comment andVoicePath:voicePath andHiddenState:hiddenState];
+//        
+//    }
+//    
+//    //是否放照片在地圖上
+//    _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
+//    if (_isShowImagesOnMap) {
+//        NSLog(@"show Images On Map");
+//    }else{
+//        [_mapView clear];
+//        NSLog(@"Don't show Images On Map ");
+//    }
+//    
+//    //show Image scrollView
+//    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:201];
+//    modeBtnBackgroundView.hidden = NO;
+//    
+//    [imageScrollView setImageAry:images];
+////    [self setImageDisplayScrollView:images];
+//
+//
+//    
+//    //Create  Trip
+//    if (!_isTripCreate) {
+//
+//        _isTripCreate = YES;
+//        [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:_isTripCreate] forKey:@"isTripCreate"];
+//        
+//        
+//        [self updateTripCreateState];
+//        
+//        
+//        ///!!!:wait for coding
+//        //show Trip title text
+//        UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
+//        tripTitleText.hidden = NO;
+//        
+//        UIView *coverTripTitleView = (UIView *)[_mapDisplayView viewWithTag:202];
+//        coverTripTitleView.hidden = NO;
+//        ///
+//        
+//        
+//        
+//        NSLog(@"Trip Created!");
+//    }
+//
+//    //Start to record GPS
+//    [_locationManager startUpdatingLocation];
+//    NSLog(@"GPS recording start");
+//}
+
+#pragma mark - UIImagePickerController
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(nullable NSDictionary<NSString *,id> *)editingInfo NS_DEPRECATED_IOS(2_0, 3_0){
+    
+}
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
+    
+    UIImage *img = [info objectForKey:@"UIImagePickerControllerOriginalImage"];
+    
+    // Save image
+    UIImageWriteToSavedPhotosAlbum(img, self, nil, nil);
+    
+    //等1秒後,
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        
+        // get camera roll
+        PHAssetCollection *cameraRoll = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil].lastObject;
+        PHAsset *asset = [[PHAsset fetchAssetsInAssetCollection:cameraRoll options:nil] lastObject];
+        [_pickedAssets addObject:asset];
+        [self finishedPickingImages:_pickedAssets];
+        
+    });
+    
+    //圖庫選圖完之後，自動關閉圖庫
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    
+    
+}
+
+
+#pragma mark
+#pragma mark - Map (GMSMapView Settings & Delegate)
+
+-(void)initMapView{
+    
+    int initalZoomLevel = 14;
+    // init mapView
+    GMSCameraPosition *camera = [GMSCameraPosition cameraWithLatitude:24.081446
+                                                            longitude:120.538854
+                                                                 zoom:initalZoomLevel];
+    
+    _mapView = [GMSMapView mapWithFrame:_mapDisplayView.bounds camera:camera];
+    [_mapDisplayView insertSubview:_mapView atIndex:0];
+    
+    //_mapView basic setting
+    //    _mapView.myLocationEnabled = YES;
+    _mapView.settings.compassButton = YES;
+    //    _mapView.settings.myLocationButton = YES;
+    _mapView.delegate = self;
+    
+}
+
 - (void)mapView:(GMSMapView *)mapView didTapAtCoordinate:(CLLocationCoordinate2D)coordinate
 {
     NSLog(@"You tapped at %f,%f", coordinate.latitude, coordinate.longitude);
@@ -960,33 +1281,7 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 }
 */
 
-#pragma mark - UIImagePickerController
-- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(nullable NSDictionary<NSString *,id> *)editingInfo NS_DEPRECATED_IOS(2_0, 3_0){
-    
-}
-- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
-    
-    UIImage *img = [info objectForKey:@"UIImagePickerControllerOriginalImage"];
-    
-    // Save image
-    UIImageWriteToSavedPhotosAlbum(img, self, nil, nil);
-    
-    //等1秒後, 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        
-        // get camera roll
-        PHAssetCollection *cameraRoll = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil].lastObject;
-        PHAsset *asset = [[PHAsset fetchAssetsInAssetCollection:cameraRoll options:nil] lastObject];
-        [_pickedAssets addObject:asset];
-        [self finishedPickingImages:_pickedAssets];
-        
-    });
-    
-    //圖庫選圖完之後，自動關閉圖庫
-    [picker dismissViewControllerAnimated:YES completion:nil];
-    
-    
-}
+
 
 #pragma mark - locationManager Delegate
 
@@ -1354,6 +1649,28 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     }];
 
 }
+
+#pragma mark
+#pragma mark - Trip data
+-(void)showReadTripCodeVC{
+    
+    CHReadTripCodeVC *vc = [[CHReadTripCodeVC alloc]init];
+    vc.delegate = self;
+    [self presentViewController:vc animated:YES completion:nil];
+}
+
+-(void)didLoadTheTripDate{
+    NSLog(@"Load trip data");
+    
+    float tableWidth = 88;
+    float tableHeight = _mapDisplayView.frame.size.height - (54 + IMAGEHEIGHT +44);
+    
+    CHMoveableTableView *moveTV = [[CHMoveableTableView alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - tableWidth, 54, tableWidth, tableHeight)];
+    
+    [_mapDisplayView addSubview:moveTV];
+
+}
+
 
 #pragma mark
 #pragma mark - Alerts

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9532" systemVersion="14F1605" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CHReadTripCodeVC">
+            <connections>
+                <outlet property="currentCodeLabel" destination="Fsx-cu-vO2" id="Ake-8Q-wxs"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lNW-iV-flF">
+                    <rect key="frame" x="123" y="498" width="75" height="30"/>
+                    <state key="normal" title="讀取分享碼"/>
+                    <connections>
+                        <action selector="readCodeBtnAction:" destination="-1" eventType="touchUpInside" id="top-MZ-71o"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="當前分享碼：" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="D1R-IE-wW7">
+                    <rect key="frame" x="8" y="83" width="102" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="AAA" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Fsx-cu-vO2">
+                    <rect key="frame" x="110" y="83" width="34" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1li-h6-A1i">
+                    <rect key="frame" x="8" y="22" width="34" height="30"/>
+                    <state key="normal" title="Back"/>
+                    <connections>
+                        <action selector="backBtnAction:" destination="-1" eventType="touchUpInside" id="yBg-Ok-XbX"/>
+                    </connections>
+                </button>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="Fsx-cu-vO2" firstAttribute="centerY" secondItem="D1R-IE-wW7" secondAttribute="centerY" id="2sz-7A-xqq"/>
+                <constraint firstItem="lNW-iV-flF" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="Gtj-QF-kwX"/>
+                <constraint firstItem="1li-h6-A1i" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="22" id="VHB-x8-ipY"/>
+                <constraint firstItem="1li-h6-A1i" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="8" id="VsX-kc-6p3"/>
+                <constraint firstItem="D1R-IE-wW7" firstAttribute="top" secondItem="1li-h6-A1i" secondAttribute="bottom" constant="31" id="hen-uu-45z"/>
+                <constraint firstItem="Fsx-cu-vO2" firstAttribute="leading" secondItem="D1R-IE-wW7" secondAttribute="trailing" id="ic8-JA-MpU"/>
+                <constraint firstAttribute="bottom" secondItem="lNW-iV-flF" secondAttribute="bottom" constant="40" id="pde-8A-GLV"/>
+                <constraint firstItem="D1R-IE-wW7" firstAttribute="leading" secondItem="1li-h6-A1i" secondAttribute="leading" id="vWJ-ud-b00"/>
+            </constraints>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+        </view>
+    </objects>
+</document>

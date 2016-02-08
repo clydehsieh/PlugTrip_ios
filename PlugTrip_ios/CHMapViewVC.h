@@ -17,11 +17,13 @@
 #import "myDB.h"
 #import "CHChatRoomSettingVC.h"
 #import "CHChatRoomVC.h"
+#import "CHReadTripCodeVC.h"
+#import "CHMoveableTableView.h"
 #import "XMPP.h"
 #import "BCKeychainManager.h"
 
 
-@interface CHMapViewVC : UIViewController <GMSMapViewDelegate,MapVCSeachViewDelegate,MapVCMenuViewDelegate,CHImagePickerViewDelegate,CHScrollViewDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate,CLLocationManagerDelegate,UITextFieldDelegate>
+@interface CHMapViewVC : UIViewController <GMSMapViewDelegate,MapVCSeachViewDelegate,MapVCMenuViewDelegate,CHImagePickerViewDelegate,CHScrollViewDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate,CLLocationManagerDelegate,UITextFieldDelegate,CHReadTripCodeVCDelegate>
 
 @property (nonatomic) BOOL isTripCreate;//確認是否已經建立local旅程, 初始化判斷用
 
@@ -29,7 +31,7 @@
 @property (nonatomic, retain) NSMutableDictionary *userInfo; // 紀錄user 資料
 @property (nonatomic) NSString *userID;//裝置使用者ID
 @property (nonatomic) NSString *userNickName;//裝置使用者ID 暱稱
-@property (nonatomic) NSString *userUUID;//裝置UUID
+//@property (nonatomic) NSString *userUUID;//裝置UUID
 
 // Chating room
 @property (nonatomic, retain) NSMutableDictionary *roomInfo; // 紀錄user 資料

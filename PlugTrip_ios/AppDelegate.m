@@ -19,6 +19,7 @@
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentPath = [paths firstObject];
     NSString *dbPath = [documentPath stringByAppendingPathComponent:@"mydatabase.sqlite"];
+    NSLog(@"DB location:%@",dbPath);
     
     return dbPath;
 }

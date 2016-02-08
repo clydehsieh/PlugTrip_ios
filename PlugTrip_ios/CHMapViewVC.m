@@ -22,6 +22,7 @@
  
  301  tripTitleText
  
+ 401  moveTV
  */
 
 /* [NSUserDefaults standardUserDefaults]:
@@ -1662,11 +1663,17 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 -(void)didLoadTheTripDate{
     NSLog(@"Load trip data");
     
+    CHMoveableTableView *moveTV = [(CHMoveableTableView *)_mapDisplayView viewWithTag:401];
+    
+    if (moveTV) {
+        [moveTV removeFromSuperview];
+    }
+    
     float tableWidth = 88;
     float tableHeight = _mapDisplayView.frame.size.height - (54 + IMAGEHEIGHT +44);
     
-    CHMoveableTableView *moveTV = [[CHMoveableTableView alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - tableWidth, 54, tableWidth, tableHeight)];
-    
+    moveTV = [[CHMoveableTableView alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - tableWidth, 54, tableWidth, tableHeight)];
+    moveTV.tag = 401;
     [_mapDisplayView addSubview:moveTV];
 
 }

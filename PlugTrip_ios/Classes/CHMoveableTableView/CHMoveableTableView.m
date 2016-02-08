@@ -88,11 +88,12 @@
     imageView.hidden = (isMergeState)?NO:YES;
     
     UIView *backgroundView = (UIView *)[cell viewWithTag:2];
-    backgroundView.backgroundColor = [UIColor blueColor];
+    backgroundView.backgroundColor = [UIColor whiteColor];
 
     UILabel *placeTitle = (UILabel *)[cell viewWithTag:3];
     NSString *object = placeName;
     placeTitle.text = object;
+    placeTitle.textColor = [UIColor lightGrayColor];
     
     UIImageView *markImage = (UIImageView *)[cell viewWithTag:4];
     markImage.backgroundColor = [UIColor redColor];
@@ -170,21 +171,16 @@
         
             //make sure the loc range is between -cellHeight/2 ~ cellHeight/2
             float loc = location.y - cell.frame.size.height/2 - cell.frame.size.height * sourceIndexPath.row;
-            float margin   = 0.5;
+            float margin   = 0.15;
             float mergeMin = cell.frame.size.height * (1.0 - margin);
             float mergeMax = cell.frame.size.height * (1.0 + margin);
             NSLog(@"%f < %f < %f",mergeMin,fabs(loc),mergeMax);
-            
+            NSLog(@"%ld %ld \n",(long)indexPath.row,(long)sourceIndexPath.row);
             
             if (self.objects.count!=1) {
                 
                 if (fabs(loc) > mergeMin && fabs(loc) < mergeMax) {
                     
-                    //get the mergeIndexPath
-                    long shiftRowValue = (loc>0) ? indexPath.row +1 : indexPath.row -1;
-                    shiftRowValue = (shiftRowValue <0) ? 0 :shiftRowValue;
-                    targetIndexPath = [NSIndexPath indexPathForRow:shiftRowValue inSection:indexPath.section];
-                    //                NSLog(@"shiftRowValue:%ld",shiftRowValue);
                     isMergeState = YES;
 
                 }else {
@@ -210,7 +206,14 @@
             }
             
             //merge state animation
-            snapshot.alpha = (isMergeState)? 0.3:0.98;
+            [UIView animateWithDuration:0.25 animations:^{
+                
+                snapshot.alpha = (isMergeState)? 0.7:0.98;
+                
+            } completion:^(BOOL finished) {
+                
+            }];
+            
          
             break;
         }
@@ -221,72 +224,145 @@
             cell.hidden = NO;
             cell.alpha = 0.0;
             
+            
+            
+            
             //merge cell!
-            if (isMergeState) {
-                ///!!!: wait for coding :merge cell
-                if (targetIndexPath) {
-                    NSLog(@"merge cell: %ld",targetIndexPath.row);
+            if (isMergeState && self.objects.count !=1 && (indexPath && ![indexPath isEqual:sourceIndexPath]) ) {
+                
+                NSMutableArray *newArray;
+                
+
+                if ([self.objects[indexPath.row] isKindOfClass:[NSDictionary class]]) {
                     
-                    NSMutableArray *newArray;
+                    NSDictionary *dic_target = self.objects[indexPath.row];
+                    NSArray *ary_target = dic_target[@"placeName"];
                     
+                    //merge後的地名arry
+                    newArray = [[NSMutableArray alloc]initWithArray:ary_target];
                     
-                    if ([self.objects[targetIndexPath.row] isKindOfClass:[NSDictionary class]]) {
+                    if ([self.objects[sourceIndexPath.row] isKindOfClass:[NSDictionary class]]){
                         
-                        NSDictionary *dic_target = self.objects[targetIndexPath.row];
-                        NSArray *ary_target = dic_target[@"placeName"];
+                        //目標是dictionary , 自己也是dictionary
+                        NSDictionary *dic_source = self.objects[sourceIndexPath.row];
+                        NSArray *ary_source = dic_source[@"placeName"];
                         
-                        //merge後的地名arry
-                        newArray = [[NSMutableArray alloc]initWithArray:ary_target];
+                        [ary_source enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                            [newArray addObject:obj];
+                        }];
+                    }else if([self.objects[sourceIndexPath.row] isKindOfClass:[NSString class]]){
                         
-                        if ([self.objects[sourceIndexPath.row] isKindOfClass:[NSDictionary class]]){
-                            
-                            //目標是dictionary , 自己也是dictionary
-                            NSDictionary *dic_source = self.objects[sourceIndexPath.row];
-                            NSArray *ary_source = dic_source[@"placeName"];
-                            
-                            [ary_source enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                                [newArray addObject:obj];
-                            }];
-                        }else if([self.objects[sourceIndexPath.row] isKindOfClass:[NSString class]]){
-                            
-                            //目標是dictionary , 自己是nsstring
-                            [newArray addObject:self.objects[sourceIndexPath.row]];
-                        }
-                        
-                        
-                    }else if([self.objects[targetIndexPath.row] isKindOfClass:[NSString class]]){
-                        
-                        NSString *placeName = self.objects[targetIndexPath.row];
-                        
-                        //merge後的地名arry
-                        newArray = [[NSMutableArray alloc]initWithObjects:placeName, nil];
-                        
-                        if ([self.objects[sourceIndexPath.row] isKindOfClass:[NSDictionary class]]){
-                            
-                            //目標是NSString , 自己是dictionary
-                            NSDictionary *dic_source = self.objects[sourceIndexPath.row];
-                            NSArray *ary_source = dic_source[@"placeName"];
-                            
-                            [ary_source enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                                [newArray addObject:obj];
-                            }];
-                            
-                        }else if([self.objects[sourceIndexPath.row] isKindOfClass:[NSString class]]){
-                            
-                            //目標是NSString , 自己是NSString
-                            [newArray addObject:self.objects[sourceIndexPath.row]];
-                            
-                        }
+                        //目標是dictionary , 自己是nsstring
+                        [newArray addObject:self.objects[sourceIndexPath.row]];
                     }
                     
-                    NSDictionary *newDic = [NSDictionary dictionaryWithObjectsAndKeys:
-                                            newArray,@"placeName",
-                                            [NSNumber numberWithLong:newArray.count-1],@"number",
-                                            nil];
-                    self.objects[targetIndexPath.row] = newDic;
-                    [self.objects removeObjectAtIndex:sourceIndexPath.row];
+                    
+                }else if([self.objects[indexPath.row] isKindOfClass:[NSString class]]){
+                    
+                    NSString *placeName = self.objects[indexPath.row];
+                    
+                    //merge後的地名arry
+                    newArray = [[NSMutableArray alloc]initWithObjects:placeName, nil];
+                    
+                    if ([self.objects[sourceIndexPath.row] isKindOfClass:[NSDictionary class]]){
+                        
+                        //目標是NSString , 自己是dictionary
+                        NSDictionary *dic_source = self.objects[sourceIndexPath.row];
+                        NSArray *ary_source = dic_source[@"placeName"];
+                        
+                        [ary_source enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                            [newArray addObject:obj];
+                        }];
+                        
+                    }else if([self.objects[sourceIndexPath.row] isKindOfClass:[NSString class]]){
+                        
+                        //目標是NSString , 自己是NSString
+                        [newArray addObject:self.objects[sourceIndexPath.row]];
+                        
+                    }
                 }
+                
+                NSDictionary *newDic = [NSDictionary dictionaryWithObjectsAndKeys:
+                                        newArray,@"placeName",
+                                        [NSNumber numberWithLong:newArray.count-1],@"number",
+                                        nil];
+                self.objects[indexPath.row] = newDic;//目標更新資料
+                [self.objects removeObjectAtIndex:sourceIndexPath.row];//原本檔案刪除
+
+                
             }
+
+            
+//            //merge cell!
+//            if (isMergeState) {
+//                ///!!!: wait for coding :merge cell
+//                if (sourceIndexPath) {
+//                    NSLog(@"merge cell: %ld",targetIndexPath.row);
+//                    
+//                    NSMutableArray *newArray;
+//                    
+//                    
+//                    if ([self.objects[targetIndexPath.row] isKindOfClass:[NSDictionary class]]) {
+//                        
+//                        NSDictionary *dic_target = self.objects[targetIndexPath.row];
+//                        NSArray *ary_target = dic_target[@"placeName"];
+//                        
+//                        //merge後的地名arry
+//                        newArray = [[NSMutableArray alloc]initWithArray:ary_target];
+//                        
+//                        if ([self.objects[sourceIndexPath.row] isKindOfClass:[NSDictionary class]]){
+//                            
+//                            //目標是dictionary , 自己也是dictionary
+//                            NSDictionary *dic_source = self.objects[sourceIndexPath.row];
+//                            NSArray *ary_source = dic_source[@"placeName"];
+//                            
+//                            [ary_source enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+//                                [newArray addObject:obj];
+//                            }];
+//                        }else if([self.objects[sourceIndexPath.row] isKindOfClass:[NSString class]]){
+//                            
+//                            //目標是dictionary , 自己是nsstring
+//                            [newArray addObject:self.objects[sourceIndexPath.row]];
+//                        }
+//                        
+//                        
+//                    }else if([self.objects[targetIndexPath.row] isKindOfClass:[NSString class]]){
+//                        
+//                        NSString *placeName = self.objects[targetIndexPath.row];
+//                        
+//                        //merge後的地名arry
+//                        newArray = [[NSMutableArray alloc]initWithObjects:placeName, nil];
+//                        
+//                        if ([self.objects[sourceIndexPath.row] isKindOfClass:[NSDictionary class]]){
+//                            
+//                            //目標是NSString , 自己是dictionary
+//                            NSDictionary *dic_source = self.objects[sourceIndexPath.row];
+//                            NSArray *ary_source = dic_source[@"placeName"];
+//                            
+//                            [ary_source enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+//                                [newArray addObject:obj];
+//                            }];
+//                            
+//                        }else if([self.objects[sourceIndexPath.row] isKindOfClass:[NSString class]]){
+//                            
+//                            //目標是NSString , 自己是NSString
+//                            [newArray addObject:self.objects[sourceIndexPath.row]];
+//                            
+//                        }
+//                    }
+//                    
+//                    NSDictionary *newDic = [NSDictionary dictionaryWithObjectsAndKeys:
+//                                            newArray,@"placeName",
+//                                            [NSNumber numberWithLong:newArray.count-1],@"number",
+//                                            nil];
+//                    self.objects[targetIndexPath.row] = newDic;
+//                    [self.objects removeObjectAtIndex:sourceIndexPath.row];
+//                }
+//            }
+            
+            
+            
+            
             
             
             //動畫

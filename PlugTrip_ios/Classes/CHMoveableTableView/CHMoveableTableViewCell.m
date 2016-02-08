@@ -25,14 +25,18 @@
     UIView *view = (UIView *)[self viewWithTag:2];
     UILabel *subTitleLabel = (UILabel *)[self viewWithTag:3];
     
+    UILabel *placeTitle = (UILabel *)[self viewWithTag:3];
+    
     if (selected) {
-        view.backgroundColor = [UIColor redColor];
-        subTitleLabel.textColor = [UIColor redColor];
+//        view.backgroundColor = [UIColor redColor];
+//        subTitleLabel.textColor = [UIColor redColor];
+        placeTitle.textColor = [UIColor redColor];
 
     }else
     {
-        view.backgroundColor = VIEWCOLOR;
-        subTitleLabel.textColor = [UIColor blackColor];
+//        view.backgroundColor = VIEWCOLOR;
+//        subTitleLabel.textColor = [UIColor blackColor];
+        placeTitle.textColor = [UIColor lightGrayColor];
     }
     
     // Configure the view for the selected state

@@ -16,6 +16,8 @@
 		EC6F52561C6300AE009FCBC9 /* CHMoveableTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = EC6F52521C6300AE009FCBC9 /* CHMoveableTableView.m */; };
 		EC6F52571C6300AE009FCBC9 /* CHMoveableTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = EC6F52541C6300AE009FCBC9 /* CHMoveableTableViewCell.m */; };
 		EC6F52581C6300AE009FCBC9 /* CHMoveableTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC6F52551C6300AE009FCBC9 /* CHMoveableTableViewCell.xib */; };
+		EC6F525C1C697D2F009FCBC9 /* CHFIreBaseAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = EC6F525B1C697D2F009FCBC9 /* CHFIreBaseAdaptor.m */; };
+		EC6F525E1C6AE397009FCBC9 /* plugtrip.json in Resources */ = {isa = PBXBuildFile; fileRef = EC6F525D1C6AE396009FCBC9 /* plugtrip.json */; };
 		EC8C8EF01C326430005BADBC /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8EEF1C326430005BADBC /* libsqlite3.tbd */; };
 		EC8C8EF61C327193005BADBC /* mydatabase.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EC8C8EF51C327193005BADBC /* mydatabase.sqlite */; };
 		EC8C8EF71C327193005BADBC /* mydatabase.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EC8C8EF51C327193005BADBC /* mydatabase.sqlite */; };
@@ -107,6 +109,9 @@
 		EC6F52531C6300AE009FCBC9 /* CHMoveableTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHMoveableTableViewCell.h; path = Classes/CHMoveableTableView/CHMoveableTableViewCell.h; sourceTree = "<group>"; };
 		EC6F52541C6300AE009FCBC9 /* CHMoveableTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHMoveableTableViewCell.m; path = Classes/CHMoveableTableView/CHMoveableTableViewCell.m; sourceTree = "<group>"; };
 		EC6F52551C6300AE009FCBC9 /* CHMoveableTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = CHMoveableTableViewCell.xib; path = Classes/CHMoveableTableView/CHMoveableTableViewCell.xib; sourceTree = "<group>"; };
+		EC6F525A1C697D2F009FCBC9 /* CHFIreBaseAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHFIreBaseAdaptor.h; path = Classes/CHFIreBaseAdaptor.h; sourceTree = "<group>"; };
+		EC6F525B1C697D2F009FCBC9 /* CHFIreBaseAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHFIreBaseAdaptor.m; path = Classes/CHFIreBaseAdaptor.m; sourceTree = "<group>"; };
+		EC6F525D1C6AE396009FCBC9 /* plugtrip.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = plugtrip.json; sourceTree = "<group>"; };
 		EC8C8EEF1C326430005BADBC /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		EC8C8EF51C327193005BADBC /* mydatabase.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = mydatabase.sqlite; sourceTree = "<group>"; };
 		EC8C8EF91C3271CE005BADBC /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
@@ -304,6 +309,15 @@
 			name = CHMoveableTableView;
 			sourceTree = "<group>";
 		};
+		EC6F52591C697CFC009FCBC9 /* CHFIreBaseAdaptor */ = {
+			isa = PBXGroup;
+			children = (
+				EC6F525A1C697D2F009FCBC9 /* CHFIreBaseAdaptor.h */,
+				EC6F525B1C697D2F009FCBC9 /* CHFIreBaseAdaptor.m */,
+			);
+			name = CHFIreBaseAdaptor;
+			sourceTree = "<group>";
+		};
 		EC8C8EFB1C327788005BADBC /* fmdb */ = {
 			isa = PBXGroup;
 			children = (
@@ -347,6 +361,7 @@
 			isa = PBXGroup;
 			children = (
 				EC8C8EF51C327193005BADBC /* mydatabase.sqlite */,
+				EC6F525D1C6AE396009FCBC9 /* plugtrip.json */,
 				ECD493B21C28E9370043BE54 /* PlugTrip_ios */,
 				ECD493CC1C28E9370043BE54 /* PlugTrip_iosTests */,
 				ECD493D71C28E9370043BE54 /* PlugTrip_iosUITests */,
@@ -420,6 +435,7 @@
 				EC6F52501C63009C009FCBC9 /* CHMoveableTableView */,
 				EC6F524A1C61D17F009FCBC9 /* CHReadTripCodeVC */,
 				ECFA88E11C5A611000A24A85 /* CHParseAdaptor */,
+				EC6F52591C697CFC009FCBC9 /* CHFIreBaseAdaptor */,
 				EC37A03C1C4FB1E600215003 /* BCKeychainManager */,
 				EC37A0411C5087D800215003 /* CHChatRoomSettingVC */,
 				ECD3027F1C4F333100AFE746 /* CHChatRoomVC */,
@@ -617,6 +633,7 @@
 				EC6F52581C6300AE009FCBC9 /* CHMoveableTableViewCell.xib in Resources */,
 				ECD493BE1C28E9370043BE54 /* Main.storyboard in Resources */,
 				ECD494151C30CBD60043BE54 /* 1_uncheck.png in Resources */,
+				EC6F525E1C6AE397009FCBC9 /* plugtrip.json in Resources */,
 				EC6F524F1C61D1CB009FCBC9 /* CHReadTripCodeVC.xib in Resources */,
 				ECD494191C30CBD60043BE54 /* checked@2x.png in Resources */,
 				ECD494181C30CBD60043BE54 /* allCheck@2x.png in Resources */,
@@ -688,6 +705,7 @@
 				ECD493F31C2A5A440043BE54 /* MapVCSearchView.m in Sources */,
 				ECD494081C30BE010043BE54 /* CHImagePickerView.m in Sources */,
 				ECD494061C30BE010043BE54 /* CHImagePickerHeaderView.m in Sources */,
+				EC6F525C1C697D2F009FCBC9 /* CHFIreBaseAdaptor.m in Sources */,
 				ECD493E81C2A4E960043BE54 /* CHLoginVC.m in Sources */,
 				EC8C8F0B1C327788005BADBC /* FMResultSet.m in Sources */,
 				ECFA88E41C5A613C00A24A85 /* CHParseAdaptor.m in Sources */,

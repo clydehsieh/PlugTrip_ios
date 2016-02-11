@@ -8,6 +8,13 @@
 
 #import "CHMoveableTableView.h"
 
+@interface CHMoveableTableView (){
+    
+}
+
+@end
+
+
 @implementation CHMoveableTableView
 
 - (id)initWithCoder:(NSCoder *)aDecoder {
@@ -16,7 +23,7 @@
         UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressGestureRecognized:)];
         [self addGestureRecognizer:longPress];
         
-        [self initSetting];
+//        [self initSetting];
         
     }
     return self;
@@ -29,7 +36,7 @@
         UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPressGestureRecognized:)];
         [self addGestureRecognizer:longPress];
         
-        [self initSetting];
+//        [self initSetting];
         
     }
     
@@ -50,16 +57,54 @@
     
 }
 
+-(void)setObjects:(NSMutableArray *)objects{
+    
+    if (objects) {
+        _objects = objects;//
+        /*
+         objects:
+         {
+         "day" :0,
+         "week":0,
+         ...
+         }
+         {
+         "day" :1,
+         "week":0,
+         ...
+         }
+         */
+        
+        
+        [self registerNib:[UINib nibWithNibName:@"CHMoveableTableViewCell" bundle:nil] forCellReuseIdentifier:@"identifier"];
+        
+        self.backgroundColor = [UIColor clearColor];
+        self.rowHeight = 60;
+        self.delegate = self;
+        self.dataSource = self;
+    }
+
+    
+}
+
 #pragma mark -
 #pragma mark - UITableView data source and delegate methods
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
     return [self.objects count];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    
+    NSDictionary *dic = self.objects[section];
+    
+    return [dic[@"items"] count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *cIdentifier = @"identifier";
     
+    //init cells
     CHMoveableTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cIdentifier forIndexPath:indexPath];
     
     if (!cell) {
@@ -68,20 +113,21 @@
     
     NSString *placeName ;
     BOOL isMergeState;
-    
-    if ([self.objects[indexPath.row] isKindOfClass:[NSDictionary class]]) {
+
+    if ([_objects[indexPath.row] isKindOfClass:[NSDictionary class]]) {
         
-        NSDictionary *dic = self.objects[indexPath.row];
+        NSDictionary *dic = _objects[indexPath.row];
         NSArray *placeArray = dic[@"placeName"];
         long index = [dic[@"number"] longLongValue];
         placeName = placeArray[index];
         isMergeState = YES;
                              
     }else{
-        placeName = self.objects[indexPath.row];
+        placeName = _objects[indexPath.row];
         isMergeState = NO;
     }
     
+
     // Update cell content from data source.
     UIImageView *imageView = (UIImageView *)[cell viewWithTag:1];
     imageView.backgroundColor = [UIColor redColor];

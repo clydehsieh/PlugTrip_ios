@@ -58,6 +58,8 @@
     
     CHScrollView *imageScrollView;
     
+    CHFIreBaseAdaptor *fireBaseAdp;
+    
     UIActivityIndicatorView *activityIndicator;
 }
 
@@ -74,20 +76,25 @@ NSString *const tableName_userGPS = @"user_GPS";
 
     _isInitialLayout = NO;//for first load view
     
+    //firebase
+    fireBaseAdp = [[CHFIreBaseAdaptor alloc]init];
+    
+    ///!!!:重寫
     //Trip Info
     _tripInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"]];
-    [_tripInfo count];
     if ([_tripInfo count]==0) {
         _tripInfo = [[NSMutableDictionary alloc]init];
         [_tripInfo setObject:@"New Trip Title"            forKey:@"tripTitle"];
         [_tripInfo setObject:[NSNumber numberWithBool:NO] forKey:@"isTripCreate"];
+        [_tripInfo setObject:[NSNumber numberWithBool:NO] forKey:@"isSavedOnline"];
         [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
         
         NSLog(@"Trip info is not exist, create new one");
     }else{
-        NSLog(@"Load TripInfo success");
+        NSLog(@"\nLoad TripInfo success, start to load photos");
+        
     }
-    
+
     //User Info
     _userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"userInfo"]];
     if ([_userInfo count]==0) {
@@ -101,8 +108,22 @@ NSString *const tableName_userGPS = @"user_GPS";
         NSLog(@"Load UserInfo success");
     }
     
-    
     _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
+    
+    if ([_roomInfo count]==0) {
+        _roomInfo = [[NSMutableDictionary alloc]init];
+        
+//        [_roomInfo setObject:_roomID     forKey:@"roomID"];
+//        [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
+        NSLog(@"User info is not exist, create new one");
+    }else{
+        NSLog(@"Load UserInfo success");
+    }
+    ///=============
+    
+    
+    
+    
     
     // check is chatRoom joined or not
     _isCheckChatRoomJoin = NO;
@@ -514,6 +535,21 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     //other subview action
     [sView searchBarCancelButtonClicked:nil];
+    
+    
+    ///!!!:測試, 可刪除
+//    [[CHFIreBaseAdaptor sharedWebApiAdaptor] setUserValueWithUUID:[_userInfo objectForKey:@"UUID"] andNickname:[_userInfo objectForKey:@"nickName"]];
+    
+//    [[CHFIreBaseAdaptor sharedWebApiAdaptor] createUserByUUID:[_userInfo objectForKey:@"UUID"] andNickname:[_userInfo objectForKey:@"nickName"]];
+    
+//    [[CHFIreBaseAdaptor sharedWebApiAdaptor] queryTest];
+    
+    ///
+    
+    
+    
+    
+
 
 }
 
@@ -657,12 +693,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
--(void)showChatRoom:(UIButton *)sender{
-    
-    CHChatRoomVC *vc = [[CHChatRoomVC alloc]init];
-    [self presentViewController:vc animated:YES completion:nil];
-    
-}
+
 
 -(void)editTripTitle:(UIGestureRecognizer *)recog{
     
@@ -705,6 +736,9 @@ NSString *const tableName_userGPS = @"user_GPS";
         case 3:
             //旅程mode
             _currentModeType = 3;
+            
+            ///!!!:wait coding
+//            [self loadJsonTripData];
             [self showReadTripCodeVC];
             
             [self drawPolyLinesOnMap];
@@ -797,7 +831,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
     NSMutableArray *localIdentifier =[[NSMutableArray alloc]init];
     queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName_tripPhoto];
-    NSLog(@"%@",queryTableResult);
+//    NSLog(@"%@",queryTableResult);
     
     if (queryTableResult) {
         //        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
@@ -1355,38 +1389,86 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     NSLog(@"%@", receivedMessage);
 }
 
+
+#pragma mark 
+#pragma mark - 同夥模式
 #pragma mark - Chat room actions
 
 //確認是否已加入聊天室
+
+//FireBase
 -(void)joinChatingRoom{
-    
+
     [self indicatorStart];
-    
-    PFQuery *query = [PFQuery queryWithClassName:@"Member"];
-    [query whereKey:@"userID" equalTo:_userInfo[@"userID"]];
-    [query findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
-        [self indicatorStop];
+
+    [fireBaseAdp queryMemberByUUID:_userInfo[@"UUID"] success:^(FDataSnapshot *snapshot) {
         
-        if (!error) {
-        
-            if (objects.count ==0) {
-                [self showChatRoomActionSheet];
-            }else{
-                
-                PFObject *member = [objects firstObject];
-                _roomID = [member objectForKey:@"roomID"];
-                
-                [self showChatRoomSettingVC];
-            }
+        //存在member
+        NSDictionary *dic = (NSDictionary *)snapshot.value ;
+
+        if (dic.count == 1) {
+            
+            NSDictionary *dic2 = [[dic allValues] firstObject];
+            _roomID = [dic2 objectForKey:@"roomID"];
+            
+            [_roomInfo setObject:_roomID     forKey:@"roomID"];
+            [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
+            
         }else{
-            NSLog(@"Error:%@",error.description);
+            NSLog(@"member uuid重複");
         }
         
         
+        [self showChatRoomSettingVC];
         
-
+    } failure:^{
+        
+        //不存在member
+        [self showChatRoomActionSheet];
     }];
+    
+    
 }
+
+-(void)showChatRoom:(UIButton *)sender{
+    
+    CHChatRoomVC *vc = [[CHChatRoomVC alloc]init];
+    [self presentViewController:vc animated:YES completion:nil];
+    
+}
+
+//Parse
+//-(void)joinChatingRoom{
+//    
+//    [self indicatorStart];
+//    
+//    PFQuery *query = [PFQuery queryWithClassName:@"Member"];
+//    [query whereKey:@"userID" equalTo:_userInfo[@"userID"]];
+//    [query findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
+//        [self indicatorStop];
+//        
+//        if (!error) {
+//        
+//            if (objects.count ==0) {
+//                [self showChatRoomActionSheet];
+//            }else{
+//                
+//                PFObject *member = [objects firstObject];
+//                _roomID = [member objectForKey:@"roomID"];
+//                
+//                [self showChatRoomSettingVC];
+//            }
+//        }else{
+//            NSLog(@"Error:%@",error.description);
+//        }
+//        
+//        
+//        
+//
+//    }];
+//}
+
+
 
 //-(void)joinChatRoomWhereRoomID:(NSString *)roomID{
 //    
@@ -1452,33 +1534,42 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 //    
 //}
 
+
 -(void)createChatRoom{
     
-    [self indicatorStart];
-
-    //使用userID 創建 Rooms
-    PFObject *newRoom = [PFObject objectWithClassName:@"Rooms"];
-    newRoom[@"roomHostID"] = _userInfo[@"userID"];
-    [newRoom saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-        
-        [self indicatorStop];
-        
-        if (succeeded) {
-            
-            _roomID = newRoom.objectId;
-            NSLog(@"New room(ID:%@) created",_roomID);
-            
-            //創建成功,則繼續新建Member
-            [self createMemberWhereUserID:_userInfo[@"userID"] andNickname:_userInfo[@"nickName"] inTheRoom:_roomID isHost:YES];
-            
-        } else {
-            // There was a problem, check error.description
-            NSLog(@"Fail room created\n\n%@",error.description);
-        }
-        
-    }];
+    [fireBaseAdp createRoomByUUID:_userInfo[@"UUID"] success:nil failure:nil];
     
 }
+
+
+//Parse
+//-(void)createChatRoom{
+//    
+//    [self indicatorStart];
+//
+//    //使用userID 創建 Rooms
+//    PFObject *newRoom = [PFObject objectWithClassName:@"Rooms"];
+//    newRoom[@"roomHostID"] = _userInfo[@"userID"];
+//    [newRoom saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+//        
+//        [self indicatorStop];
+//        
+//        if (succeeded) {
+//            
+//            _roomID = newRoom.objectId;
+//            NSLog(@"New room(ID:%@) created",_roomID);
+//            
+//            //創建成功,則繼續新建Member
+//            [self createMemberWhereUserID:_userInfo[@"userID"] andNickname:_userInfo[@"nickName"] inTheRoom:_roomID isHost:YES];
+//            
+//        } else {
+//            // There was a problem, check error.description
+//            NSLog(@"Fail room created\n\n%@",error.description);
+//        }
+//        
+//    }];
+//    
+//}
 
 
 
@@ -1575,36 +1666,62 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     
     // set ok btn to AC
     UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"加入" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
         UITextField *roomCodeTF = joinRoomAC.textFields.firstObject;
         NSLog(@"You are search room code:%@",roomCodeTF.text);
         
-        [self indicatorStart];
+
         
         //確認房號是否存在,
         //如是, 則創造Member以示加入,否則跳警告
         //現有userInfo來創房
-        PFQuery *query = [PFQuery queryWithClassName:@"Rooms"];
-        [query whereKey:@"objectId" equalTo:roomCodeTF.text];
-        [query findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
+        [fireBaseAdp queryRoomByRoomID:roomCodeTF.text success:^(FDataSnapshot *snapshot) {
             
-            [self indicatorStop];
-            if (objects.count ==0) {
-                
-                // 房間不存在, show alert
-                UIAlertController *noRoomExist = [UIAlertController alertControllerWithTitle:@"錯誤" message:@"查無此聊天室" preferredStyle:UIAlertControllerStyleAlert];
-                
-                UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"瞭解" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                    //
-                }];
-                [noRoomExist addAction:cancelAction];
-                [self presentViewController:noRoomExist animated:YES completion:nil];
-                
-            }else{
-                //房間存在, 創造member
-                [self createMemberWhereUserID:_userInfo[@"userID"] andNickname:_userInfo[@"nickName"] inTheRoom:roomCodeTF.text isHost:NO];
-            }
+            //房間存在, 創造member
+            [fireBaseAdp createMemberByUUID:_userInfo[@"UUID"] andNickname:_userInfo[@"nickName"] andRoomID:roomCodeTF.text isHost:NO success:^{
+                //
+            } failure:^{
+                //
+            }];
             
+        } failure:^{
+            
+            //房間不存在
+            UIAlertController *noRoomExist = [UIAlertController alertControllerWithTitle:@"錯誤" message:@"查無此聊天室" preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"瞭解" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+                //
+            }];
+            [noRoomExist addAction:cancelAction];
+            [self presentViewController:noRoomExist animated:YES completion:nil];
+
         }];
+
+        
+//        PFQuery *query = [PFQuery queryWithClassName:@"Rooms"];
+//        [query whereKey:@"objectId" equalTo:roomCodeTF.text];
+//        [query findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
+//            
+//            [self indicatorStop];
+//            if (objects.count ==0) {
+//                
+//                // 房間不存在, show alert
+//                UIAlertController *noRoomExist = [UIAlertController alertControllerWithTitle:@"錯誤" message:@"查無此聊天室" preferredStyle:UIAlertControllerStyleAlert];
+//                
+//                UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"瞭解" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+//                    //
+//                }];
+//                [noRoomExist addAction:cancelAction];
+//                [self presentViewController:noRoomExist animated:YES completion:nil];
+//                
+//            }else{
+//                //房間存在, 創造member
+//                [self createMemberWhereUserID:_userInfo[@"userID"] andNickname:_userInfo[@"nickName"] inTheRoom:roomCodeTF.text isHost:NO];
+//            }
+//            
+//        }];
+        
+        
+        
         
     }];
     
@@ -1618,38 +1735,64 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 }
 
 -(void)showChatRoomSettingVC{
-    
-    [self indicatorStart];
-    
-    // Query members
-    PFQuery *queryResult = [PFQuery queryWithClassName:@"Member"];
-    
-    // query all members
-    [queryResult whereKey:@"roomID" equalTo:_roomID];
-    [queryResult findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
+ 
+    [fireBaseAdp queryMemberByRoomID:_roomID success:^(FDataSnapshot *snapshot) {
         
-        [self indicatorStop];
+        // Query members
+        NSDictionary *dic = snapshot.value;
+        NSMutableArray *memberAry = [NSMutableArray arrayWithArray:[dic allValues]];
+//        NSArray *keyAry = [dic allKeys];
+        
 
-        if (!error) {
-            if (objects.count !=0) {
-                
-                CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
-                vc.chatRoomMembers = [NSMutableArray arrayWithArray:objects];
-                [self presentViewController:vc animated:YES completion:nil];
-                
-                vc.roomIDLabel.text =_roomID;
-    
-            }
-        }else{
-            NSLog(@"Error:%@",error.description);
-        }
+//        [keyAry enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL * _Nonnull stop) {
+//            [memberAry addObject:dic[key]];
+//        }];
         
+        CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
+        vc.chatRoomMembers = memberAry;
+        [self presentViewController:vc animated:YES completion:nil];
+        vc.roomIDLabel.text =_roomID;
         
-        
-        
+    } failure:^{
+        //
     }];
-
 }
+
+
+//parse
+//-(void)showChatRoomSettingVC{
+//    
+//    [self indicatorStart];
+//    
+//    // Query members
+//    PFQuery *queryResult = [PFQuery queryWithClassName:@"Member"];
+//    
+//    // query all members
+//    [queryResult whereKey:@"roomID" equalTo:_roomID];
+//    [queryResult findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
+//        
+//        [self indicatorStop];
+//
+//        if (!error) {
+//            if (objects.count !=0) {
+//                
+//                CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
+//                vc.chatRoomMembers = [NSMutableArray arrayWithArray:objects];
+//                [self presentViewController:vc animated:YES completion:nil];
+//                
+//                vc.roomIDLabel.text =_roomID;
+//    
+//            }
+//        }else{
+//            NSLog(@"Error:%@",error.description);
+//        }
+//        
+//        
+//        
+//        
+//    }];
+//
+//}
 
 #pragma mark
 #pragma mark - Trip data
@@ -1660,9 +1803,11 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     [self presentViewController:vc animated:YES completion:nil];
 }
 
--(void)didLoadTheTripDate{
-    NSLog(@"Load trip data");
+-(void)didLoadTripDate:(id)tripData{
     
+    NSLog(@"Start to load trip data");
+    
+    //建立table
     CHMoveableTableView *moveTV = [(CHMoveableTableView *)_mapDisplayView viewWithTag:401];
     
     if (moveTV) {
@@ -1675,9 +1820,31 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     moveTV = [[CHMoveableTableView alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - tableWidth, 54, tableWidth, tableHeight)];
     moveTV.tag = 401;
     [_mapDisplayView addSubview:moveTV];
-
+    
+    
+    // fed data
+    [moveTV setObjects:[NSMutableArray arrayWithArray:tripData[@"total"]]];
+    
 }
 
+-(void)loadJsonTripData{
+    
+    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"plugtrip" ofType:@"json"];
+    
+    // Load the file into an NSData object called JSONData
+    
+    NSError *error = nil;
+    
+    NSData *JSONData = [NSData dataWithContentsOfFile:filePath options:NSDataReadingMappedIfSafe error:&error];
+    
+    // Create an Objective-C object from JSON Data
+    
+    id JSONObject = [NSJSONSerialization
+                     JSONObjectWithData:JSONData
+                     options:NSJSONReadingAllowFragments
+                     error:&error];
+    NSLog(@"%@",JSONObject);
+}
 
 #pragma mark
 #pragma mark - Alerts
@@ -1701,6 +1868,10 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     activityIndicator = [[UIActivityIndicatorView alloc]initWithFrame:CGRectMake(0.0f, 0.0f, 32.0f, 32.0f)];
     [activityIndicator setCenter:self.view.center];
     [activityIndicator setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhite];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(indicatorStart) name:@"indicatorStart" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(indicatorStop) name:@"indicatorStop" object:nil];
+    
 
 }
 

@@ -26,17 +26,24 @@
 
 -(void)readCode:(NSString *)tripCode{
     
-    if (![tripCode isEqualToString:@""]) {
-        
-        [self dismissViewControllerAnimated:YES completion:^{
-            [self.delegate didLoadTheTripDate];
-        }];
-        
-    }else{
-        NSLog(@"Load data fail");
-    }
+    //確認code存不存在
+    ///!!!:wait for coding:確認code存不存在
+
     
+    //如存在, 下載Json
+    ///!!!:暫時使用local Json for test
+    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"plugtrip" ofType:@"json"];
+    NSError *error = nil;
+    NSData *JSONData = [NSData dataWithContentsOfFile:filePath options:NSDataReadingMappedIfSafe error:&error];
+    id JSONObject = [NSJSONSerialization
+                     JSONObjectWithData:JSONData
+                     options:NSJSONReadingAllowFragments
+                     error:&error];
     
+    //傳值
+    [self dismissViewControllerAnimated:YES completion:^{
+        [self.delegate didLoadTripDate:JSONObject];
+    }];
     
 }
 
@@ -67,11 +74,22 @@
     UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"ok" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         
         UITextField *tripCode = readTripCodeAC.textFields.firstObject;
-        NSLog(@"You are search room code:%@",tripCode.text);
-        [self readCode:tripCode.text];
+        
+        // code 不能是空白
+        if (![tripCode.text isEqualToString:@""]) {
+             NSLog(@"You are search room code:%@",tripCode.text);
+            [self readCode:tripCode.text];
+        }else{
+            
+            UIAlertController *warningAC = [UIAlertController alertControllerWithTitle:@"請輸入Code" message:nil preferredStyle:UIAlertControllerStyleAlert];
+            
+            [self presentViewController:warningAC animated:YES completion:nil];
+        }
+   
         
     }];
-        
+    
+    
     // apply btns to AC
     [readTripCodeAC addAction:cancelAction];
     [readTripCodeAC addAction:okAction];
@@ -80,6 +98,8 @@
     [self presentViewController:readTripCodeAC animated:YES completion:nil];
     
 }
+
+
 
 
 /*

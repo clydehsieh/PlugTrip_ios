@@ -19,8 +19,10 @@
 #import "CHChatRoomVC.h"
 #import "CHReadTripCodeVC.h"
 #import "CHMoveableTableView.h"
-#import "XMPP.h"
+//#import "XMPP.h"
 #import "BCKeychainManager.h"
+
+#import "CHFIreBaseAdaptor.h"
 
 
 @interface CHMapViewVC : UIViewController <GMSMapViewDelegate,MapVCSeachViewDelegate,MapVCMenuViewDelegate,CHImagePickerViewDelegate,CHScrollViewDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate,CLLocationManagerDelegate,UITextFieldDelegate,CHReadTripCodeVCDelegate>

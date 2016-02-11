@@ -10,7 +10,7 @@
 
 @protocol CHReadTripCodeVCDelegate <NSObject>
 
--(void)didLoadTheTripDate;
+-(void)didLoadTripDate:(id)tripData;
 
 @end
 

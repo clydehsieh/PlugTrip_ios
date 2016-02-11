@@ -20,6 +20,7 @@
 @interface CHChatRoomVC (){
     
     NSMutableArray	*messages;
+    NSMutableArray	*members;
     NSTimer *receivedMsg;
 }
 
@@ -33,7 +34,7 @@ static NSString *identifier = @"identifier";
     [super viewDidLoad];
 
     //inits
-    messages = [[NSMutableArray alloc]init];
+//    messages = [[NSMutableArray alloc]init];
     
     
     //show & hide keyboard
@@ -44,6 +45,10 @@ static NSString *identifier = @"identifier";
     receivedMsg = [NSTimer scheduledTimerWithTimeInterval:5.0f
                                                    target:self selector:@selector(loadMsgFromServer:) userInfo:nil repeats:YES];
     [receivedMsg invalidate];
+    
+    ///!!!:test
+    [self startChatting];
+    
     
     //Msg tableView
     [_messageContentTableView registerClass:[UITableViewCell class] forCellReuseIdentifier:identifier];
@@ -61,6 +66,57 @@ static NSString *identifier = @"identifier";
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+
+#pragma mark - chat
+-(void)startChatting{
+
+    NSMutableDictionary *roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
+    
+    __block BOOL initialAdds = YES;
+    
+    [[CHFIreBaseAdaptor sharedInstance] queryMemberByRoomID:roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
+        
+        // Query members
+        NSDictionary *dic = snapshot.value;
+        members = [NSMutableArray arrayWithArray:[dic allValues]];
+        
+//        [_messageContentTableView reloadData];
+        
+    } failure:^{
+        //
+    }];
+    
+    [[CHFIreBaseAdaptor sharedInstance] queryMsgRegularlyByRoomID:roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
+        
+        if (!initialAdds) {
+            NSDictionary *dic = snapshot.value;
+            [messages addObject: dic];
+
+            [_messageContentTableView reloadData];
+        }
+        
+    } failure:^{
+        
+        NSLog(@"固定撈chatting 資料失敗");
+    }];
+    
+    
+    [[CHFIreBaseAdaptor sharedInstance] queryMsgByRoomID:roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
+        
+        NSDictionary *dic = snapshot.value;
+        messages = [NSMutableArray arrayWithArray:dic.allValues];
+        
+        [_messageContentTableView reloadData];
+        initialAdds = NO;
+        
+        NSLog(@"首次撈全部chatting 資料成功");
+        
+    } failure:^{
+        NSLog(@"首次撈全部chatting 資料失敗");
+    }];
+
+}
+
 
 
 #pragma mark - TextField
@@ -121,12 +177,7 @@ static NSString *identifier = @"identifier";
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    //load data
-    PFObject *object = messages[indexPath.row];
-    NSString *msg = [object objectForKey:@"messageContent"];
-    NSString *userID = [object objectForKey:@"messageOwnerID"];
-    NSString *roomID = [object objectForKey:@"roomID"];
-
+    
 
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (!cell) {
@@ -140,6 +191,7 @@ static NSString *identifier = @"identifier";
         [v removeFromSuperview];
     }
     
+    
     //強制更新為裝置螢幕大小
     CGRect newCellFrame = cell.frame;
     newCellFrame.size.width = tableView.frame.size.width;
@@ -147,6 +199,23 @@ static NSString *identifier = @"identifier";
     
     //設定寬度
     float chatContentWidth_Max = cell.frame.size.width - (IMAGE_WIDE *3);
+    
+    
+    //load data
+    NSDictionary *object = messages[indexPath.row];
+    NSString *msg = [object objectForKey:@"message"];
+    __block NSString *userID = [object objectForKey:@"uuid"];
+//    NSString *roomID = [object objectForKey:@"roomID"];
+    
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"userInfo"]];
+    
+    //抓暱稱
+    [members enumerateObjectsUsingBlock:^(NSDictionary *dic, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([dic[@"uuid"] isEqualToString:userID]) {
+            userID = dic[@"userNickname"];
+        }
+    }];
+    
     
     //判斷行高
     UIFont *font = [UIFont systemFontOfSize:FONTSIZE];
@@ -175,7 +244,7 @@ static NSString *identifier = @"identifier";
     float chatContentLocationX = 0;
     UIColor *chatcontentColor ;
     ///!!!:wait for coding :使用者ＩＤ
-    if (![userID isEqualToString:@"user"])
+    if (![[object objectForKey:@"uuid"] isEqualToString:userInfo[@"UUID"]])
     {
         //received message, left side
         userImageLocationX = 0;
@@ -224,9 +293,9 @@ static NSString *identifier = @"identifier";
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    PFObject *object = messages[indexPath.row];
-    NSString *msg = [object objectForKey:@"messageContent"];
-    NSString *userID = [object objectForKey:@"messageOwnerID"];
+    NSDictionary *object = messages[indexPath.row];
+    NSString *msg = [object objectForKey:@"message"];
+    NSString *userID = [object objectForKey:@"uuid"];
     NSString *roomID = [object objectForKey:@"roomID"];
     
     
@@ -267,54 +336,70 @@ static NSString *identifier = @"identifier";
 
 - (IBAction)sendBtnAction:(id)sender {
 
-    // Write data to cloud
-    PFObject *messageTable = [PFObject objectWithClassName:@"Messages"];
-    messageTable[@"roomID"] = @"0002";
-    messageTable[@"messageContent"] = _messageTextField.text;
-    messageTable[@"messageOwnerID"] = @"000A";
-    [messageTable saveInBackground];
+    NSMutableDictionary *tripInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"]];
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"userInfo"]];
+    NSMutableDictionary *roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
     
-    // clear input
+    
+    [[CHFIreBaseAdaptor sharedInstance] createMsgByUUID:userInfo[@"UUID"] andMSg:_messageTextField.text andRoomID:roomInfo[@"roomID"] success:^{
+        NSLog(@"create msg success");
+    } failure:^{
+        NSLog(@"create msg Fail!!");
+    }];
+    
     _messageTextField.text = @"";
     [_messageTextField resignFirstResponder];
     
-    //retrive data from cloud
-    PFQuery *query = [PFQuery queryWithClassName:@"Messages"];
-    [query whereKey:@"roomID" equalTo:@"0002"];
-    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
-        if (!error) {
-            // The find succeeded.
-            NSLog(@"Successfully retrieved %lu rows data.", (unsigned long)objects.count);
-            
-            // Do something with the found objects
-            for (PFObject *object in objects) {
-//                NSLog(@"%@", object.objectId);
-//                NSLog(@"%@", [object objectForKey:@"roomID"]);
-//                NSLog(@"%@", [object objectForKey:@"messageContent"]);
-//                NSLog(@"%@\n", [object objectForKey:@"messageOwnerID"]);
-            }
-            
-            messages = [NSMutableArray arrayWithArray:objects];
-            [_messageContentTableView reloadData];
-            
-            
-        } else {
-            // Log details of the failure
-            NSLog(@"Error: %@ %@", error, [error userInfo]);
-        }
-    }];
     
-    
-    // When users indicate they are Giants fans, we subscribe them to that channel.
-    PFInstallation *currentInstallation = [PFInstallation currentInstallation];
-    [currentInstallation addUniqueObject:@"Giants" forKey:@"channels"];
-    [currentInstallation saveInBackground];
-    
-    // Send a notification to all devices subscribed to the "Giants" channel.
-    PFPush *push = [[PFPush alloc] init];
-    [push setChannel:@"Giants"];
-    [push setMessage:@"The Giants just scored!"];
-    [push sendPushInBackground];
+//    ///Parse
+//    // Write data to cloud
+//    PFObject *messageTable = [PFObject objectWithClassName:@"Messages"];
+//    messageTable[@"roomID"] = @"0002";
+//    messageTable[@"messageContent"] = _messageTextField.text;
+//    messageTable[@"messageOwnerID"] = @"000A";
+//    [messageTable saveInBackground];
+//    
+//    // clear input
+//    _messageTextField.text = @"";
+//    [_messageTextField resignFirstResponder];
+//    
+//    //retrive data from cloud
+//    PFQuery *query = [PFQuery queryWithClassName:@"Messages"];
+//    [query whereKey:@"roomID" equalTo:@"0002"];
+//    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+//        if (!error) {
+//            // The find succeeded.
+//            NSLog(@"Successfully retrieved %lu rows data.", (unsigned long)objects.count);
+//            
+//            // Do something with the found objects
+//            for (PFObject *object in objects) {
+////                NSLog(@"%@", object.objectId);
+////                NSLog(@"%@", [object objectForKey:@"roomID"]);
+////                NSLog(@"%@", [object objectForKey:@"messageContent"]);
+////                NSLog(@"%@\n", [object objectForKey:@"messageOwnerID"]);
+//            }
+//            
+//            messages = [NSMutableArray arrayWithArray:objects];
+//            [_messageContentTableView reloadData];
+//            
+//            
+//        } else {
+//            // Log details of the failure
+//            NSLog(@"Error: %@ %@", error, [error userInfo]);
+//        }
+//    }];
+//    
+//    
+//    // When users indicate they are Giants fans, we subscribe them to that channel.
+//    PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+//    [currentInstallation addUniqueObject:@"Giants" forKey:@"channels"];
+//    [currentInstallation saveInBackground];
+//    
+//    // Send a notification to all devices subscribed to the "Giants" channel.
+//    PFPush *push = [[PFPush alloc] init];
+//    [push setChannel:@"Giants"];
+//    [push setMessage:@"The Giants just scored!"];
+//    [push sendPushInBackground];
     
     
 

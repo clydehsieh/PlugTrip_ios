@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "CHFIreBaseAdaptor.h"
 #import <Parse/Parse.h>
 
 @interface CHChatRoomVC : UIViewController <UITableViewDataSource,UITableViewDelegate>

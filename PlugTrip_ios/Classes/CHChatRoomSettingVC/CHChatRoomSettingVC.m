@@ -10,7 +10,7 @@
 
 @interface CHChatRoomSettingVC ()
 {
-    NSMutableArray *users;
+    NSMutableArray *members;
 }
 
 @end
@@ -47,7 +47,18 @@ static NSString *cellIdentifier = @"cell";
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     
-    return _chatRoomMembers.count;
+    members = [[NSMutableArray alloc]init];
+    
+    [_chatRoomMembers enumerateObjectsUsingBlock:^(NSDictionary *dic, NSUInteger idx, BOOL * _Nonnull stop) {
+        
+        //不是房主時
+        if (![[dic objectForKey:@"isHost"]boolValue]) {
+            [members addObject:dic];
+        }
+    
+    }];
+    
+    return members.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -70,15 +81,18 @@ static NSString *cellIdentifier = @"cell";
         }
     }
     
+    //load data
     UILabel *userName = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, 200, cell.frame.size.height)];
-    PFObject *obj = _chatRoomMembers[indexPath.row];
+    NSDictionary *dic = members[indexPath.row];
+    userName.text = [dic objectForKey:@"userNickname"];
+    [cell addSubview:userName];
     
-    //不是房主時
-    if (![[obj objectForKey:@"isHost"]boolValue]) {
-        userName.text = [obj objectForKey:@"nickName"];
-        [cell addSubview:userName];
-
-    }
+//    //不是房主時
+//    if (![[dic objectForKey:@"isHost"]boolValue]) {
+//        userName.text = [dic objectForKey:@"userNickname"];
+//        [cell addSubview:userName];
+//
+//    }
     
     return cell;
 }
@@ -107,34 +121,48 @@ static NSString *cellIdentifier = @"cell";
         _userNicknameTF.text = _userInfo[@"nickName"];
     }else{
         
-        PFQuery *query = [PFQuery queryWithClassName:@"Member"];
-        [query whereKey:@"userID" equalTo:_userInfo[@"userID"]];
-        [query findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
-            
-            if (!error) {
-                
-                PFObject *obj = [objects firstObject];
-                [obj setObject:_userNicknameTF.text forKey:@"nickName"];
-                [obj saveInBackgroundWithBlock:^(BOOL succeeded, NSError * _Nullable error) {
-                    if (succeeded) {
-                        
-                        _userNicknameLabel.text = _userNicknameTF.text;
-                        [_userInfo setValue: _userNicknameTF.text forKey:@"nickName"];
-                        [[NSUserDefaults standardUserDefaults]setObject:_userInfo forKey:@"userInfo"];
-                        NSLog(@"nickName updated!");
-                    }else{
-                         NSLog(@"fait to update nickName. Error:\n");
-                        _userNicknameTF.text = _userInfo[@"nickName"];
-                    }
-                }];
-                
-                
-                
-            }else{
-                NSLog(@"fait to update nickName. Error:\n");
-                _userNicknameTF.text = _userInfo[@"nickName"];
-            }
-        }];
+       [[CHFIreBaseAdaptor sharedInstance] updateMemberBykey:@"userNickname" andValue:_userNicknameTF.text success:^(FDataSnapshot *snapshot) {
+           
+           //
+           _userNicknameLabel.text = _userNicknameTF.text;
+           [_userInfo setValue: _userNicknameTF.text forKey:@"nickName"];
+           [[NSUserDefaults standardUserDefaults]setObject:_userInfo forKey:@"userInfo"];
+           
+       } failure:^{
+           
+           //
+           _userNicknameTF.text = _userInfo[@"nickName"];
+       }];
+        
+        
+//        PFQuery *query = [PFQuery queryWithClassName:@"Member"];
+//        [query whereKey:@"userID" equalTo:_userInfo[@"userID"]];
+//        [query findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
+//            
+//            if (!error) {
+//                
+//                PFObject *obj = [objects firstObject];
+//                [obj setObject:_userNicknameTF.text forKey:@"nickName"];
+//                [obj saveInBackgroundWithBlock:^(BOOL succeeded, NSError * _Nullable error) {
+//                    if (succeeded) {
+//                        
+//                        _userNicknameLabel.text = _userNicknameTF.text;
+//                        [_userInfo setValue: _userNicknameTF.text forKey:@"nickName"];
+//                        [[NSUserDefaults standardUserDefaults]setObject:_userInfo forKey:@"userInfo"];
+//                        NSLog(@"nickName updated!");
+//                    }else{
+//                         NSLog(@"fait to update nickName. Error:\n");
+//                        _userNicknameTF.text = _userInfo[@"nickName"];
+//                    }
+//                }];
+//                
+//                
+//                
+//            }else{
+//                NSLog(@"fait to update nickName. Error:\n");
+//                _userNicknameTF.text = _userInfo[@"nickName"];
+//            }
+//        }];
         
         
 //        PFObject *obj = [PFObject objectWithClassName:@"Users"];

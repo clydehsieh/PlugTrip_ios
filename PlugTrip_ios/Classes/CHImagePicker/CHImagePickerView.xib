@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="14F1605" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9532" systemVersion="14F1605" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Constraints with non-1.0 multipliers" minToolsVersion="5.1"/>
     </dependencies>
@@ -39,21 +39,30 @@
                             </constraints>
                         </view>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Iha-bA-XUA">
-                            <rect key="frame" x="5" y="11" width="30" height="30"/>
+                            <rect key="frame" x="133" y="12" width="30" height="30"/>
                             <state key="normal" title="全選"/>
                             <connections>
                                 <action selector="allPickBtn:" destination="iN0-l3-epB" eventType="touchUpInside" id="qtq-oA-sFZ"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="b4q-Sw-P7k">
+                            <rect key="frame" x="5" y="12" width="34" height="30"/>
+                            <state key="normal" title="Back"/>
+                            <connections>
+                                <action selector="backBtnAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="7PB-VC-5N2"/>
                             </connections>
                         </button>
                     </subviews>
                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     <constraints>
                         <constraint firstItem="STs-1E-mJr" firstAttribute="centerY" secondItem="cgj-Of-XXT" secondAttribute="centerY" id="309-vD-TBI"/>
-                        <constraint firstItem="Iha-bA-XUA" firstAttribute="leading" secondItem="KsJ-fF-bsB" secondAttribute="leading" constant="5" id="4hA-lB-7Mj"/>
                         <constraint firstAttribute="trailing" secondItem="4nl-or-LoF" secondAttribute="trailing" id="72p-9B-a9x"/>
                         <constraint firstItem="cgj-Of-XXT" firstAttribute="centerX" secondItem="KsJ-fF-bsB" secondAttribute="centerX" id="7KA-12-07b"/>
                         <constraint firstItem="4nl-or-LoF" firstAttribute="leading" secondItem="KsJ-fF-bsB" secondAttribute="leading" id="CWb-MW-wbT"/>
+                        <constraint firstItem="cgj-Of-XXT" firstAttribute="leading" secondItem="Iha-bA-XUA" secondAttribute="trailing" constant="10" id="NJa-cu-6Ng"/>
                         <constraint firstItem="cgj-Of-XXT" firstAttribute="centerY" secondItem="KsJ-fF-bsB" secondAttribute="centerY" id="Wam-RP-vA2"/>
+                        <constraint firstItem="b4q-Sw-P7k" firstAttribute="leading" secondItem="KsJ-fF-bsB" secondAttribute="leading" constant="5" id="a5q-0a-NHb"/>
+                        <constraint firstItem="b4q-Sw-P7k" firstAttribute="centerY" secondItem="cgj-Of-XXT" secondAttribute="centerY" id="fgq-69-C0u"/>
                         <constraint firstAttribute="bottom" secondItem="4nl-or-LoF" secondAttribute="bottom" id="g9i-od-Zgh"/>
                         <constraint firstItem="Iha-bA-XUA" firstAttribute="centerY" secondItem="cgj-Of-XXT" secondAttribute="centerY" id="hu7-5E-S1b"/>
                         <constraint firstAttribute="trailing" secondItem="STs-1E-mJr" secondAttribute="trailing" constant="5" id="lzf-qk-UBh"/>

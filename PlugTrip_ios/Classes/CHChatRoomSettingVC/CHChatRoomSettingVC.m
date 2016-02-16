@@ -8,9 +8,16 @@
 
 #import "CHChatRoomSettingVC.h"
 
+
 @interface CHChatRoomSettingVC ()
 {
     NSMutableArray *members;
+    
+    UIActivityIndicatorView *activityIndicator;
+    
+    CLLocationManager *locationManager;
+    int countNo;
+    
 }
 
 @end
@@ -22,14 +29,37 @@ static NSString *cellIdentifier = @"cell";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    countNo = 0;
     _userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"userInfo"]];
-    _userNicknameTF.text = _userInfo[@"nickName"];
-    _userNicknameLabel.text = _userNicknameTF.text;
+    _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
+
+    
+    
+    //GPS setting
+//    [self gpsSetting];
+
     _userNicknameTF.delegate = self;
     
-    [self initUserTableView];
     
+}
+
+-(void)viewWillLayoutSubviews{
     
+    if (countNo == 0) {
+        [self indicatorSetting];
+        [self indicatorStart];
+    }
+    countNo +=1;
+    
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    
+//    [self indicatorStart];
+}
+
+-(void)viewDidAppear:(BOOL)animated{
+    [self loadChatMember];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -37,12 +67,57 @@ static NSString *cellIdentifier = @"cell";
     // Dispose of any resources that can be recreated.
 }
 
+-(void)gpsSetting{
+    
+    locationManager = [[CLLocationManager alloc] init];
+    locationManager.delegate = self;
+    locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    
+    [locationManager startUpdatingLocation];
+}
+
+// ...load data and build tableview
+-(void)loadChatMember{
+    
+    
+    [[CHFIreBaseAdaptor sharedInstance]queryMemberByRoomID:_roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
+        
+        NSLog(@"setting room 載入member成功, 開始建立table");
+        NSDictionary *dic = snapshot.value;
+        _chatRoomMembers = [NSMutableArray arrayWithArray:[dic allValues]];
+        
+        [self initUserTableView];
+        
+        
+    } failure:^{
+        
+        //
+        NSLog(@"setting room 載入member失敗");
+        [self dismissViewControllerAnimated:YES completion:nil];
+        
+    }];
+    
+}
+
 #pragma mark - UITableView
 -(void)initUserTableView{
+    
+    NSString *uuid = _userInfo[@"UUID"];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF contains[c] %@",uuid];
+    NSArray *result = [_chatRoomMembers filteredArrayUsingPredicate:predicate];
+    NSDictionary *locUser = [result firstObject];
+    
+    //init switch
+    [_isShareGPSSwitch  setOn:[locUser[@"isShareGPS"] boolValue]];
+    [_isShowOnMapSwitch setOn:[_roomInfo[@"isShowOnMap"] boolValue]];
+    _roomIDLabel.text = _roomInfo[@"roomID"];
     
     [_usersTableView registerClass:[UITableViewCell class] forCellReuseIdentifier:cellIdentifier];
     _usersTableView.delegate = self;
     _usersTableView.dataSource = self;
+    [_usersTableView reloadData];
+    [self indicatorStop];
+
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -52,8 +127,13 @@ static NSString *cellIdentifier = @"cell";
     [_chatRoomMembers enumerateObjectsUsingBlock:^(NSDictionary *dic, NSUInteger idx, BOOL * _Nonnull stop) {
         
         //不是房主時
-        if (![[dic objectForKey:@"isHost"]boolValue]) {
+        if (![[dic objectForKey:@"uuid"] isEqualToString:_userInfo[@"UUID"]]) {
             [members addObject:dic];
+            
+        }else{
+            
+            _userNicknameTF.text = dic[@"userNickname"];
+//            _userNicknameLabel.text = _userNicknameTF.text;
         }
     
     }];
@@ -124,7 +204,7 @@ static NSString *cellIdentifier = @"cell";
        [[CHFIreBaseAdaptor sharedInstance] updateMemberBykey:@"userNickname" andValue:_userNicknameTF.text success:^(FDataSnapshot *snapshot) {
            
            //
-           _userNicknameLabel.text = _userNicknameTF.text;
+//           _userNicknameLabel.text = _userNicknameTF.text;
            [_userInfo setValue: _userNicknameTF.text forKey:@"nickName"];
            [[NSUserDefaults standardUserDefaults]setObject:_userInfo forKey:@"userInfo"];
            
@@ -188,17 +268,42 @@ static NSString *cellIdentifier = @"cell";
     
 }
 
+#pragma mark - CLLocationManagerDelegate
+
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
+{
+    NSLog(@"locationManager didFailWithError: %@", error);
+
+}
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
+{
+    NSLog(@"didUpdateToLocation: %@", newLocation);
+    CLLocation *currentLocation = newLocation;
+    
+    if (currentLocation != nil) {
+        
+        NSLog(@"\n\n(lat:%@,Long:%@)",[NSString stringWithFormat:@"%.8f", currentLocation.coordinate.latitude],[NSString stringWithFormat:@"%.8f", currentLocation.coordinate.longitude]);
+    
+    }
+}
+
 #pragma mark - switch actions
 - (IBAction)showOnMapSwitchStateChange:(UISwitch *)sender {
+    
+    [_roomInfo setObject:[NSNumber numberWithBool:sender.isOn]   forKey:@"isShowOnMap"];
+    [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
     
     if (sender.isOn) {
         NSLog(@"show on map!");
     }else{
         NSLog(@"not show on map!");
     }
+
     
 }
 
+//是否允許他人得到自己位置
 - (IBAction)shareGPSSwitchStateChange:(UISwitch *)sender {
     
     if (sender.isOn) {
@@ -207,6 +312,17 @@ static NSString *cellIdentifier = @"cell";
         NSLog(@"not share GPS!");
     }
     
+    [[CHFIreBaseAdaptor sharedInstance]updateMemberBykey:@"isShareGPS" andValue:[NSNumber numberWithBool:sender.isOn] success:^(FDataSnapshot *snapshot) {
+        NSLog(@"Update member isShareGPS success");
+        
+    } failure:^{
+        NSLog(@"Update member isShareGPS Fail");
+    }];
+    
+    
+    
+
+    
 }
 
 
@@ -214,15 +330,82 @@ static NSString *cellIdentifier = @"cell";
 
 - (IBAction)backBtnAction:(id)sender {
     
-    [self dismissViewControllerAnimated:YES completion:nil];
+//    [self dismissViewControllerAnimated:YES completion:^{
+//
+//        if ([self.delegate respondsToSelector:@selector(didLeftSettingVC)]) {
+//            [self.delegate didLeftSettingVC];
+//        }
+//        
+//    }];
+    
+    if ([self.delegate respondsToSelector:@selector(didLeftSettingVC)]) {
+        [self.delegate didLeftSettingVC];
+        
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }
+    
+    
+    
+    
+    
 }
 
 - (IBAction)leftChatRoomBtnAction:(id)sender {
     
+    [[CHFIreBaseAdaptor sharedInstance] deleteMemberByRoomID:_roomInfo[@"roomID"] andUUID:_userInfo[@"UUID"] success:^{
+        //
+        NSLog(@"Delete success");
+        [self dismissViewControllerAnimated:YES completion:nil];
+        
+    } failure:^{
+        
+        NSLog(@"Delete fail");
+        
+        
+    }];
+    
+    
+//    [[CHFIreBaseAdaptor sharedInstance] deleteMemberByUUID:_userInfo[@"UUID"] success:^{
+//        //
+//        NSLog(@"Delete success");
+//        [self dismissViewControllerAnimated:YES completion:nil];
+//        
+//    } failure:^{
+//        
+//        NSLog(@"Delete fail");
+//        
+//        
+//    }];
+    
     
 }
 
 
+-(void)indicatorSetting
+{
+    activityIndicator = [[UIActivityIndicatorView alloc]initWithFrame:CGRectMake(0.0f, 0.0f, 32.0f, 32.0f)];
+    [activityIndicator setCenter:self.view.center];
+    [activityIndicator setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhite];
+}
+- (void)indicatorStart
+{
+    UIView *view = [[UIView alloc] initWithFrame:self.view.frame];
+    [view setTag:203];
+    [view setBackgroundColor:[UIColor blackColor]];
+    [view setAlpha:0.8];
+    [self.view addSubview:view];
+    
+    [self.view addSubview:activityIndicator];
+    [activityIndicator startAnimating];
+}
+
+- (void)indicatorStop
+{
+    UIView *view = (UIView *)[self.view viewWithTag:203];
+    [view removeFromSuperview];
+    
+    [activityIndicator stopAnimating];
+}
 /*
 #pragma mark - Navigation
 

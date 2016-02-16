@@ -43,9 +43,20 @@
     roomHostID
 
  */
-#define IMAGEHEIGHT 80
+
+#define TAG_modeBtn       102
+#define TAG_quickChatView 204
+
+#define TAG_quickChatText 302
+
+#define IMAGEHEIGHT 50
 #define MODEBTN_WIDTH 80.0
 #define MODEBTN_HEIGHT 44.0
+
+#define BOTTOM_VIEW_FRAME1 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH, IMAGEHEIGHT)
+#define BOTTOM_VIEW_FRAME2 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH*2, IMAGEHEIGHT)
+
+
 
 #import "CHMapViewVC.h"
 
@@ -54,13 +65,29 @@
     MapVCSearchView *sView;
     MapVCMenuView *menuView;
     
-    NSMutableArray *markerArray;
+    
     
     CHScrollView *imageScrollView;
     
     CHFIreBaseAdaptor *fireBaseAdp;
     
     UIActivityIndicatorView *activityIndicator;
+    
+    //紀錄mode
+    NSMutableArray *localImages;
+    NSMutableArray *localImgMarkers;
+    NSTimer *receivedMsg;
+    
+    //夥伴mode
+    
+    NSMutableArray *memberMarkers;
+    
+    //旅程mode
+    NSMutableArray *dlTripItems;
+    NSMutableArray *dlTripItemsMarkers;
+    
+    //通用(紀錄&旅程)
+    EasyTableView *horizontalView;
 }
 
 @end
@@ -74,6 +101,11 @@ NSString *const tableName_userGPS = @"user_GPS";
 - (void)viewDidLoad {
     [super viewDidLoad];
 
+    //show & hide keyboard
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillChangeFrameNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+    
+    
     _isInitialLayout = NO;//for first load view
     
     //firebase
@@ -102,6 +134,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         [_userInfo setObject:@"New User"     forKey:@"userID"];
         [_userInfo setObject:[self loadUUID] forKey:@"UUID"];
         [_userInfo setObject:@"New User"     forKey:@"nickName"];
+        [_userInfo setObject:[NSNumber numberWithBool:NO]  forKey:@"isShareGPS"];
         [[NSUserDefaults standardUserDefaults] setObject:_userInfo forKey:@"userInfo"];
         NSLog(@"User info is not exist, create new one");
     }else{
@@ -112,34 +145,26 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     if ([_roomInfo count]==0) {
         _roomInfo = [[NSMutableDictionary alloc]init];
-        
+        [_roomInfo setObject:[NSNumber numberWithBool:NO]   forKey:@"isShowOnMap"];
 //        [_roomInfo setObject:_roomID     forKey:@"roomID"];
-//        [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
+        [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
         NSLog(@"User info is not exist, create new one");
     }else{
         NSLog(@"Load UserInfo success");
     }
+    
     ///=============
     
     
-    
-    
-    
+ 
     // check is chatRoom joined or not
     _isCheckChatRoomJoin = NO;
     _modes = [[NSArray alloc]initWithObjects:@"分析",@"紀錄",@"同夥",@"旅程", nil];
 
     
     //GPS init
-    if (_locationManager == nil)
-    {
-        _locationManager = [[CLLocationManager alloc] init];
-        _locationManager.desiredAccuracy =
-        kCLLocationAccuracyNearestTenMeters;
-        _locationManager.delegate = self;
-        [_locationManager requestAlwaysAuthorization];
-        
-    }
+    [self locationManagerSetting];
+    
     
     // to receive push notification info
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveChatRoomMessage:) name:@"ChatRoomInfo" object:nil];
@@ -160,6 +185,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         [self initMenuView];
         [self initButtons];
         [self initScrollView];
+        [self initHorizontalView];
         
         //init data
         [self updateTripCreateState];
@@ -219,6 +245,11 @@ NSString *const tableName_userGPS = @"user_GPS";
         coverTripTitleView.hidden = NO;
      
         [self loadDBPhotos];
+        
+//        ///!!!:開始記錄ＧＰＳ！！
+//        receivedMsg = [NSTimer scheduledTimerWithTimeInterval:5.0f
+//                                                       target:self selector:@selector(locationManager: didUpdateLocations:) userInfo:nil repeats:YES];
+//        [receivedMsg isValid];
     }
     
     [self updateModeBtnState];
@@ -418,6 +449,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     sView.delegate = self;
     [_mapDisplayView insertSubview:sView atIndex:4];
 }
+
 #pragma mark - MapVCSeachViewDelegate
 -(void)didSelectTableSearchResultLocationAtLatitude:(NSString *)latitude andLongitude:(NSString *)longitude{
     [_mapView animateToLocation:CLLocationCoordinate2DMake(latitude.doubleValue, longitude.doubleValue)];
@@ -442,8 +474,8 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     UIImageView *chsrollViewBackground = [[UIImageView alloc]initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT*0.5, _mapDisplayView.frame.size.width, IMAGEHEIGHT*0.5)];
     chsrollViewBackground.image = [UIImage imageNamed:@"tab_bar_bg.png"];
-    [_mapDisplayView addSubview:chsrollViewBackground];
-    [_mapDisplayView addSubview:imageScrollView];
+//    [_mapDisplayView addSubview:chsrollViewBackground];
+//    [_mapDisplayView addSubview:imageScrollView];
 
     
 }
@@ -460,18 +492,158 @@ NSString *const tableName_userGPS = @"user_GPS";
 }
 -(void)scrollView:(UIScrollView *)scrollView didSelectedImage:(UIImageView *)selectedView{
     
-    
     _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
+    
     if (_isShowImagesOnMap) {
         NSInteger tag = selectedView.tag-1;
-        [self mapView:_mapView didTapMarker:markerArray[tag]];
+        [self mapView:_mapView didTapMarker:localImgMarkers[tag]];
         NSLog(@"\nYou selected chScollView the no.%ld Image",(long)selectedView.tag);
     }else{
         //無marker, 不動作
     }
+ 
+}
 
+#pragma mark
+#pragma mark - horizontalView (EasyTableview) delegate
+-(void)initHorizontalView{
+
+    EasyTableView *view	= [[EasyTableView alloc] initWithFrame:BOTTOM_VIEW_FRAME2 ofWidth:IMAGEHEIGHT];
+    horizontalView  = view;
+    horizontalView.delegate= self;
+    horizontalView.tableView.backgroundColor= [UIColor clearColor];
+    horizontalView.tableView.allowsSelection= YES;
+    horizontalView.tableView.separatorColor	= [UIColor darkGrayColor];
+    horizontalView.autoresizingMask			= UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
+    [_mapDisplayView addSubview:horizontalView];
+    
+}
+
+- (NSUInteger)numberOfSectionsInEasyTableView:(EasyTableView*)easyTableView{
+    
+    if (_currentModeType == 1) {
+        return 1;
+    }else if(_currentModeType == 3 ){
+        return [dlTripItemsMarkers count];
+    }else{
+        return 0;
+    }
+    
+}
+
+- (NSInteger)easyTableView:(EasyTableView *)easyTableView numberOfRowsInSection:(NSInteger)section{
+
+    if (_currentModeType == 1) {
+        return [localImages count];
+    }else if(_currentModeType == 3 ){
+        return [dlTripItemsMarkers[section] count];
+    }else{
+        return 0;
+    }
+    
+}
+- (UITableViewCell *)easyTableView:(EasyTableView *)easyTableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+
+    static NSString *cellIdentifier = @"EasyTableViewCell";
+    
+    //init cell
+    UITableViewCell *cell = [easyTableView.tableView dequeueReusableCellWithIdentifier:cellIdentifier];
+    UIImageView *imgView;
+    UILabel *locNoLabel;
+    
+    //移除所有subview
+    NSArray *subViews = cell.subviews;
+    [subViews enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [obj removeFromSuperview];
+    }];
+    
+    if (!cell) {
+        // Create a new table view cell
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        cell.backgroundColor = [UIColor clearColor];
+       
+    }
+    
+    float downsize = 5;
+    CGRect imgViewRect		= CGRectMake(downsize, downsize, cell.frame.size.width - downsize*2, cell.frame.size.height - downsize*2);
+    
+    // ImgView
+    
+    imgView = [[UIImageView alloc]initWithFrame:imgViewRect];
+    imgView.center = cell.center;
+    imgView.contentMode = UIViewContentModeScaleAspectFit;
+    imgView.autoresizingMask  = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    imgView.tag = 1101;
+    [cell addSubview:imgView];
+    
+    //Label
+    
+    locNoLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, cell.frame.size.height - 20, cell.frame.size.height,20)]
+    //        locNoLabel = [[UILabel alloc]initWithFrame:imgViewRect];
+    ;
+    locNoLabel.textAlignment   = NSTextAlignmentCenter;
+    locNoLabel.backgroundColor = [UIColor clearColor];
+    locNoLabel.textColor       = [UIColor whiteColor];
+    locNoLabel.layer.cornerRadius = 5.0f;
+    locNoLabel.layer.borderWidth  = 2.0f;
+    locNoLabel.layer.borderColor  = [UIColor lightGrayColor].CGColor;
+    locNoLabel.tag = 1102;
+    [cell addSubview:locNoLabel];
     
     
+    
+    // ... LOAD DATA ...
+    
+    // ImgView
+    if (_currentModeType == 1) {
+        
+        imgView.image = localImages[indexPath.row];
+        
+    }else if(_currentModeType == 3 ){
+        
+        imgView.image = [UIImage imageNamed:@"Locicon.png"];
+    }
+    
+    // Location No label
+    locNoLabel.text   = [NSString stringWithFormat:@"%ld-%ld",indexPath.section , indexPath.row];
+    locNoLabel.hidden = (_currentModeType == 3)? NO:YES;
+    
+    
+    return cell;
+}
+
+
+//
+//- (NSUInteger)numberOfSectionsInEasyTableView:(EasyTableView*)easyTableView{
+//    
+//}
+- (void)easyTableView:(EasyTableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+
+    NSLog(@"did select%ld",(long)indexPath.row);
+    
+    if (_currentModeType == 1) {
+        //紀錄模式
+        
+        //是否有show照片
+        _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
+        if (_isShowImagesOnMap) {
+            
+            [self mapView:_mapView didTapMarker:localImgMarkers[indexPath.row]];
+   
+        }else{
+            //不動作
+        }
+        
+    }else if(_currentModeType == 3 ){
+        //旅程模式
+        
+        [self mapView:_mapView didTapMarker:dlTripItemsMarkers[indexPath.section][indexPath.row]];
+        
+    }else{
+        
+        //
+    }
     
 }
 
@@ -536,21 +708,6 @@ NSString *const tableName_userGPS = @"user_GPS";
     //other subview action
     [sView searchBarCancelButtonClicked:nil];
     
-    
-    ///!!!:測試, 可刪除
-//    [[CHFIreBaseAdaptor sharedWebApiAdaptor] setUserValueWithUUID:[_userInfo objectForKey:@"UUID"] andNickname:[_userInfo objectForKey:@"nickName"]];
-    
-//    [[CHFIreBaseAdaptor sharedWebApiAdaptor] createUserByUUID:[_userInfo objectForKey:@"UUID"] andNickname:[_userInfo objectForKey:@"nickName"]];
-    
-//    [[CHFIreBaseAdaptor sharedWebApiAdaptor] queryTest];
-    
-    ///
-    
-    
-    
-    
-
-
 }
 
 -(void)didSelectModeBtn:(UIButton *)sender{
@@ -738,16 +895,21 @@ NSString *const tableName_userGPS = @"user_GPS";
             _currentModeType = 3;
             
             ///!!!:wait coding
-//            [self loadJsonTripData];
+            [self loadJsonTripData];
             [self showReadTripCodeVC];
+//            [self drawPolyLinesOnMap];
             
-            [self drawPolyLinesOnMap];
             break;
         default:
             break;
     }
 
     [self updateModeBtnState];
+    
+    
+    UIView *quickChatView = (UIView *)[_mapDisplayView viewWithTag:TAG_quickChatView];
+    [quickChatView removeFromSuperview];
+    
   
 }
 #pragma mark
@@ -771,7 +933,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     //
     NSMutableArray *images = [[NSMutableArray alloc] init];
-    markerArray = [[NSMutableArray alloc]init];
+    localImgMarkers = [[NSMutableArray alloc]init];
     
     [_mapView clear];
     
@@ -787,32 +949,32 @@ NSString *const tableName_userGPS = @"user_GPS";
         NSLog(@"imageLatitue:%@,imageLongtitude:%@",imageLatitude,imageLongtitude);
         
         
-        ///!!!:建立markers
-        GMSMarker *marker = [GMSMarker markerWithPosition:position];
-        marker.title =[NSString stringWithFormat:@"%d",i];
-        marker.snippet = @"Population: 8,174,100";
-        marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
-        marker.map = _mapView;
-        [markerArray addObject:marker];
+//        ///!!!:建立markers
+//        GMSMarker *marker = [GMSMarker markerWithPosition:position];
+//        marker.title =[NSString stringWithFormat:@"%d",i];
+//        marker.snippet = @"Population: 8,174,100";
+//        marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+//        marker.map = _mapView;
+//        [localImgMarkers addObject:marker];
         
         // marker 上放照片
-        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
-        NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
-        CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
-        [[PHImageManager defaultManager]
-         requestImageForAsset:_pickedAssets[i]
-         targetSize:retinaSquare
-         contentMode:PHImageContentModeAspectFill
-         options:nil
-         resultHandler:^(UIImage *result, NSDictionary *info) {
-             
-             [images addObject:result];
-             UIGraphicsBeginImageContextWithOptions(CGSizeMake(30, 40), NO, 0.0);
-             [result drawInRect:CGRectMake(0, 0, 30, 40)];
-             UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
-             UIGraphicsEndImageContext();
-             marker.icon = newImage;
-         }];
+//        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
+//        NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
+//        CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
+//        [[PHImageManager defaultManager]
+//         requestImageForAsset:_pickedAssets[i]
+//         targetSize:retinaSquare
+//         contentMode:PHImageContentModeAspectFill
+//         options:nil
+//         resultHandler:^(UIImage *result, NSDictionary *info) {
+//             
+//             [images addObject:result];
+//             UIGraphicsBeginImageContextWithOptions(CGSizeMake(30, 40), NO, 0.0);
+//             [result drawInRect:CGRectMake(0, 0, 30, 40)];
+//             UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+//             UIGraphicsEndImageContext();
+//             marker.icon = newImage;
+//         }];
         ///
         
         //取值 - path
@@ -833,6 +995,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName_tripPhoto];
 //    NSLog(@"%@",queryTableResult);
     
+    
     if (queryTableResult) {
         //        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
         [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -841,38 +1004,88 @@ NSString *const tableName_userGPS = @"user_GPS";
         }];
         
         PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
-        
-        _pickedAssets = [[NSMutableArray alloc]init];
+        //從assets解析出照片images
+//        _pickedAssets = [[NSMutableArray alloc]init];
+        localImages = [[NSMutableArray alloc]init];
+        localImgMarkers = [[NSMutableArray alloc]init];
         
         [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
             
-            [_pickedAssets addObject:asset];
+//            [_pickedAssets addObject:asset];
+            
+            // 建立local img markers
+            CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
+//            NSLog(@"imageLatitue:%@,imageLongtitude:%@",imageLatitude,imageLongtitude);
+            
+            GMSMarker *marker = [GMSMarker markerWithPosition:position];
+            marker.title =[NSString stringWithFormat:@"%lu",(unsigned long)idx];
+            marker.snippet = @"Imgs";
+            marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+            marker.map = _mapView;
+            [localImgMarkers addObject:marker];
+            
+            
+            // 取 local imgs,
+            UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
+            NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
+            CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
+            [[PHImageManager defaultManager]
+             requestImageForAsset:asset
+             targetSize:retinaSquare
+             contentMode:PHImageContentModeAspectFill
+             options:nil
+             resultHandler:^(UIImage *result, NSDictionary *info) {
+                 
+                 [localImages addObject:result];
+             }];
             
         }];
+        
+        [horizontalView.tableView reloadData];
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+        [self easyTableView:horizontalView didSelectRowAtIndexPath:indexPath];
+
     }
-    
-    //從assets解析出照片images
-    NSMutableArray *images = [[NSMutableArray alloc]init];
-    
-    for (int i = 0; i < [_pickedAssets count]; i++)
-    {
-        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
-        NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
-        CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
-        [[PHImageManager defaultManager]
-         requestImageForAsset:_pickedAssets[i]
-         targetSize:retinaSquare
-         contentMode:PHImageContentModeAspectFill
-         options:nil
-         resultHandler:^(UIImage *result, NSDictionary *info) {
-             
-             [images addObject:result];
-             
-         }];
-    }
-    
-    //展示照片scroll view
-    [self showImageDisplayScrollViewWithImages:images];
+
+//    if (queryTableResult) {
+//        //        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+//        [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
+//            
+//            [localIdentifier addObject:dict[@"imagePath"]];
+//        }];
+//        
+//        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
+//        
+//        _pickedAssets = [[NSMutableArray alloc]init];
+//        
+//        [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
+//            
+//            [_pickedAssets addObject:asset];
+//            
+//        }];
+//    }
+//    
+//    //從assets解析出照片images
+//    NSMutableArray *images = [[NSMutableArray alloc]init];
+//    
+//    for (int i = 0; i < [_pickedAssets count]; i++)
+//    {
+//        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
+//        NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
+//        CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
+//        [[PHImageManager defaultManager]
+//         requestImageForAsset:_pickedAssets[i]
+//         targetSize:retinaSquare
+//         contentMode:PHImageContentModeAspectFill
+//         options:nil
+//         resultHandler:^(UIImage *result, NSDictionary *info) {
+//             
+//             [images addObject:result];
+//             
+//         }];
+//    }
+//    //展示照片scroll view
+//    [self showImageDisplayScrollViewWithImages:images];
     
 }
 
@@ -1024,7 +1237,7 @@ NSString *const tableName_userGPS = @"user_GPS";
 //    
 //    //
 //    NSMutableArray *images = [[NSMutableArray alloc] init];
-//    markerArray = [[NSMutableArray alloc]init];
+//    localImgMarkers = [[NSMutableArray alloc]init];
 //    
 //    [_mapView clear];
 //    
@@ -1044,7 +1257,7 @@ NSString *const tableName_userGPS = @"user_GPS";
 //        marker.snippet = @"Population: 8,174,100";
 //        marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
 //        marker.map = _mapView;
-//        [markerArray addObject:marker];
+//        [localImgMarkers addObject:marker];
 //        
 //        //取值 - 圖片 & marker
 //        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
@@ -1189,6 +1402,18 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
+-(void)createMarker{
+    
+    CLLocationCoordinate2D position = CLLocationCoordinate2DMake(24.081446, 120.538854);
+    GMSMarker *marker = [GMSMarker markerWithPosition:position];
+    marker.title =[NSString stringWithFormat:@"Marker title"];
+    marker.snippet = @"Marker snippet";
+    marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+    marker.map = _mapView;
+    [localImgMarkers addObject:marker];
+}
+
+
 - (void)mapView:(GMSMapView *)mapView didTapAtCoordinate:(CLLocationCoordinate2D)coordinate
 {
     NSLog(@"You tapped at %f,%f", coordinate.latitude, coordinate.longitude);
@@ -1277,6 +1502,73 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     
 }
 
+#pragma mark - GPS & locationManager
+
+-(void)locationManagerSetting{
+    
+    if (_locationManager == nil)
+    {
+        _locationManager = [[CLLocationManager alloc] init];
+        _locationManager.desiredAccuracy =
+        kCLLocationAccuracyNearestTenMeters;
+        _locationManager.delegate = self;
+        [_locationManager requestAlwaysAuthorization];
+        
+    }
+}
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
+    
+    //    NSLog(@"/n lat: %f",_locationManager.location.coordinate.latitude);
+    //    NSLog(@" lon: %f/n",_locationManager.location.coordinate.longitude);
+    
+    //存入table
+    [[myDB sharedInstance]insertGPSTable:tableName_userGPS
+                             andLatitude:[NSString stringWithFormat:@"%f",
+                                          _locationManager.location.coordinate.latitude]
+                           andLongtitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.longitude]];
+    
+    double lat = _locationManager.location.coordinate.latitude;
+    double lon = _locationManager.location.coordinate.longitude;
+    
+    
+    //update server
+    [[CHFIreBaseAdaptor sharedInstance]updateMemberBykey:@"lastGPSLocation" andValue:[NSArray arrayWithObjects:[NSNumber numberWithDouble:lat],[NSNumber numberWithDouble:lon],nil] success:^(FDataSnapshot *snapshot) {
+        
+        ///!!!:update member marker
+        [self addMemberMarker];
+        
+    } failure:^{
+        
+        //
+        NSLog(@"");
+    }];
+    
+    
+    [self drawPolyLinesOnMap];
+    
+}
+
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
+{
+    NSLog(@"locationManager didFailWithError: %@", error);
+    
+}
+
+//- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
+//{
+//    NSLog(@"didUpdateToLocation: %@", newLocation);
+//    CLLocation *currentLocation = newLocation;
+//    
+//    if (currentLocation != nil) {
+//        
+//        NSLog(@"\n\n(lat:%@,Long:%@)",[NSString stringWithFormat:@"%.8f", currentLocation.coordinate.latitude],[NSString stringWithFormat:@"%.8f", currentLocation.coordinate.longitude]);
+//        
+//    }
+//}
+
+
+#pragma mark - draw path on map
 -(void)drawPolyLinesOnMap{
     
     
@@ -1317,20 +1609,8 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 */
 
 
-
-#pragma mark - locationManager Delegate
-
-- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
-    
-//    NSLog(@"/n lat: %f",_locationManager.location.coordinate.latitude);
-//    NSLog(@" lon: %f/n",_locationManager.location.coordinate.longitude);
-    
-    //存入table
-    [[myDB sharedInstance]insertGPSTable:tableName_userGPS andLatitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.latitude] andLongtitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.longitude]];
-
-}
-
 #pragma mark - UIText hide keyboard & Delegates
+
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
     UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
@@ -1352,30 +1632,33 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField{
     
-    textField.backgroundColor = [UIColor whiteColor];
-    textField.layer.borderColor = [[UIColor blackColor]CGColor];
+    if (textField.tag == TAG_quickChatText) {
+        //
+    }else{
+        textField.backgroundColor = [UIColor whiteColor];
+        textField.layer.borderColor = [[UIColor blackColor]CGColor];
+    }
+    
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField{
     
-    textField.backgroundColor = [UIColor clearColor];
-    textField.layer.borderColor = [[UIColor clearColor]CGColor];
-    
-    if ([textField.text isEqualToString:@""]) {
-        textField.text = _tripInfo[@"tripTitle"];
+    if (textField.tag == TAG_quickChatText) {
+        //
     }else{
-        NSString *string = textField.text;
-        [_tripInfo setObject:string forKey:@"tripTitle"];
-        [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
+        
+        textField.backgroundColor = [UIColor clearColor];
+        textField.layer.borderColor = [[UIColor clearColor]CGColor];
+        
+        if ([textField.text isEqualToString:@""]) {
+            textField.text = _tripInfo[@"tripTitle"];
+        }else{
+            NSString *string = textField.text;
+            [_tripInfo setObject:string forKey:@"tripTitle"];
+            [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
+        }
     }
-
     
-//    if (textField.tag == 301) {
-//        ///!!!:待刪除, 測試用
-//        _deviceUserIDOfChatRoom = textField.text;
-//        _isCheckChatRoomJoin = NO;
-//        [self checkJoinChatRoomStateWithUserID:_deviceUserIDOfChatRoom];
-//    }
     
     
 }
@@ -1393,38 +1676,94 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 #pragma mark 
 #pragma mark - 同夥模式
 #pragma mark - Chat room actions
+/*
+ 流程：
+ 
+ 確認是否已有member
 
-//確認是否已加入聊天室
+ 建立/確認 user,
+ 獲得userID(uuid) & nickname
+ 
+ 建立/確認 room,
+ 獲得roomID,
+ 
+ 使用roomID & userID(uuid)建立member
+ 
+ 2.建立 room有兩種方式
+    a. 加入 (搜尋現有roomID,再以roomID & userID(uuid)建立member)
+    b. 自創 (以userID(uuid)建立room, 再以roomID & userID(uuid)建立member)
+ */
+
 
 //FireBase
 -(void)joinChatingRoom{
 
     [self indicatorStart];
 
-    [fireBaseAdp queryMemberByUUID:_userInfo[@"UUID"] success:^(FDataSnapshot *snapshot) {
+    [[CHFIreBaseAdaptor sharedInstance] queryMemberByUUID:_userInfo[@"UUID"] success:^(FDataSnapshot *snapshot) {
         
-        //存在member
+        //UUID搜尋是否已經建立member
+        //否, 則進入 "加入" or "自創"選單, 建立memeber後, 進入setting VC
+        //是, 則進入setting VC
+        
         NSDictionary *dic = (NSDictionary *)snapshot.value ;
 
+        //存在member
         if (dic.count == 1) {
+            //正常：1個uuid對應1個member
             
+            //撈roomID
             NSDictionary *dic2 = [[dic allValues] firstObject];
             _roomID = [dic2 objectForKey:@"roomID"];
             
+            //存到default
             [_roomInfo setObject:_roomID     forKey:@"roomID"];
             [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
             
+            //開啟setting VC
+            [self showChatRoomSettingVC];
+            [self indicatorStop];
+            
         }else{
+            //不正常：1個uuid對應多個member
+            
             NSLog(@"member uuid重複");
         }
         
         
-        [self showChatRoomSettingVC];
         
     } failure:^{
-        
         //不存在member
-        [self showChatRoomActionSheet];
+        
+        //確認uuid是否建立user
+        //否, 建立user, 然後開啟"加入" or "自創"選單
+        //是, 開啟"加入" or "自創"選單
+        
+        [[CHFIreBaseAdaptor sharedInstance] queryUserByUUID:_userInfo[@"UUID"] exist:^(FDataSnapshot *snapshot) {
+            
+            
+            NSLog(@"UUID尚未建立Member, 但已建立user");
+            [self showChatRoomActionSheet];
+            
+        } notExist:^{
+             NSLog(@"UUID尚未建立Member & user");
+            
+            [[CHFIreBaseAdaptor sharedInstance]createUserByUUID:_userInfo[@"UUID"] andNickname:@"New User" success:^{
+                
+                NSLog(@"New user create success");
+                
+                [self showChatRoomActionSheet];
+                
+            } failure:^{
+                
+                NSLog(@"New user create Failuer");
+            }];
+            
+        }];
+        
+        
+        
+        
     }];
     
     
@@ -1537,7 +1876,18 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 
 -(void)createChatRoom{
     
-    [fireBaseAdp createRoomByUUID:_userInfo[@"UUID"] success:nil failure:nil];
+    [fireBaseAdp createRoomByUUID:_userInfo[@"UUID"] success:^{
+        
+        //開啟setting VC
+        NSLog(@"自創room成功, 開啟setting VC");
+        [self showChatRoomSettingVC];
+        
+    } failure:^{
+        
+        //開啟setting VC
+        NSLog(@"自創room失敗");
+
+    } ];
     
 }
 
@@ -1670,18 +2020,27 @@ idleAtCameraPosition:(GMSCameraPosition *)position
         UITextField *roomCodeTF = joinRoomAC.textFields.firstObject;
         NSLog(@"You are search room code:%@",roomCodeTF.text);
         
-
-        
         //確認房號是否存在,
         //如是, 則創造Member以示加入,否則跳警告
         //現有userInfo來創房
-        [fireBaseAdp queryRoomByRoomID:roomCodeTF.text success:^(FDataSnapshot *snapshot) {
+        
+        [[CHFIreBaseAdaptor sharedInstance] queryRoomByRoomID:roomCodeTF.text success:^(FDataSnapshot *snapshot) {
             
             //房間存在, 創造member
             [fireBaseAdp createMemberByUUID:_userInfo[@"UUID"] andNickname:_userInfo[@"nickName"] andRoomID:roomCodeTF.text isHost:NO success:^{
-                //
+                
+                //存到default
+                [_roomInfo setObject:roomCodeTF.text forKey:@"roomID"];
+                [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
+                
+                //開啟setting VC
+                NSLog(@"Member 創立成功, 開啟setting VC");
+                [self showChatRoomSettingVC];
+                
             } failure:^{
                 //
+                NSLog(@"Member 創立失敗");
+                
             }];
             
         } failure:^{
@@ -1693,9 +2052,40 @@ idleAtCameraPosition:(GMSCameraPosition *)position
             }];
             [noRoomExist addAction:cancelAction];
             [self presentViewController:noRoomExist animated:YES completion:nil];
-
+            
         }];
+        
+//        [fireBaseAdp queryRoomByRoomID:roomCodeTF.text success:^(FDataSnapshot *snapshot) {
+//            
+//            //房間存在, 創造member
+//            [fireBaseAdp createMemberByUUID:_userInfo[@"UUID"] andNickname:_userInfo[@"nickName"] andRoomID:roomCodeTF.text isHost:NO success:^{
+//                //
+//                
+//                //開啟setting VC
+//                NSLog(@"Member 創立成功, 開啟setting VC");
+//                [self showChatRoomSettingVC];
+//                
+//            } failure:^{
+//                //
+//                NSLog(@"Member 創立失敗");
+//                
+//            }];
+//            
+//        } failure:^{
+//            
+//            //房間不存在
+//            UIAlertController *noRoomExist = [UIAlertController alertControllerWithTitle:@"錯誤" message:@"查無此聊天室" preferredStyle:UIAlertControllerStyleAlert];
+//            UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"瞭解" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+//                //
+//            }];
+//            [noRoomExist addAction:cancelAction];
+//            [self presentViewController:noRoomExist animated:YES completion:nil];
+//
+//        }];
 
+        
+        
+        
         
 //        PFQuery *query = [PFQuery queryWithClassName:@"Rooms"];
 //        [query whereKey:@"objectId" equalTo:roomCodeTF.text];
@@ -1736,26 +2126,56 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 
 -(void)showChatRoomSettingVC{
  
-    [fireBaseAdp queryMemberByRoomID:_roomID success:^(FDataSnapshot *snapshot) {
-        
-        // Query members
-        NSDictionary *dic = snapshot.value;
-        NSMutableArray *memberAry = [NSMutableArray arrayWithArray:[dic allValues]];
-//        NSArray *keyAry = [dic allKeys];
-        
+    
+    CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
+    vc.delegate = self ;
+    [self presentViewController:vc animated:YES completion:nil];
 
-//        [keyAry enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL * _Nonnull stop) {
-//            [memberAry addObject:dic[key]];
-//        }];
-        
-        CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
-        vc.chatRoomMembers = memberAry;
-        [self presentViewController:vc animated:YES completion:nil];
-        vc.roomIDLabel.text =_roomID;
-        
-    } failure:^{
-        //
-    }];
+    
+    
+//    [[CHFIreBaseAdaptor sharedInstance] queryMemberByRoomID:_roomID success:^(FDataSnapshot *snapshot) {
+//        
+//        // Query members
+//        NSDictionary *dic = snapshot.value;
+//        NSMutableArray *memberAry = [NSMutableArray arrayWithArray:[dic allValues]];
+//        //        NSArray *keyAry = [dic allKeys];
+//        
+//        
+//        //        [keyAry enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL * _Nonnull stop) {
+//        //            [memberAry addObject:dic[key]];
+//        //        }];
+//        
+//        CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
+//        vc.chatRoomMembers = memberAry;
+//        [self presentViewController:vc animated:YES completion:nil];
+//        vc.roomIDLabel.text =_roomID;
+//        
+//    } failure:^{
+//        //
+//    }];
+    
+    
+    
+//    [fireBaseAdp queryMemberByRoomID:_roomID success:^(FDataSnapshot *snapshot) {
+//        
+//        // Query members
+//        NSDictionary *dic = snapshot.value;
+//        NSMutableArray *memberAry = [NSMutableArray arrayWithArray:[dic allValues]];
+////        NSArray *keyAry = [dic allKeys];
+//        
+//
+////        [keyAry enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL * _Nonnull stop) {
+////            [memberAry addObject:dic[key]];
+////        }];
+//        
+//        CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
+//        vc.chatRoomMembers = memberAry;
+//        [self presentViewController:vc animated:YES completion:nil];
+//        vc.roomIDLabel.text =_roomID;
+//        
+//    } failure:^{
+//        //
+//    }];
 }
 
 
@@ -1794,6 +2214,219 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 //
 //}
 
+
+#pragma mark - ChatRoom delegate
+
+-(void)didLeftSettingVC{
+    
+    NSLog(@"left Setting View");
+    
+    _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
+    
+    [self quickChatTextInit];
+
+    receivedMsg = [NSTimer scheduledTimerWithTimeInterval:10.0f
+                                                   target:self selector:@selector(locationManager: didUpdateLocations:) userInfo:nil repeats:YES];
+    
+    
+    if ([_roomInfo[@"isShowOnMap"] boolValue]) {
+        
+       [receivedMsg isValid];
+//        [self addMemberMarker];
+    }else{
+       [receivedMsg invalidate];
+    }
+
+    
+    
+}
+
+
+///!!!:開始更新member marker on map
+-(void)removeMemberMarker{
+    
+    // ... remove member marker
+    [memberMarkers enumerateObjectsUsingBlock:^(GMSMarker *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        obj.map = nil;
+    }];
+    
+    [memberMarkers removeAllObjects];
+}
+
+-(void)addMemberMarker{
+    
+    
+    // ... remove member marker
+    [self removeMemberMarker];
+    
+    [[CHFIreBaseAdaptor sharedInstance] queryMemberByRoomID:_roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
+        
+        NSLog(@"success");
+        
+        if ([snapshot.value isEqual:[NSNull null]]) {
+            
+            //not exsit
+            
+        }else{
+            
+            //exsit
+            
+            NSDictionary *members = snapshot.value;
+            memberMarkers = [[NSMutableArray alloc]init];
+            
+            [members enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, NSDictionary *member, BOOL * _Nonnull stop) {
+                
+                NSArray *locGPS = member[@"lastGPSLocation"];
+                float lat = [locGPS[0] floatValue];
+                float lon = [locGPS[1] floatValue];
+                
+                // 建立 member markers
+                CLLocationCoordinate2D position = CLLocationCoordinate2DMake(lat,lon);
+                GMSMarker *marker = [GMSMarker markerWithPosition:position];
+                marker.title = member[@"userNickname"];
+                marker.snippet = @"User";
+                marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+                marker.userData = member[@"uuid"];
+                
+                marker.map = (member[@"isShowOnMap"])? _mapView : nil;
+                [memberMarkers addObject:marker];
+                
+                
+                
+            }];
+            
+            [self addMsgOnMemberMarker];
+            NSLog(@"memberMarke 有%ld個",memberMarkers.count);
+        }
+        
+        
+    } failure:^{
+        //
+        NSLog(@"fail");
+        
+    }];
+    
+}
+
+-(void)addMsgOnMemberMarker{
+    
+    [[CHFIreBaseAdaptor sharedInstance]queryMsgRegularlyByRoomID:_roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
+        
+        //
+        NSLog(@"");
+        NSDictionary *dic = snapshot.value;
+        
+        [memberMarkers enumerateObjectsUsingBlock:^(GMSMarker *marker, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+            if ([marker.userData isEqualToString:dic[@"uuid"]]) {
+                marker.title = dic[@"message"];
+                [self mapView:_mapView didTapMarker:marker];
+            }
+            
+        }];
+        
+        
+    } failure:^{
+        
+        //
+        NSLog(@"");
+    }];
+    
+}
+
+
+
+#pragma mark - quick msg
+
+-(void)quickChatTextInit{
+    
+    CGRect frame = BOTTOM_VIEW_FRAME1;
+    frame.size.width = _mapDisplayView.frame.size.width;
+    UIView *quickChatView = [[UIView alloc]initWithFrame:frame];
+    quickChatView.tag = TAG_quickChatView;
+    quickChatView.layer.borderWidth = 2.0f;
+//    quickChatView.layer.borderColor = [UIColor blackColor].CGColor;
+//    quickChatView.backgroundColor = [UIColor whiteColor];
+    [_mapDisplayView addSubview:quickChatView];
+    
+    CGRect frame2 = BOTTOM_VIEW_FRAME1;
+    frame2.origin = CGPointMake(0, 0);
+    UITextField *quickChat = [[UITextField alloc]initWithFrame:frame2];
+    quickChat.tag = TAG_quickChatText;
+    quickChat.delegate = self;
+    quickChat.layer.borderWidth = 2.0f;
+    quickChat.layer.borderColor = [UIColor brownColor].CGColor;
+    quickChat.backgroundColor   = [UIColor whiteColor];
+    [quickChatView addSubview:quickChat];
+    
+    CGRect frame3 =CGRectMake(frame2.size.width, frame.size.height*0.15, frame.size.width - frame2.size.width, frame.size.height*0.7);
+    UIButton *sendQuickMsgBtn = [[UIButton alloc]initWithFrame:frame3];
+    sendQuickMsgBtn.backgroundColor = [UIColor blueColor];
+    [sendQuickMsgBtn setTitle:@"Send" forState:UIControlStateNormal];
+    [sendQuickMsgBtn addTarget:self action:@selector(didSentQuickMsg) forControlEvents:UIControlEventTouchDown];
+    [quickChatView addSubview:sendQuickMsgBtn];
+    
+    UIButton *modeBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_modeBtn];
+    [_mapDisplayView bringSubviewToFront:modeBtn];
+    
+}
+
+-(void)didSentQuickMsg{
+    
+    UITextField *quickChat = (UITextField *)[_mapDisplayView viewWithTag:TAG_quickChatText];
+    
+    if (![quickChat.text isEqualToString:@""]) {
+       
+        [[CHFIreBaseAdaptor sharedInstance] createMsgByUUID:_userInfo[@"UUID"] andMSg:quickChat.text andRoomID:_roomInfo[@"roomID"] success:^{
+            NSLog(@"create msg success");
+        } failure:^{
+            NSLog(@"create msg Fail!!");
+        }];
+        
+        quickChat.text = @"";
+        
+    }
+    
+    [quickChat resignFirstResponder];
+
+}
+
+- (void)keyboardWillShow:(NSNotification *)notification {
+    
+    UIView *quickChatView = (UIView *)[_mapDisplayView viewWithTag:TAG_quickChatView];
+    CGRect newFrame = quickChatView.frame;
+    
+    NSDictionary *info = [notification userInfo];
+    NSValue *kbFrame = [info objectForKey:UIKeyboardFrameEndUserInfoKey];
+    NSTimeInterval animationDuration = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    CGRect keyboardFrame = [kbFrame CGRectValue];
+    CGFloat height = keyboardFrame.size.height;
+    
+    // we need to set a negative constant value here.
+    newFrame.origin.y -= height;
+    quickChatView.frame = newFrame;
+    
+    [UIView animateWithDuration:animationDuration animations:^{
+        [self.view layoutIfNeeded];
+    }];
+}
+
+- (void)keyboardWillHide:(NSNotification *)notification {
+    NSDictionary *info = [notification userInfo];
+    NSTimeInterval animationDuration = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    
+    // we need to set a negative constant value here.
+    UIView *quickChatView = (UIView *)[_mapDisplayView viewWithTag:TAG_quickChatView];
+    CGRect newFrame = BOTTOM_VIEW_FRAME1;
+    newFrame.size.width = _mapDisplayView.frame.size.width;;
+     quickChatView.frame = newFrame;
+    
+    [UIView animateWithDuration:animationDuration animations:^{
+        [self.view layoutIfNeeded];
+    }];
+}
+
+
 #pragma mark
 #pragma mark - Trip data
 -(void)showReadTripCodeVC{
@@ -1820,10 +2453,16 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     moveTV = [[CHMoveableTableView alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - tableWidth, 54, tableWidth, tableHeight)];
     moveTV.tag = 401;
     [_mapDisplayView addSubview:moveTV];
-    
+    moveTV.chDelegate = self;
     
     // fed data
     [moveTV setObjects:[NSMutableArray arrayWithArray:tripData[@"total"]]];
+    
+}
+
+- (void)moveableTableView:(CHMoveableTableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    [self easyTableView:horizontalView didSelectRowAtIndexPath:indexPath];
     
 }
 
@@ -1844,6 +2483,39 @@ idleAtCameraPosition:(GMSCameraPosition *)position
                      options:NSJSONReadingAllowFragments
                      error:&error];
     NSLog(@"%@",JSONObject);
+    
+    
+    // Making markers on map
+    
+    NSArray *total = JSONObject[@"total"];
+
+    dlTripItemsMarkers = [[NSMutableArray alloc]init];
+    
+    [total enumerateObjectsUsingBlock:^(NSDictionary *day, NSUInteger idx, BOOL * _Nonnull stop) {
+        
+        NSArray *items = day[@"items"];
+        NSMutableArray *day_markers = [[NSMutableArray alloc]init];
+        
+        [items enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+            CLLocationCoordinate2D position = CLLocationCoordinate2DMake([item[@"lat"] floatValue], [item[@"lon"] floatValue]);
+            GMSMarker *marker = [GMSMarker markerWithPosition:position];
+            marker.title   = [NSString stringWithFormat:@"%@",item[@"title"]];
+            marker.snippet = [NSString stringWithFormat:@"%@",item[@"text"]];
+            marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+            marker.map = _mapView;
+            
+            [day_markers addObject:marker];
+            
+        }];
+        
+        [dlTripItemsMarkers addObject:day_markers];
+        
+    }];
+    
+    [horizontalView.tableView reloadData];
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+    [self easyTableView:horizontalView didSelectRowAtIndexPath:indexPath];
 }
 
 #pragma mark

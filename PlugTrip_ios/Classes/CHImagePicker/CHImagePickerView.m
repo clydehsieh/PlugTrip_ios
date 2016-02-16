@@ -369,7 +369,7 @@
 
 #pragma mark - Actions
 
-- (IBAction)cancelBtnAction:(id)sender {
+- (IBAction)backBtnAction:(id)sender {
     
     NSLog(@"Cancel");
     

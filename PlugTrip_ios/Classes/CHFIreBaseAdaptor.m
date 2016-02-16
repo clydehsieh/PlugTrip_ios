@@ -91,17 +91,22 @@
               {
                   if (error) {
                       NSLog(@"Data could not be saved.");
+                      failureBlacok();
                   } else {
                       NSLog(@"Data saved successfully.");
                       
                       NSString *postId = ref.key;
                       NSLog(@"Key:%@",postId);
+                      
+                      successBloack();
                   }
               }];
              
          }else{
+             
              /// 已經註冊
              NSLog(@"The UUID has been registed!");
+             failureBlacok();
          }
      }];
 }
@@ -127,15 +132,26 @@
               {
                   if (error) {
                       
+                      failureBlacok();
                       NSLog(@"Data could not be saved.");
                       [[NSNotificationCenter defaultCenter] postNotificationName:@"indicatorStop" object:nil];
                       
                   } else {
                       NSLog(@"new room created successfully, start to create member");
                       
+                      //存到default
                       NSString *roomID = ref.key;
-                      [self createMemberByUUID:uuid andNickname:@"New one" andRoomID:roomID isHost:YES success:nil failure:nil];
- 
+                      NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"roomInfo"]];
+                      [userInfo setObject:roomID forKey:@"roomID"];
+                      [[NSUserDefaults standardUserDefaults] setObject:userInfo forKey:@"roomInfo"];
+                      
+                      [self createMemberByUUID:uuid andNickname:@"New one" andRoomID:roomID isHost:YES success:^{
+                          
+                          successBloack();
+                          
+                      } failure:nil];
+                      
+                      
                   }
               }];
              
@@ -143,6 +159,8 @@
              /// 已經註冊
              NSLog(@"room重複出現uuid");
              [[NSNotificationCenter defaultCenter] postNotificationName:@"indicatorStop" object:nil];
+             
+             failureBlacok();
          }
          
 
@@ -163,7 +181,9 @@
              NSDictionary *valuse =  @{@"uuid":uuid,
                                        @"userNickname":nickname,
                                        @"roomID":roomID,
-                                       @"isHost":[NSNumber numberWithBool:isHost]
+                                       @"isHost":[NSNumber numberWithBool:isHost],
+                                       @"isShareGPS" :[NSNumber numberWithBool:NO],
+                                       @"lastGPSLocation":[NSArray arrayWithObjects:@0,@0,nil]
                                        };
              //隨機建立obj key
              Firebase *memberLayer2Ref = [membersRef childByAutoId];
@@ -171,18 +191,28 @@
              //上傳server
              [memberLayer2Ref setValue:valuse withCompletionBlock:^(NSError *error, Firebase *ref)
               {
+                  
                   if (error) {
+                      
                       NSLog(@"Data could not be saved.");
+                      failureBlacok();
+                      
                   } else {
+                      
                       NSLog(@"new member create successfully.");
+                      successBloack();
+                      
                   }
+                  
                   [[NSNotificationCenter defaultCenter] postNotificationName:@"indicatorStop" object:nil];
               }];
              
          }else{
+             
              /// 已經註冊
              NSLog(@"member重複出現uuid");
              [[NSNotificationCenter defaultCenter] postNotificationName:@"indicatorStop" object:nil];
+             failureBlacok();
          }
      }];
 }
@@ -215,7 +245,110 @@
 
 #pragma mark
 #pragma mark - remove
+-(void)deleteMemberByUUID:(NSString *)uuid success:(void(^)())successBloack failure:(void (^)())failureBlacok{
+    
+    //User Info
+//    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"userInfo"]];
+    
+    //先找member位置
+    [self queryMemberByUUID:uuid success:^(FDataSnapshot *snapshot) {
+        
+        NSDictionary *dic = snapshot.value;
+        
+        [dic enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            
+            Firebase *member = [membersRef childByAppendingPath:key];
+            [member removeValueWithCompletionBlock:^(NSError *error, Firebase *ref) {
+                
+                NSLog(@"member刪除成功");
+                successBloack();
+                
+            }];
+        }];
+     
+    } failure:^{
+        NSLog(@"會員不存在, 更新失敗");
+        failureBlacok();
+        
+    }];
+}
 
+-(void)deleteMemberByRoomID:(NSString *)roomID andUUID:(NSString *)uuid success:(void(^)())successBloack failure:(void (^)())failureBlacok{
+    
+    
+    //找出room內所有member
+    [self queryMemberByRoomID:roomID success:^(FDataSnapshot *snapshot) {
+        
+        NSDictionary *dic = snapshot.value;
+        __block BOOL isChatRoomOnly1 = (dic.count ==1)? YES : NO;
+        
+        
+        [dic enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            
+            //刪除member
+            NSDictionary *memberInfo = obj;
+            
+            if ([memberInfo[@"uuid"] isEqualToString:uuid]) {
+                
+                //
+                Firebase *member = [membersRef childByAppendingPath:key];
+                [member removeValueWithCompletionBlock:^(NSError *error, Firebase *ref) {
+                    
+                    NSLog(@"member刪除成功");
+                    
+                    if (isChatRoomOnly1) {
+                        [self deleteRoomByUUID:uuid success:^{
+                            NSLog(@"room內無member,刪除room成功");
+                            
+                        } failure:^{
+                            NSLog(@"room內無member,刪除room失敗!!");
+                            
+                            
+                        }];
+                    }else{
+                        NSLog(@"room內還有member,不刪除room");
+                    }
+                    
+                    successBloack();
+                    
+                }];
+            }
+            
+        }];
+        
+    } failure:^{
+        NSLog(@"會員不存在, 更新失敗");
+        failureBlacok();
+        
+    }];
+}
+
+-(void)deleteRoomByUUID:(NSString *)uuid success:(void(^)())successBloack failure:(void (^)())failureBlacok{
+    
+    
+    //先找room位置
+    [self queryRoomByUUID:uuid success:^(FDataSnapshot *snapshot) {
+        
+        NSDictionary *dic = snapshot.value;
+        
+        [dic enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            
+            Firebase *room = [roomRef childByAppendingPath:key];
+            [room removeValueWithCompletionBlock:^(NSError *error, Firebase *ref) {
+                
+                NSLog(@"member刪除成功");
+                successBloack();
+                
+            }];
+        }];
+        
+        
+    } failure:^{
+        NSLog(@"會員不存在, 更新失敗");
+        failureBlacok();
+        
+    }];
+}
 
 
 
@@ -305,6 +438,27 @@
 //    }];
 //}
 
+-(void)queryUserByUUID:(NSString *)uuid exist:(void(^)(FDataSnapshot *snapshot))existBloack notExist:(void (^)())notExistBlacok{
+
+    //確認ＵＵＩＤ是否重複註冊
+    [[[usersRef queryOrderedByChild:@"uuid"] queryEqualToValue:uuid]
+     observeSingleEventOfType:FEventTypeValue withBlock:^(FDataSnapshot *snapshot) {
+         
+         if ([snapshot.value isEqual:[NSNull null]]) {
+             //not exsit
+             notExistBlacok();
+             
+         }else{
+             
+             //exsit
+             existBloack(snapshot);
+         }
+         
+         [[NSNotificationCenter defaultCenter] postNotificationName:@"indicatorStop" object:nil];
+         
+     }];
+}
+
 -(void)queryRoomByUUID:(NSString *)uuid success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok{
     
     //確認ＵＵＩＤ是否重複註冊
@@ -326,18 +480,35 @@
 
 -(void)queryRoomByRoomID:(NSString *)RoomID success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok{
     
-    //確認ＵＵＩＤ是否重複註冊
-    
     
     [roomRef observeSingleEventOfType:FEventTypeValue withBlock:^(FDataSnapshot *snapshot) {
         
-        NSDictionary *dic = snapshot.value;
-        NSArray *ary = [dic allKeys];
-        if ([ary containsObject:RoomID]) {
-            successBloack(snapshot);
-        }else{
+        if ([snapshot.value isEqual:[NSNull null]]) {
+            
+            //not exsit
             failureBlacok();
+            
+        }else{
+            
+            //exsit
+            NSDictionary *dic = snapshot.value;
+            NSArray *ary = [dic allKeys];
+            if ([ary containsObject:RoomID]) {
+                successBloack(snapshot);
+            }else{
+                failureBlacok();
+            }
         }
+        
+        
+        
+//        NSDictionary *dic = snapshot.value;
+//        NSArray *ary = [dic allKeys];
+//        if ([ary containsObject:RoomID]) {
+//            successBloack(snapshot);
+//        }else{
+//            failureBlacok();
+//        }
         
          [[NSNotificationCenter defaultCenter] postNotificationName:@"indicatorStop" object:nil];
 
@@ -363,9 +534,24 @@
 
 -(void)queryMemberByRoomID:(NSString *)roomID success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok{
     
-    
     [[[membersRef queryOrderedByChild:@"roomID"] queryEqualToValue:roomID]
      observeSingleEventOfType:FEventTypeValue withBlock:^(FDataSnapshot *snapshot) {
+         
+         if ([snapshot.value isEqual:[NSNull null]]) {
+             failureBlacok();
+         }else{
+             successBloack(snapshot);
+         }
+         
+         [[NSNotificationCenter defaultCenter] postNotificationName:@"indicatorStop" object:nil];
+         
+     }];
+}
+
+-(void)queryMemberNotSingleTimeByRoomID:(NSString *)roomID success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok{
+    
+    [[[membersRef queryOrderedByChild:@"roomID"] queryEqualToValue:roomID]
+     observeEventType:FEventTypeValue withBlock:^(FDataSnapshot *snapshot) {
          
          if ([snapshot.value isEqual:[NSNull null]]) {
              failureBlacok();

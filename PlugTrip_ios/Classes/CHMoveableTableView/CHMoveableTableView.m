@@ -60,22 +60,14 @@
 -(void)setObjects:(NSMutableArray *)objects{
     
     if (objects) {
-        _objects = objects;//
-        /*
-         objects:
-         {
-         "day" :0,
-         "week":0,
-         ...
-         }
-         {
-         "day" :1,
-         "week":0,
-         ...
-         }
-         */
         
         
+        _objects = [[NSMutableArray alloc]init];
+        
+        [objects enumerateObjectsUsingBlock:^(NSDictionary  *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            [_objects addObject:obj[@"items"]];
+        }];
+ 
         [self registerNib:[UINib nibWithNibName:@"CHMoveableTableViewCell" bundle:nil] forCellReuseIdentifier:@"identifier"];
         
         self.backgroundColor = [UIColor clearColor];
@@ -91,14 +83,19 @@
 #pragma mark - UITableView data source and delegate methods
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return [self.objects count];
+    return [_objects count];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     
-    NSDictionary *dic = self.objects[section];
+    NSArray *items = _objects[section];
     
-    return [dic[@"items"] count];
+    return [items count];
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    
+    return 30;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -110,21 +107,24 @@
     if (!cell) {
         cell = [tableView dequeueReusableCellWithIdentifier:cIdentifier];
     }
+
+    
+    NSArray      *items    = _objects[indexPath.section];
+    id            item   = items[indexPath.row];
     
     NSString *placeName ;
     BOOL isMergeState;
-
-    if ([_objects[indexPath.row] isKindOfClass:[NSDictionary class]]) {
+    
+    if ([item isKindOfClass:[NSDictionary class]]) {
         
-        NSDictionary *dic = _objects[indexPath.row];
-        NSArray *placeArray = dic[@"placeName"];
-        long index = [dic[@"number"] longLongValue];
-        placeName = placeArray[index];
-        isMergeState = YES;
-                             
-    }else{
-        placeName = _objects[indexPath.row];
+        placeName = item[@"title"];
         isMergeState = NO;
+                             
+    }else if([item isKindOfClass:[NSArray class]]){
+        
+        NSDictionary *dic = item[1];
+        placeName = dic[@"title"];
+        isMergeState = YES;
     }
     
 
@@ -157,8 +157,14 @@
 }
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-    [self.objects removeObjectAtIndex:indexPath.row];
-    [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
+    
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        
+        NSMutableArray *items = _objects[indexPath.section];
+        [items removeObjectAtIndex:indexPath.row];
+        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
+    }
+    
 }
 
 - (IBAction)longPressGestureRecognized:(id)sender {
@@ -172,7 +178,6 @@
     
     static UIView       *snapshot = nil;        ///< A snapshot of the row user is moving.
     static NSIndexPath  *sourceIndexPath = nil; ///< Initial index path, where gesture begins.
-    static NSIndexPath  *targetIndexPath = nil; ///<
     static BOOL  isMergeState = NO;
     
     switch (state) {
@@ -213,44 +218,89 @@
             center.y = location.y;
             snapshot.center = center;
             
-            UITableViewCell *cell = [self cellForRowAtIndexPath:indexPath];
-        
-            //make sure the loc range is between -cellHeight/2 ~ cellHeight/2
-            float loc = location.y - cell.frame.size.height/2 - cell.frame.size.height * sourceIndexPath.row;
-            float margin   = 0.15;
-            float mergeMin = cell.frame.size.height * (1.0 - margin);
-            float mergeMax = cell.frame.size.height * (1.0 + margin);
-            NSLog(@"%f < %f < %f",mergeMin,fabs(loc),mergeMax);
-            NSLog(@"%ld %ld \n",(long)indexPath.row,(long)sourceIndexPath.row);
+//            UITableViewCell *cell = [self cellForRowAtIndexPath:indexPath];
+//            float distanceOfCellAndLoc = location.y - cell.center.y;
+//            float mergeRange = cell.frame.size.height * 0.1;
+//            NSLog(@"%f",distanceOfCellAndLoc);
             
-            if (self.objects.count!=1) {
+            if (indexPath && ![indexPath isEqual:sourceIndexPath]){
                 
-                if (fabs(loc) > mergeMin && fabs(loc) < mergeMax) {
+                NSLog(@"exchange cell with (set:%ld,row:%ld)",(long)indexPath.section,(long)indexPath.row);
+                
+                [self beginUpdates];
+                
+                if (indexPath.section == sourceIndexPath.section) {
                     
-                    isMergeState = YES;
-
+                    NSLog(@"moveing to the same section");
+                    
+                    // ... update data source.
+                    NSMutableArray       *items    = [NSMutableArray arrayWithArray:_objects[indexPath.section]];
+                    [items exchangeObjectAtIndex:indexPath.row withObjectAtIndex:sourceIndexPath.row];
+                    _objects[indexPath.section] = items;
+                    
+                    [items enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger idx, BOOL * _Nonnull stop) {
+                        NSLog(@"%@",item[@"title"]);
+                    }];
+                    
+                    // ... move the rows.
+                    [self moveRowAtIndexPath:sourceIndexPath toIndexPath:indexPath];
+                    
+                    
                 }else {
                     
-                    if (fabs(loc) > mergeMax){
-                        
-                        if (indexPath && ![indexPath isEqual:sourceIndexPath]) {
-                            
-                            // ... update data source.
-                            [self.objects exchangeObjectAtIndex:indexPath.row withObjectAtIndex:sourceIndexPath.row];
-                            
-                            // ... move the rows.
-                            [self moveRowAtIndexPath:sourceIndexPath toIndexPath:indexPath];
-                            
-                            // ... and update source so it is in sync with UI changes.
-                            sourceIndexPath = indexPath;
-                        }
+                    NSMutableArray       *sourceItems         = [NSMutableArray arrayWithArray:_objects[sourceIndexPath.section]];
+                    NSMutableArray       *destinationItems    = [NSMutableArray arrayWithArray:_objects[indexPath.section]];
+                    id item = sourceItems[sourceIndexPath.row];
+                    NSIndexPath *destinationIndexPath;
+                    
+                    if (indexPath.section > sourceIndexPath.section){
+                        NSLog(@"moveing to next section");
+                        [sourceItems removeObject:item];
+                        [destinationItems insertObject:item atIndex:0];
+                        destinationIndexPath = [NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section];
+                      
+                    }else {
+                        NSLog(@"moveing to previous section");
+                        [sourceItems removeObject:item];
+                        [destinationItems addObject:item];
+                        destinationIndexPath = [NSIndexPath indexPathForRow:indexPath.row+1 inSection:indexPath.section];
                     }
                     
-                    isMergeState = NO;
-                    targetIndexPath = nil;
+                    indexPath = destinationIndexPath;
+                    
+                    _objects[sourceIndexPath.section] = sourceItems;
+                    _objects[indexPath.section]       = destinationItems;
+                    
+                    [self deleteRowsAtIndexPaths:[NSArray arrayWithObject: sourceIndexPath] withRowAnimation:UITableViewRowAnimationNone];
+                    [self insertRowsAtIndexPaths:[NSArray arrayWithObject: indexPath]       withRowAnimation:UITableViewRowAnimationNone];
+                    
                 }
+                
+                [self endUpdates];
+                
+                // ... and update source so it is in sync with UI changes.
+                sourceIndexPath = indexPath;
+                UITableViewCell *cell = [self cellForRowAtIndexPath:indexPath];
+                cell.hidden = YES;
+                
+//                if (fabs(distanceOfCellAndLoc) < mergeRange) {
+//                    
+//                    //
+//                    NSLog(@"Show Merge state");
+//                    
+//                }else{
+//                    
+//                    //
+//                    NSLog(@"exchange cell");
+//                    // ... and update source so it is in sync with UI changes.
+//                    sourceIndexPath = indexPath;
+//                    
+//                }
+                
+                
+                
             }
-            
+   
             //merge state animation
             [UIView animateWithDuration:0.25 animations:^{
                 
@@ -270,9 +320,7 @@
             cell.hidden = NO;
             cell.alpha = 0.0;
             
-            
-            
-            
+   
             //merge cell!
             if (isMergeState && self.objects.count !=1 && (indexPath && ![indexPath isEqual:sourceIndexPath]) ) {
                 
@@ -424,7 +472,13 @@
                 sourceIndexPath = nil;
                 [snapshot removeFromSuperview];
                 snapshot = nil;
-                NSLog(@"%@",_objects);
+                
+                [_objects enumerateObjectsUsingBlock:^(NSArray *items, NSUInteger idx, BOOL * _Nonnull stop) {
+                    [items enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger idx, BOOL * _Nonnull stop) {
+                        NSLog(@"%@",item[@"title"]);
+                    }];
+                }];
+                
                 [self reloadData];
                 
                 [self selectRowAtIndexPath:indexPath animated:YES scrollPosition:UITableViewScrollPositionNone];
@@ -432,6 +486,12 @@
             
             break;
         }
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    if ([self.chDelegate respondsToSelector:@selector(moveableTableView: didSelectRowAtIndexPath:)]) {
+        [self.chDelegate moveableTableView:self didSelectRowAtIndexPath:indexPath];
     }
 }
 
@@ -455,6 +515,35 @@
     snapshot.layer.shadowOpacity = 0.4;
     
     return snapshot;
+}
+
+-(NSInteger)turnToIndexFromIndexPath:(NSIndexPath *)indexPath andArray:(NSArray *)array{
+    
+    NSInteger result;
+    
+    int num = 0;
+    for (int i=0 ; i < indexPath.section ; i++) {
+        num += [array[i] count];
+    }
+    
+    result = num + indexPath.row;
+    
+//    if (indexPath.section ==0) {
+//        result = indexPath.row;
+//
+//    }else{
+//        
+//        int num = 0;
+//        for (int i=0 ; i < indexPath.section ; i++) {
+//            num += [array[i] count];
+//        }
+//        
+//        result = num + indexPath.row;
+//    }
+    
+    
+    return result;
+    
 }
 
 /*

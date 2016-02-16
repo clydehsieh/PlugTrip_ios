@@ -11,7 +11,18 @@
 
 #import <Parse/Parse.h>
 
-@interface CHChatRoomSettingVC : UIViewController <UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate>
+
+@protocol CHChatRoomSettingVCDelegate <NSObject>
+
+-(void)didLeftSettingVC;
+
+@end
+
+
+
+@interface CHChatRoomSettingVC : UIViewController <UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,CLLocationManagerDelegate>
+
+@property (nonatomic) id<CHChatRoomSettingVCDelegate>delegate;
 
 @property (weak, nonatomic) IBOutlet UIButton *backBtn;
 @property (weak, nonatomic) IBOutlet UIButton *leftBtn;
@@ -26,5 +37,6 @@
 @property (weak, nonatomic) IBOutlet UITableView *usersTableView;
 
 @property (nonatomic, retain) NSMutableDictionary *userInfo; // 紀錄user 資料
+@property (nonatomic, retain) NSMutableDictionary *roomInfo; // 紀錄user 資料
 
 @end

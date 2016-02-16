@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3DD0FD0E461D75CD3BCD7A3C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BD3503176144C23B38431939 /* libPods.a */; };
+		EC0BF2E51C719A0E00519D13 /* Locicon.png in Resources */ = {isa = PBXBuildFile; fileRef = EC0BF2E41C719A0E00519D13 /* Locicon.png */; };
 		EC37A03F1C4FB1E600215003 /* BCKeychainManager.m in Sources */ = {isa = PBXBuildFile; fileRef = EC37A03E1C4FB1E600215003 /* BCKeychainManager.m */; };
 		EC37A0451C50881400215003 /* CHChatRoomSettingVC.m in Sources */ = {isa = PBXBuildFile; fileRef = EC37A0431C50881400215003 /* CHChatRoomSettingVC.m */; };
 		EC37A0461C50881400215003 /* CHChatRoomSettingVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC37A0441C50881400215003 /* CHChatRoomSettingVC.xib */; };
@@ -18,6 +19,7 @@
 		EC6F52581C6300AE009FCBC9 /* CHMoveableTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = EC6F52551C6300AE009FCBC9 /* CHMoveableTableViewCell.xib */; };
 		EC6F525C1C697D2F009FCBC9 /* CHFIreBaseAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = EC6F525B1C697D2F009FCBC9 /* CHFIreBaseAdaptor.m */; };
 		EC6F525E1C6AE397009FCBC9 /* plugtrip.json in Resources */ = {isa = PBXBuildFile; fileRef = EC6F525D1C6AE396009FCBC9 /* plugtrip.json */; };
+		EC6F52621C70E185009FCBC9 /* EasyTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = EC6F52611C70E185009FCBC9 /* EasyTableView.m */; };
 		EC8C8EF01C326430005BADBC /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = EC8C8EEF1C326430005BADBC /* libsqlite3.tbd */; };
 		EC8C8EF61C327193005BADBC /* mydatabase.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EC8C8EF51C327193005BADBC /* mydatabase.sqlite */; };
 		EC8C8EF71C327193005BADBC /* mydatabase.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = EC8C8EF51C327193005BADBC /* mydatabase.sqlite */; };
@@ -96,6 +98,7 @@
 		683A63D2D4AF3E9A491058A9 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		92DA014E37C9787200AD1D99 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		BD3503176144C23B38431939 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		EC0BF2E41C719A0E00519D13 /* Locicon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Locicon.png; sourceTree = "<group>"; };
 		EC37A03D1C4FB1E600215003 /* BCKeychainManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BCKeychainManager.h; sourceTree = "<group>"; };
 		EC37A03E1C4FB1E600215003 /* BCKeychainManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BCKeychainManager.m; sourceTree = "<group>"; };
 		EC37A0421C50881400215003 /* CHChatRoomSettingVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHChatRoomSettingVC.h; path = Classes/CHChatRoomSettingVC/CHChatRoomSettingVC.h; sourceTree = "<group>"; };
@@ -112,6 +115,8 @@
 		EC6F525A1C697D2F009FCBC9 /* CHFIreBaseAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHFIreBaseAdaptor.h; path = Classes/CHFIreBaseAdaptor.h; sourceTree = "<group>"; };
 		EC6F525B1C697D2F009FCBC9 /* CHFIreBaseAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHFIreBaseAdaptor.m; path = Classes/CHFIreBaseAdaptor.m; sourceTree = "<group>"; };
 		EC6F525D1C6AE396009FCBC9 /* plugtrip.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = plugtrip.json; sourceTree = "<group>"; };
+		EC6F52601C70E185009FCBC9 /* EasyTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EasyTableView.h; path = Classes/EasyTableView/EasyTableView.h; sourceTree = "<group>"; };
+		EC6F52611C70E185009FCBC9 /* EasyTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = EasyTableView.m; path = Classes/EasyTableView/EasyTableView.m; sourceTree = "<group>"; };
 		EC8C8EEF1C326430005BADBC /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		EC8C8EF51C327193005BADBC /* mydatabase.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = mydatabase.sqlite; sourceTree = "<group>"; };
 		EC8C8EF91C3271CE005BADBC /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
@@ -318,6 +323,15 @@
 			name = CHFIreBaseAdaptor;
 			sourceTree = "<group>";
 		};
+		EC6F525F1C70E149009FCBC9 /* EasyTableView */ = {
+			isa = PBXGroup;
+			children = (
+				EC6F52601C70E185009FCBC9 /* EasyTableView.h */,
+				EC6F52611C70E185009FCBC9 /* EasyTableView.m */,
+			);
+			name = EasyTableView;
+			sourceTree = "<group>";
+		};
 		EC8C8EFB1C327788005BADBC /* fmdb */ = {
 			isa = PBXGroup;
 			children = (
@@ -432,6 +446,7 @@
 		ECD493EC1C2A59800043BE54 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				EC6F525F1C70E149009FCBC9 /* EasyTableView */,
 				EC6F52501C63009C009FCBC9 /* CHMoveableTableView */,
 				EC6F524A1C61D17F009FCBC9 /* CHReadTripCodeVC */,
 				ECFA88E11C5A611000A24A85 /* CHParseAdaptor */,
@@ -498,6 +513,7 @@
 				ECD494111C30CBD60043BE54 /* 2_unchecked.png */,
 				ECD494121C30CBD60043BE54 /* allCheck@2x.png */,
 				ECD494131C30CBD60043BE54 /* checked@2x.png */,
+				EC0BF2E41C719A0E00519D13 /* Locicon.png */,
 			);
 			path = Images;
 			sourceTree = "<group>";
@@ -628,6 +644,7 @@
 				ECD494091C30BE010043BE54 /* CHImagePickerView.xib in Resources */,
 				ECD493FB1C2A748C0043BE54 /* MapVCMenuView.xib in Resources */,
 				EC8C8EF61C327193005BADBC /* mydatabase.sqlite in Resources */,
+				EC0BF2E51C719A0E00519D13 /* Locicon.png in Resources */,
 				ECD494141C30CBD60043BE54 /* 1_checked.png in Resources */,
 				ECD493C01C28E9370043BE54 /* Assets.xcassets in Resources */,
 				EC6F52581C6300AE009FCBC9 /* CHMoveableTableViewCell.xib in Resources */,
@@ -717,6 +734,7 @@
 				ECD302831C4F334F00AFE746 /* CHChatRoomVC.m in Sources */,
 				EC8C8F121C33BD30005BADBC /* CHScrollView.m in Sources */,
 				EC8C8F071C327788005BADBC /* FMDatabase.m in Sources */,
+				EC6F52621C70E185009FCBC9 /* EasyTableView.m in Sources */,
 				EC8C8F0E1C3277B7005BADBC /* myDB.m in Sources */,
 				ECD4940A1C30BE010043BE54 /* CHImagePickerViewCell.m in Sources */,
 				EC8C8F081C327788005BADBC /* FMDatabaseAdditions.m in Sources */,

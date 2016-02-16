@@ -80,18 +80,26 @@ static NSString *identifier = @"identifier";
         NSDictionary *dic = snapshot.value;
         members = [NSMutableArray arrayWithArray:[dic allValues]];
         
-//        [_messageContentTableView reloadData];
+        [self loadChattingContents];
         
     } failure:^{
         //
     }];
+
+}
+
+-(void)loadChattingContents{
+    
+     NSMutableDictionary *roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
+    
+    __block BOOL initialAdds = YES;
     
     [[CHFIreBaseAdaptor sharedInstance] queryMsgRegularlyByRoomID:roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
         
         if (!initialAdds) {
             NSDictionary *dic = snapshot.value;
             [messages addObject: dic];
-
+            
             [_messageContentTableView reloadData];
         }
         
@@ -114,10 +122,7 @@ static NSString *identifier = @"identifier";
     } failure:^{
         NSLog(@"首次撈全部chatting 資料失敗");
     }];
-
 }
-
-
 
 #pragma mark - TextField
 

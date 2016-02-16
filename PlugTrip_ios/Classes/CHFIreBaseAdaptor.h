@@ -21,19 +21,26 @@
 -(void)createMsgByUUID:(NSString *)uuid andMSg:(NSString *)msg andRoomID:(NSString *)roomID success:(void(^)())successBloack failure:(void (^)())failureBlacok;
 
 //刪除
-
+-(void)deleteMemberByUUID:(NSString *)uuid success:(void(^)())successBloack failure:(void (^)())failureBlacok;
+-(void)deleteMemberByRoomID:(NSString *)roomID andUUID:(NSString *)uuid success:(void(^)())successBloack failure:(void (^)())failureBlacok;
 
 //更新
 -(void)updateMemberBykey:(NSString *)key andValue:(id)value success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok;
 
 //搜尋
+-(void)queryUserByUUID:(NSString *)uuid exist:(void(^)(FDataSnapshot *snapshot))existBloack notExist:(void (^)())notExistBlacok;
+
 -(void)queryRoomByUUID:(NSString *)uuid success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok;
 -(void)queryRoomByRoomID:(NSString *)RoomID success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok;
 
 -(void)queryMemberByUUID:(NSString *)uuid success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok;
 -(void)queryMemberByRoomID:(NSString *)roomID success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok;
+-(void)queryMemberNotSingleTimeByRoomID:(NSString *)roomID success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok;
+
 -(void)queryMsgByRoomID:(NSString *)roomID success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok;
 -(void)queryMsgRegularlyByRoomID:(NSString *)roomID success:(void(^)(FDataSnapshot *snapshot))successBloack failure:(void (^)())failureBlacok;
+
+
 
 -(void)setUserValueWithUUID:(NSString *)uuid andNickname:(NSString *)nickname;
 -(void)queryTest;

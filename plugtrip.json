@@ -1,0 +1,78 @@
+{
+  "code": "GOOD",
+  "total": [
+    {
+      "day": 0,
+      "week": 0,
+      "items": [
+        {
+          "title": "0-0台南火車站",
+          "text": "說明",
+          "address": "台南市東區大學路西段89號",
+          "lat": 22.996,
+          "lon": 120.35,
+          "link": "http://www.yahoo.com.tw",
+          "startTime": "8:50:05",
+          "endTime": "9:15:12"
+        },
+        {
+          "No":"1",
+          "title": "0-1孔廟",
+          "text": "說明",
+          "address": "台南市中西區南門路2號",
+          "lat": 22.990,
+          "lon": 120.204,
+          "link": "http://www.yahoo.com.tw",
+          "startTime": "10:50:05",
+          "endTime": "12:15:12"
+        },
+        {
+          "title": "0-2林百貨",
+          "text": "說明",
+          "address": "台南市中西區忠義路二段63號",
+          "lat": 22.991,
+          "lon": 120.202,
+          "link": "http://www.yahoo.com.tw",
+          "startTime": "13:50:05",
+          "endTime": "15:15:12"
+        }
+      ]
+    },
+    {
+      "day": 1,
+      "week": 0,
+      "items": [
+        {
+          "title": "1-0香格里拉",
+          "text": "說明",
+          "address": "台南市東區大學路西段89號",
+          "lat": 22.996,
+          "lon": 120.213,
+          "link": "http://www.yahoo.com.tw",
+          "startTime": "9:50:05",
+          "endTime": "10:15:12"
+        },
+        {
+          "title": "1-1國賓影城",
+          "text": "說明",
+          "address": "台南市東區中華東路一段66號",
+          "lat": 22.995,
+          "lon": 120.234,
+          "link": "http://www.yahoo.com.tw",
+          "startTime": "11:50:05",
+          "endTime": "14:15:12"
+        },
+        {
+          "title": "1-2虹品牛肉湯",
+          "text": "說明",
+          "address": "台南市永康區大安街288號",
+          "lat": 22.008,
+          "lon": 120.265,
+          "link": "http://www.yahoo.com.tw",
+          "startTime": "15:50:05",
+          "endTime": "16:15:12"
+        }
+      ]
+    }
+  ]
+}

@@ -14,6 +14,7 @@
 @protocol CHImagePickerViewDelegate <NSObject>
 
 -(void)finishedPickingImages:(NSMutableArray *)assets;
+-(void)didLeftPickingImagesVC;
 
 @end
 

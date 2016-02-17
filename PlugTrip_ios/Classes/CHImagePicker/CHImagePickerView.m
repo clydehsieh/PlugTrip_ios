@@ -373,6 +373,10 @@
     
     NSLog(@"Cancel");
     
+    if ([_delegate respondsToSelector:@selector(didLeftPickingImagesVC)]) {
+        [_delegate didLeftPickingImagesVC];
+    }
+    
     [self removeFromSuperview];
 }
 

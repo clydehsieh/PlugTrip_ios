@@ -44,14 +44,26 @@
 
  */
 
+#define TAG_menuBtn       101
 #define TAG_modeBtn       102
-#define TAG_quickChatView 204
-
+#define TAG_addPhotoBtn   103
+#define TAG_chatRoomBtn   104
+#define TAG_modeBtnBackgroundView 201
+#define TAG_coverTripTitleView    202
+#define TAG_indicator_maskView    203
+#define TAG_quickChatView         204
+#define TAG_tripTitleText 301
 #define TAG_quickChatText 302
+#define TAG_moveTV 401
+#define TAG_horizontalView_CellImgView   501
+#define TAG_horizontalView_CellLabel     502
 
-#define IMAGEHEIGHT 50
-#define MODEBTN_WIDTH 80.0
+#define WIDTH_moveTV 88
+#define IMAGEHEIGHT    50
+#define MODEBTN_WIDTH  80.0
 #define MODEBTN_HEIGHT 44.0
+#define MEMBER_MapMarker_SIZE 20
+
 
 #define BOTTOM_VIEW_FRAME1 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH, IMAGEHEIGHT)
 #define BOTTOM_VIEW_FRAME2 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH*2, IMAGEHEIGHT)
@@ -104,61 +116,21 @@ NSString *const tableName_userGPS = @"user_GPS";
     //show & hide keyboard
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillChangeFrameNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
-    
+
+    [self initTripInfo];
+    [self initUserInfo];
+    [self initRoomInfo];
+ 
     
     _isInitialLayout = NO;//for first load view
     
     //firebase
     fireBaseAdp = [[CHFIreBaseAdaptor alloc]init];
     
-    ///!!!:重寫
-    //Trip Info
-    _tripInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"]];
-    if ([_tripInfo count]==0) {
-        _tripInfo = [[NSMutableDictionary alloc]init];
-        [_tripInfo setObject:@"New Trip Title"            forKey:@"tripTitle"];
-        [_tripInfo setObject:[NSNumber numberWithBool:NO] forKey:@"isTripCreate"];
-        [_tripInfo setObject:[NSNumber numberWithBool:NO] forKey:@"isSavedOnline"];
-        [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
-        
-        NSLog(@"Trip info is not exist, create new one");
-    }else{
-        NSLog(@"\nLoad TripInfo success, start to load photos");
-        
-    }
-
-    //User Info
-    _userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"userInfo"]];
-    if ([_userInfo count]==0) {
-        _userInfo = [[NSMutableDictionary alloc]init];
-        [_userInfo setObject:@"New User"     forKey:@"userID"];
-        [_userInfo setObject:[self loadUUID] forKey:@"UUID"];
-        [_userInfo setObject:@"New User"     forKey:@"nickName"];
-        [_userInfo setObject:[NSNumber numberWithBool:NO]  forKey:@"isShareGPS"];
-        [[NSUserDefaults standardUserDefaults] setObject:_userInfo forKey:@"userInfo"];
-        NSLog(@"User info is not exist, create new one");
-    }else{
-        NSLog(@"Load UserInfo success");
-    }
-    
-    _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
-    
-    if ([_roomInfo count]==0) {
-        _roomInfo = [[NSMutableDictionary alloc]init];
-        [_roomInfo setObject:[NSNumber numberWithBool:NO]   forKey:@"isShowOnMap"];
-//        [_roomInfo setObject:_roomID     forKey:@"roomID"];
-        [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
-        NSLog(@"User info is not exist, create new one");
-    }else{
-        NSLog(@"Load UserInfo success");
-    }
-    
-    ///=============
-    
-    
- 
     // check is chatRoom joined or not
     _isCheckChatRoomJoin = NO;
+    
+    
     _modes = [[NSArray alloc]initWithObjects:@"分析",@"紀錄",@"同夥",@"旅程", nil];
 
     
@@ -173,6 +145,12 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 
 }
+
+-(void)viewWillAppear:(BOOL)animated{
+    // Turn on the location manager to update location.
+    [_locationManager startUpdatingLocation];
+}
+
 
 -(void)viewDidAppear:(BOOL)animated{
     
@@ -190,14 +168,11 @@ NSString *const tableName_userGPS = @"user_GPS";
         //init data
         [self updateTripCreateState];
     
-        
         _isInitialLayout = YES;
     }
-    
 }
 
-- (void)viewWillDisappear:(BOOL)animated
-{
+- (void)viewWillDisappear:(BOOL)animated{
     // Turn off the location manager to save power.
     [_locationManager stopUpdatingLocation];
 }
@@ -208,7 +183,27 @@ NSString *const tableName_userGPS = @"user_GPS";
 }
 
 #pragma mark
+#pragma mark - ...初始資料...
 #pragma mark - TripInfo
+-(void)initTripInfo{
+    
+    //Trip Info
+    _tripInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"]];
+    
+    if ([_tripInfo count]==0) {
+        _tripInfo = [[NSMutableDictionary alloc]init];
+        [_tripInfo setObject:@"New Trip"            forKey:@"tripTitle"];
+        [_tripInfo setObject:[NSNumber numberWithBool:NO] forKey:@"isTripCreate"];
+        [_tripInfo setObject:[NSNumber numberWithBool:NO] forKey:@"isSavedOnline"];
+        [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
+        
+        NSLog(@"Trip info is not exist, create new one");
+    }else{
+        NSLog(@"\nLoad TripInfo success, start to load photos");
+        
+    }
+}
+
 -(void)tripInfoUpdateObjec:(id)object forKey:(id)key{
     
     [_tripInfo setObject:object forKey:key];
@@ -233,23 +228,18 @@ NSString *const tableName_userGPS = @"user_GPS";
         NSLog(@"已經建立旅程, 開始紀錄模式");
         
         //開啟menuBtn
-        UIButton *menuBtn = (UIButton *)[_mapDisplayView viewWithTag:101];
+        UIButton *menuBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_menuBtn];
         menuBtn.hidden = NO;
         NSLog(@"開啟menuBtn");
         
         //show Trip title text
-        UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
+        UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:TAG_tripTitleText];
         tripTitleText.hidden = NO;
         
-        UIView *coverTripTitleView = (UIView *)[_mapDisplayView viewWithTag:202];
+        UIView *coverTripTitleView = (UIView *)[_mapDisplayView viewWithTag:TAG_coverTripTitleView];
         coverTripTitleView.hidden = NO;
      
         [self loadDBPhotos];
-        
-//        ///!!!:開始記錄ＧＰＳ！！
-//        receivedMsg = [NSTimer scheduledTimerWithTimeInterval:5.0f
-//                                                       target:self selector:@selector(locationManager: didUpdateLocations:) userInfo:nil repeats:YES];
-//        [receivedMsg isValid];
     }
     
     [self updateModeBtnState];
@@ -258,19 +248,19 @@ NSString *const tableName_userGPS = @"user_GPS";
 
 -(void)initTripTitleText{
     
-    UITextField *tripTitleText = [[UITextField alloc]initWithFrame:CGRectMake(54, 5 + 44 +5, 100, 22)];
+    UITextField *tripTitleText = [[UITextField alloc]initWithFrame:CGRectMake(54, 5 + 44 +5, 150, 22)];
     tripTitleText.text = _tripInfo[@"tripTitle"];
     tripTitleText.backgroundColor = [UIColor clearColor];
     tripTitleText.layer.borderWidth = 0.5f;
     tripTitleText.layer.borderColor = [[UIColor clearColor]CGColor];
-    tripTitleText.tag = 301;
+    tripTitleText.tag = TAG_tripTitleText;
     tripTitleText.delegate = self;
     tripTitleText.hidden = YES;
     //    tripTitleText.enabled = NO;
     [_mapDisplayView addSubview:tripTitleText];
     
     UIView *coverTripTitleView = [[UIView alloc]initWithFrame:tripTitleText.frame];
-    coverTripTitleView.tag = 202;
+    coverTripTitleView.tag = TAG_coverTripTitleView;
     coverTripTitleView.hidden = YES;
     [_mapDisplayView addSubview:coverTripTitleView];
     UILongPressGestureRecognizer *recog = [[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(editTripTitle:)];
@@ -278,8 +268,26 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
-#pragma mark
 #pragma mark - UserInfo
+-(void)initUserInfo{
+    
+    //User Info
+    _userInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"userInfo"]];
+    
+    if ([_userInfo count]==0) {
+        _userInfo = [[NSMutableDictionary alloc]init];
+        [_userInfo setObject:@"New User"     forKey:@"userID"];
+        [_userInfo setObject:[self loadUUID] forKey:@"UUID"];
+        [_userInfo setObject:@"New User"     forKey:@"nickName"];
+        [_userInfo setObject:[NSNumber numberWithBool:NO]  forKey:@"isShareGPS"];
+        [[NSUserDefaults standardUserDefaults] setObject:_userInfo forKey:@"userInfo"];
+        NSLog(@"User info is not exist, create new one");
+    }else{
+        NSLog(@"Load UserInfo success");
+    }
+    
+}
+
 -(NSString *)loadUUID{
     
     //load UUID
@@ -441,8 +449,26 @@ NSString *const tableName_userGPS = @"user_GPS";
     }];
 }
 
+#pragma mark - roomInfo
+-(void)initRoomInfo{
+    
+    _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
+    
+    if ([_roomInfo count]==0) {
+        _roomInfo = [[NSMutableDictionary alloc]init];
+        [_roomInfo setObject:[NSNumber numberWithBool:NO]   forKey:@"isShowOnMap"];
+        //        [_roomInfo setObject:_roomID     forKey:@"roomID"];
+        [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
+        NSLog(@"User info is not exist, create new one");
+    }else{
+        NSLog(@"Load UserInfo success");
+    }
+    
+}
 
 #pragma mark 
+#pragma mark - ...View layout setting...
+
 #pragma mark - Search View
 -(void)initSearchView{
     sView = [[MapVCSearchView alloc]initWithFrame:CGRectMake(54, 5, _mapDisplayView.frame.size.width-(54+5), 44*5) owner:nil andApiServerKey:apiKey];
@@ -457,8 +483,6 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
-
-#pragma mark
 #pragma mark - CHScrollView
 -(void)initScrollView
 {
@@ -483,7 +507,7 @@ NSString *const tableName_userGPS = @"user_GPS";
 -(void)showImageDisplayScrollViewWithImages:(NSArray *)images {
     
     //show Image scrollView
-    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:201];
+    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:TAG_modeBtnBackgroundView];
     modeBtnBackgroundView.hidden = NO;
     
     [imageScrollView setImageAry:images];
@@ -504,7 +528,6 @@ NSString *const tableName_userGPS = @"user_GPS";
  
 }
 
-#pragma mark
 #pragma mark - horizontalView (EasyTableview) delegate
 -(void)initHorizontalView{
 
@@ -551,46 +574,46 @@ NSString *const tableName_userGPS = @"user_GPS";
     UIImageView *imgView;
     UILabel *locNoLabel;
     
-    //移除所有subview
-    NSArray *subViews = cell.subviews;
-    [subViews enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        [obj removeFromSuperview];
-    }];
     
     if (!cell) {
         // Create a new table view cell
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         cell.backgroundColor = [UIColor clearColor];
+        
+        float downsize = 5;
+        CGRect imgViewRect		= CGRectMake(downsize, downsize, cell.frame.size.width - downsize*2, cell.frame.size.height - downsize*2);
+        
+        // ImgView
+        
+        imgView = [[UIImageView alloc]initWithFrame:imgViewRect];
+        imgView.center = cell.center;
+        imgView.tag = TAG_horizontalView_CellImgView;
+        imgView.contentMode = UIViewContentModeScaleAspectFit;
+        imgView.autoresizingMask  = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+        [cell addSubview:imgView];
+        
+        //Label
+        
+        locNoLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, cell.frame.size.height - 20, cell.frame.size.height,20)];
+        locNoLabel.tag = TAG_horizontalView_CellLabel;
+        ;
+        locNoLabel.textAlignment   = NSTextAlignmentCenter;
+        locNoLabel.backgroundColor = [UIColor clearColor];
+        locNoLabel.textColor       = [UIColor whiteColor];
+        locNoLabel.layer.cornerRadius = 5.0f;
+        locNoLabel.layer.borderWidth  = 2.0f;
+        locNoLabel.layer.borderColor  = [UIColor lightGrayColor].CGColor;
+        [cell addSubview:locNoLabel];
+        
        
+    }else{
+        imgView    = (UIImageView *)[cell viewWithTag:TAG_horizontalView_CellImgView];
+        locNoLabel = (UILabel *)    [cell viewWithTag:TAG_horizontalView_CellLabel];
+        
     }
     
-    float downsize = 5;
-    CGRect imgViewRect		= CGRectMake(downsize, downsize, cell.frame.size.width - downsize*2, cell.frame.size.height - downsize*2);
-    
-    // ImgView
-    
-    imgView = [[UIImageView alloc]initWithFrame:imgViewRect];
-    imgView.center = cell.center;
-    imgView.contentMode = UIViewContentModeScaleAspectFit;
-    imgView.autoresizingMask  = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-    imgView.tag = 1101;
-    [cell addSubview:imgView];
-    
-    //Label
-    
-    locNoLabel = [[UILabel alloc]initWithFrame:CGRectMake(0, cell.frame.size.height - 20, cell.frame.size.height,20)]
-    //        locNoLabel = [[UILabel alloc]initWithFrame:imgViewRect];
-    ;
-    locNoLabel.textAlignment   = NSTextAlignmentCenter;
-    locNoLabel.backgroundColor = [UIColor clearColor];
-    locNoLabel.textColor       = [UIColor whiteColor];
-    locNoLabel.layer.cornerRadius = 5.0f;
-    locNoLabel.layer.borderWidth  = 2.0f;
-    locNoLabel.layer.borderColor  = [UIColor lightGrayColor].CGColor;
-    locNoLabel.tag = 1102;
-    [cell addSubview:locNoLabel];
-    
+   
     
     
     // ... LOAD DATA ...
@@ -625,15 +648,18 @@ NSString *const tableName_userGPS = @"user_GPS";
     if (_currentModeType == 1) {
         //紀錄模式
         
-        //是否有show照片
-        _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
-        if (_isShowImagesOnMap) {
-            
+        if (localImgMarkers.count !=0) {
             [self mapView:_mapView didTapMarker:localImgMarkers[indexPath.row]];
-   
-        }else{
-            //不動作
         }
+//        //是否有show照片
+//        _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
+//        if (_isShowImagesOnMap) {
+//            
+//            [self mapView:_mapView didTapMarker:localImgMarkers[indexPath.row]];
+//   
+//        }else{
+//            //不動作
+//        }
         
     }else if(_currentModeType == 3 ){
         //旅程模式
@@ -647,8 +673,6 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
-
-#pragma mark
 #pragma mark - Button
 -(void)initButtons{
     
@@ -658,18 +682,18 @@ NSString *const tableName_userGPS = @"user_GPS";
     [menuBtn setTitle:@"Me" forState:UIControlStateNormal];
     [menuBtn setBackgroundColor:[UIColor lightGrayColor]];
 //    [menuBtn setBackgroundImage:[UIImage imageNamed:@"s1_1.png"] forState:UIControlStateNormal];
-    menuBtn.tag = 101;
+    menuBtn.tag = TAG_menuBtn;
     menuBtn.hidden = YES;//旅程建立, 才顯示
     [_mapDisplayView addSubview:menuBtn];
     
     //mode setting
     UIView *modeBtnBackgroundView = [[UIView alloc]initWithFrame:CGRectMake(0, _mapDisplayView.frame.size.height-MODEBTN_HEIGHT, _mapDisplayView.frame.size.width, MODEBTN_HEIGHT)];
-    modeBtnBackgroundView.tag = 201;
+    modeBtnBackgroundView.tag = TAG_modeBtnBackgroundView;
     modeBtnBackgroundView.backgroundColor = [UIColor blueColor];
     [_mapDisplayView addSubview:modeBtnBackgroundView];
     
     UIButton *modeBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
-    modeBtn.tag = 102;
+    modeBtn.tag = TAG_modeBtn;
     [modeBtn addTarget:self action:@selector(didSelectModeBtn:) forControlEvents:UIControlEventTouchDown];
     [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
     [modeBtn setBackgroundColor:[UIColor blueColor]];
@@ -678,7 +702,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     //add photo btn
     UIButton *addPhotoBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH*2, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
-    addPhotoBtn.tag = 103;
+    addPhotoBtn.tag = TAG_addPhotoBtn;
     [addPhotoBtn addTarget:self action:@selector(addPhotoBtnAction:) forControlEvents:UIControlEventTouchDown];
     [addPhotoBtn setTitle:@"+" forState:UIControlStateNormal];
     [addPhotoBtn setBackgroundColor:[UIColor blueColor]];
@@ -686,7 +710,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     // chat room btn
     UIButton *chatRoomBtn = [[UIButton alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - MODEBTN_WIDTH, _mapDisplayView.frame.size.height -MODEBTN_HEIGHT*2, MODEBTN_WIDTH, MODEBTN_HEIGHT)];
-    chatRoomBtn.tag = 104;
+    chatRoomBtn.tag = TAG_chatRoomBtn;
     [chatRoomBtn addTarget:self action:@selector(showChatRoom:) forControlEvents:UIControlEventTouchDown];
     [chatRoomBtn setTitle:@"聊天室" forState:UIControlStateNormal];
     [chatRoomBtn setBackgroundColor:[UIColor blueColor]];
@@ -820,17 +844,17 @@ NSString *const tableName_userGPS = @"user_GPS";
 -(void)updateModeBtnState{
     
     //
-    UIButton *modeBtn = (UIButton *)[_mapDisplayView viewWithTag:102];
+    UIButton *modeBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_modeBtn];
     [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
     
    
-    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:201];
+    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:TAG_modeBtnBackgroundView];
     modeBtnBackgroundView.hidden = (_currentModeType == 0)? YES: NO;
     
-    UIButton *addPhotoBtn = (UIButton *)[_mapDisplayView viewWithTag:103];
+    UIButton *addPhotoBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_addPhotoBtn];
     addPhotoBtn.hidden = (_currentModeType == 1)? NO: YES;
 
-    UIButton *chatRoomBtn = (UIButton *)[_mapDisplayView viewWithTag:104];
+    UIButton *chatRoomBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_chatRoomBtn];
     chatRoomBtn.hidden = (_currentModeType == 2)? NO: YES;
 
     
@@ -854,14 +878,11 @@ NSString *const tableName_userGPS = @"user_GPS";
 
 -(void)editTripTitle:(UIGestureRecognizer *)recog{
     
-    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
+    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:TAG_tripTitleText];
     [tripTitleText becomeFirstResponder];
     
 }
 
-
-
-#pragma mark
 #pragma mark - menu
 -(void)initMenuView{
     
@@ -873,6 +894,7 @@ NSString *const tableName_userGPS = @"user_GPS";
 
 -(void)didSelectTheMenu:(UIButton *)btn;
 {
+    [_mapView clear];
     
     // Change mode button
     switch (btn.tag) {
@@ -897,13 +919,12 @@ NSString *const tableName_userGPS = @"user_GPS";
             ///!!!:wait coding
             [self loadJsonTripData];
             [self showReadTripCodeVC];
-//            [self drawPolyLinesOnMap];
             
             break;
         default:
             break;
     }
-
+    
     [self updateModeBtnState];
     
     
@@ -912,8 +933,194 @@ NSString *const tableName_userGPS = @"user_GPS";
     
   
 }
+
 #pragma mark
-#pragma mark - 照片相關管理
+#pragma mark - ...地圖相關設定...
+#pragma mark - Map (Settings & Delegate)
+
+-(void)initMapView{
+    
+    int initalZoomLevel = 14;
+    // init mapView
+    GMSCameraPosition *camera = [GMSCameraPosition cameraWithLatitude:24.081446
+                                                            longitude:120.538854
+                                                                 zoom:initalZoomLevel];
+    
+    _mapView = [GMSMapView mapWithFrame:_mapDisplayView.bounds camera:camera];
+    [_mapDisplayView insertSubview:_mapView atIndex:0];
+    
+    //_mapView basic setting
+    //    _mapView.myLocationEnabled = YES;
+    _mapView.settings.compassButton = YES;
+    //    _mapView.settings.myLocationButton = YES;
+    _mapView.delegate = self;
+    
+}
+
+//僅紀錄create marker方式
+-(void)createMarker{
+    
+    CLLocationCoordinate2D position = CLLocationCoordinate2DMake(24.081446, 120.538854);
+    GMSMarker *marker = [GMSMarker markerWithPosition:position];
+    marker.title            =[NSString stringWithFormat:@"Marker title"];
+    marker.snippet          = @"Marker snippet";
+    marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+    marker.map              = _mapView;
+    marker.icon             = [UIImage imageNamed:@"house"];
+    [localImgMarkers addObject:marker];
+}
+
+//tap map時的反應
+- (void)mapView:(GMSMapView *)mapView didTapAtCoordinate:(CLLocationCoordinate2D)coordinate
+{
+    NSLog(@"You tapped at %f,%f", coordinate.latitude, coordinate.longitude);
+}
+
+//tap marker時的反應
+- (BOOL)mapView:(GMSMapView *)mapView didTapMarker:(GMSMarker *)marker {
+    
+    mapView.selectedMarker = marker;
+    
+    GMSCameraPosition *tapedLocation = [GMSCameraPosition cameraWithLatitude:marker.position.latitude
+                                                                   longitude:marker.position.longitude
+                                                                        zoom:_mapView.camera.zoom];
+    NSLog(@"\nTapped image\nimageLatitue:%f,imageLongtitude:%f",marker.position.latitude,marker.position.longitude
+          );
+    [_mapView setCamera:tapedLocation];
+    
+    return YES;
+}
+
+//map 移動前的反應
+- (void)mapView:(GMSMapView *)mapView willMove:(BOOL)gesture
+{
+    //
+}
+
+//map 移動時的反應
+- (void)mapView:(GMSMapView *)mapView didChangeCameraPosition:(GMSCameraPosition *)position
+{
+    //
+    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:TAG_tripTitleText];
+    [tripTitleText resignFirstResponder];
+    
+}
+
+//map 停止時的反應
+- (void)mapView:(GMSMapView *)mapView idleAtCameraPosition:(GMSCameraPosition *)position{
+    //
+}
+
+#pragma mark - GPS & locationManager
+-(void)locationManagerSetting{
+    
+    if (_locationManager == nil)
+    {
+        _locationManager = [[CLLocationManager alloc] init];
+        _locationManager.distanceFilter  = kCLDistanceFilterNone;
+        _locationManager.desiredAccuracy = kCLLocationAccuracyBest;//100m
+        _locationManager.delegate = self;
+        [_locationManager requestAlwaysAuthorization];
+        
+        ///!!!:週期性更新GPS location
+        receivedMsg = [NSTimer scheduledTimerWithTimeInterval:5.0f
+                                                       target:self selector:@selector(updateDeviceLoctionData) userInfo:nil repeats:YES];
+        [receivedMsg isValid];
+    }
+}
+
+//獲取裝置位置
+- (NSString *)deviceLocation
+{
+    NSString *theLocation = [NSString stringWithFormat:@"latitude: %f longitude: %f", self.locationManager.location.coordinate.latitude, self.locationManager.location.coordinate.longitude];
+    return theLocation;
+}
+
+//存裝置位置至local db
+-(void)updateDeviceLoctionData{
+    
+    [[myDB sharedInstance]insertGPSTable:tableName_userGPS
+                             andLatitude:[NSString stringWithFormat:@"%f",
+                                          _locationManager.location.coordinate.latitude]
+                           andLongtitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.longitude]];
+    
+    //    NSLog(@"\n更新DB的LOC:(%f,%f)",_locationManager.location.coordinate.latitude,_locationManager.location.coordinate.longitude);
+    
+    ///!!!:同夥模式, 且允許顯示地圖member marker
+    if ([_roomInfo[@"isShowOnMap"] boolValue]== YES && _currentModeType == 2) {
+        [self updateDeviceLocationToServer];
+    }
+    
+    //    [self drawPolyLinesOnMap];
+}
+
+//存裝置位置至server
+-(void)updateDeviceLocationToServer{
+    
+    double lat = _locationManager.location.coordinate.latitude;
+    double lon = _locationManager.location.coordinate.longitude;
+    
+    NSLog(@"\nServer的LOC:(%f,%f)",_locationManager.location.coordinate.latitude,_locationManager.location.coordinate.longitude);
+    
+    //update server
+    [[CHFIreBaseAdaptor sharedInstance]updateMemberBykey:@"lastGPSLocation" andValue:[NSArray arrayWithObjects:[NSNumber numberWithDouble:lat],[NSNumber numberWithDouble:lon],nil] success:^(FDataSnapshot *snapshot) {
+        
+        [self addMemberMarker];
+        
+    } failure:^{
+        
+        //
+        NSLog(@"");
+    }];
+}
+
+//locationManager更新位置時反應
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
+    
+    //    NSLog(@"\nUpdateLOC:(%f,%f)",_locationManager.location.coordinate.latitude,_locationManager.location.coordinate.longitude);
+}
+
+//locationManager更新位置失敗時反應
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error{
+    NSLog(@"locationManager didFailWithError: %@", error);
+    
+}
+
+#pragma mark - 繪製地圖路徑
+
+//local db GPS data 繪製成路徑
+-(void)drawPolyLinesOnMap{
+    
+    
+    NSMutableArray *queryGPSTableResult=[[NSMutableArray alloc]init];
+    __block float latitude;
+    __block float longitude;
+    
+    
+    queryGPSTableResult = [[myDB sharedInstance]queryWithTableName:tableName_userGPS];
+    //    NSLog(@"%@",queryGPSTableResult);
+    
+    GMSMutablePath *path = [GMSMutablePath path];
+    
+    if (queryGPSTableResult) {
+        [queryGPSTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
+            latitude  = [dict[@"userLatitude"]   floatValue];
+            longitude = [dict[@"userLongtitude"] floatValue];
+            [path addCoordinate:CLLocationCoordinate2DMake(latitude, longitude)];
+        }];
+        
+        GMSPolyline *rectangle = [GMSPolyline polylineWithPath:path];
+        rectangle.map = _mapView;
+        NSLog(@"Drawing path on map");
+    }
+    
+    
+}
+
+#pragma mark
+#pragma mark - ...分析模式...
+
+#pragma mark - 存取照片
 -(void)savePickedPhotoToDB{
    
     //Clear the table
@@ -932,7 +1139,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     NSString *hiddenState       = [[NSString alloc]init];
     
     //
-    NSMutableArray *images = [[NSMutableArray alloc] init];
+//    NSMutableArray *images = [[NSMutableArray alloc] init];
     localImgMarkers = [[NSMutableArray alloc]init];
     
     [_mapView clear];
@@ -943,13 +1150,13 @@ NSString *const tableName_userGPS = @"user_GPS";
         PHAsset *asset = _pickedAssets[i];
         
         //取值 - 地圖座標
-        CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
+//        CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
         imageLatitude   = [NSString stringWithFormat:@"%f",asset.location.coordinate.latitude];
         imageLongtitude = [NSString stringWithFormat:@"%f",asset.location.coordinate.longitude];
-        NSLog(@"imageLatitue:%@,imageLongtitude:%@",imageLatitude,imageLongtitude);
+//        NSLog(@"imageLatitue:%@,imageLongtitude:%@",imageLatitude,imageLongtitude);
         
         
-//        ///!!!:建立markers
+//        //建立markers
 //        GMSMarker *marker = [GMSMarker markerWithPosition:position];
 //        marker.title =[NSString stringWithFormat:@"%d",i];
 //        marker.snippet = @"Population: 8,174,100";
@@ -993,37 +1200,34 @@ NSString *const tableName_userGPS = @"user_GPS";
     NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
     NSMutableArray *localIdentifier =[[NSMutableArray alloc]init];
     queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName_tripPhoto];
-//    NSLog(@"%@",queryTableResult);
     
     
     if (queryTableResult) {
         //        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
         [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
-            
             [localIdentifier addObject:dict[@"imagePath"]];
         }];
         
         PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
         //從assets解析出照片images
-//        _pickedAssets = [[NSMutableArray alloc]init];
-        localImages = [[NSMutableArray alloc]init];
-        localImgMarkers = [[NSMutableArray alloc]init];
-        
+        localImages         = [[NSMutableArray alloc]init];
+        localImgMarkers     = [[NSMutableArray alloc]init];
+        _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
+
         [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
             
-//            [_pickedAssets addObject:asset];
-            
-            // 建立local img markers
-            CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
-//            NSLog(@"imageLatitue:%@,imageLongtitude:%@",imageLatitude,imageLongtitude);
-            
-            GMSMarker *marker = [GMSMarker markerWithPosition:position];
-            marker.title =[NSString stringWithFormat:@"%lu",(unsigned long)idx];
-            marker.snippet = @"Imgs";
-            marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
-            marker.map = _mapView;
-            [localImgMarkers addObject:marker];
-            
+            //顯示ImgMarker
+            if (_isShowImagesOnMap) {
+                // 建立local img markers
+                CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
+                
+                GMSMarker *marker = [GMSMarker markerWithPosition:position];
+                marker.title =[NSString stringWithFormat:@"%lu",(unsigned long)idx];
+                marker.snippet = @"Imgs";
+                marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+                marker.map = _mapView;
+                [localImgMarkers addObject:marker];
+            }
             
             // 取 local imgs,
             UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
@@ -1038,6 +1242,7 @@ NSString *const tableName_userGPS = @"user_GPS";
                  
                  [localImages addObject:result];
              }];
+            
             
         }];
         
@@ -1090,7 +1295,7 @@ NSString *const tableName_userGPS = @"user_GPS";
 }
 
 
-#pragma mark - CHImagePickerView setting & delegate
+#pragma mark - Image Picker
 
 -(void)showImagePickerAlert{
     //點選"分析"按鈕時, 跳出照片
@@ -1212,7 +1417,12 @@ NSString *const tableName_userGPS = @"user_GPS";
         
         [self loadDBPhotos];
     }
+}
+
+-(void)didLeftPickingImagesVC{
     
+    NSLog(@"開始執行離開PickImgVC 動作");
+    [self loadDBPhotos];
     
 }
 
@@ -1332,7 +1542,7 @@ NSString *const tableName_userGPS = @"user_GPS";
 //        [self updateTripCreateState];
 //        
 //        
-//        ///!!!:wait for coding
+//        //wait for coding
 //        //show Trip title text
 //        UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
 //        tripTitleText.hidden = NO;
@@ -1380,223 +1590,6 @@ NSString *const tableName_userGPS = @"user_GPS";
 }
 
 
-#pragma mark
-#pragma mark - Map (GMSMapView Settings & Delegate)
-
--(void)initMapView{
-    
-    int initalZoomLevel = 14;
-    // init mapView
-    GMSCameraPosition *camera = [GMSCameraPosition cameraWithLatitude:24.081446
-                                                            longitude:120.538854
-                                                                 zoom:initalZoomLevel];
-    
-    _mapView = [GMSMapView mapWithFrame:_mapDisplayView.bounds camera:camera];
-    [_mapDisplayView insertSubview:_mapView atIndex:0];
-    
-    //_mapView basic setting
-    //    _mapView.myLocationEnabled = YES;
-    _mapView.settings.compassButton = YES;
-    //    _mapView.settings.myLocationButton = YES;
-    _mapView.delegate = self;
-    
-}
-
--(void)createMarker{
-    
-    CLLocationCoordinate2D position = CLLocationCoordinate2DMake(24.081446, 120.538854);
-    GMSMarker *marker = [GMSMarker markerWithPosition:position];
-    marker.title =[NSString stringWithFormat:@"Marker title"];
-    marker.snippet = @"Marker snippet";
-    marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
-    marker.map = _mapView;
-    [localImgMarkers addObject:marker];
-}
-
-
-- (void)mapView:(GMSMapView *)mapView didTapAtCoordinate:(CLLocationCoordinate2D)coordinate
-{
-    NSLog(@"You tapped at %f,%f", coordinate.latitude, coordinate.longitude);
-}
-
-- (BOOL) mapView:(GMSMapView *)mapView didTapMarker:(GMSMarker *)marker {
-    mapView.selectedMarker = marker;
-    
-    GMSCameraPosition *tapedLocation = [GMSCameraPosition cameraWithLatitude:marker.position.latitude
-                                                                   longitude:marker.position.longitude
-                                                                        zoom:_mapView.camera.zoom];
-    NSLog(@"\nTapped image\nimageLatitue:%f,imageLongtitude:%f",marker.position.latitude,marker.position.longitude
-          );
-    [_mapView setCamera:tapedLocation];
-    
-    return YES;
-}
-
-- (void)mapView:(GMSMapView *)mapView willMove:(BOOL)gesture
-{
-    //
-}
-
-
-- (void)mapView:(GMSMapView *)mapView
-didChangeCameraPosition:(GMSCameraPosition *)position
-{
-    //
-    
-    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
-    [tripTitleText resignFirstResponder];
-    
-
-}
-
-// 停止
-- (void)mapView:(GMSMapView *)mapView
-idleAtCameraPosition:(GMSCameraPosition *)position
-{
-    //    [_mapView clear];
-    
-    //    [self resetMapMarkers];
-    
-    //    assignRange = pow(0.5, position.zoom - initalZoomLevel) * assignRangeBase;
-    
-    //    [self loadAllMarkers];
-    
-    
-    //    NSLog(@"%f",position.zoom);
-    //
-    //    if (position.zoom > showAllGroupLevel)
-    //    {
-    //        if(showAllGroup == NO)
-    //        {
-    //            showAllGroup =YES;
-    //
-    //            for(GMSMarker *pin in mapMarkers)
-    //            {
-    //                if(![pin.userData isEqualToString:@"GroupCenter"])
-    //                {
-    //                    pin.map = _mapView;
-    //                }
-    //            }
-    //        }
-    //
-    //    }
-    //    else if (position.zoom < showAllGroupLevel)
-    //    {
-    //        if(showAllGroup == YES)
-    //        {
-    //            showAllGroup =NO;
-    //
-    //            for(GMSMarker *pin in mapMarkers)
-    //            {
-    //                if(![pin.userData isEqualToString:@"GroupCenter"])
-    //                {
-    //                    pin.map = nil;
-    //                }
-    //            }
-    //
-    //        }
-    //
-    //    }
-    
-    
-    
-}
-
-#pragma mark - GPS & locationManager
-
--(void)locationManagerSetting{
-    
-    if (_locationManager == nil)
-    {
-        _locationManager = [[CLLocationManager alloc] init];
-        _locationManager.desiredAccuracy =
-        kCLLocationAccuracyNearestTenMeters;
-        _locationManager.delegate = self;
-        [_locationManager requestAlwaysAuthorization];
-        
-    }
-}
-
-- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
-    
-    //    NSLog(@"/n lat: %f",_locationManager.location.coordinate.latitude);
-    //    NSLog(@" lon: %f/n",_locationManager.location.coordinate.longitude);
-    
-    //存入table
-    [[myDB sharedInstance]insertGPSTable:tableName_userGPS
-                             andLatitude:[NSString stringWithFormat:@"%f",
-                                          _locationManager.location.coordinate.latitude]
-                           andLongtitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.longitude]];
-    
-    double lat = _locationManager.location.coordinate.latitude;
-    double lon = _locationManager.location.coordinate.longitude;
-    
-    
-    //update server
-    [[CHFIreBaseAdaptor sharedInstance]updateMemberBykey:@"lastGPSLocation" andValue:[NSArray arrayWithObjects:[NSNumber numberWithDouble:lat],[NSNumber numberWithDouble:lon],nil] success:^(FDataSnapshot *snapshot) {
-        
-        ///!!!:update member marker
-        [self addMemberMarker];
-        
-    } failure:^{
-        
-        //
-        NSLog(@"");
-    }];
-    
-    
-    [self drawPolyLinesOnMap];
-    
-}
-
-- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
-{
-    NSLog(@"locationManager didFailWithError: %@", error);
-    
-}
-
-//- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
-//{
-//    NSLog(@"didUpdateToLocation: %@", newLocation);
-//    CLLocation *currentLocation = newLocation;
-//    
-//    if (currentLocation != nil) {
-//        
-//        NSLog(@"\n\n(lat:%@,Long:%@)",[NSString stringWithFormat:@"%.8f", currentLocation.coordinate.latitude],[NSString stringWithFormat:@"%.8f", currentLocation.coordinate.longitude]);
-//        
-//    }
-//}
-
-
-#pragma mark - draw path on map
--(void)drawPolyLinesOnMap{
-    
-    
-    NSMutableArray *queryGPSTableResult=[[NSMutableArray alloc]init];
-    __block float latitude;
-    __block float longitude;
-
-    
-    queryGPSTableResult = [[myDB sharedInstance]queryWithTableName:tableName_userGPS];
-//    NSLog(@"%@",queryGPSTableResult);
-    
-    GMSMutablePath *path = [GMSMutablePath path];
-    
-    if (queryGPSTableResult) {
-        [queryGPSTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
-            latitude  = [dict[@"userLatitude"]   floatValue];
-            longitude = [dict[@"userLongtitude"] floatValue];
-            [path addCoordinate:CLLocationCoordinate2DMake(latitude, longitude)];
-        }];
-        
-        GMSPolyline *rectangle = [GMSPolyline polylineWithPath:path];
-        rectangle.map = _mapView;
-        NSLog(@"Drawing path on map");
-    }
-
-
-}
-
 
 /*
 #pragma mark - Navigation
@@ -1609,73 +1602,11 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 */
 
 
-#pragma mark - UIText hide keyboard & Delegates
-
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:301];
-    
-    //touch other view
-    if (![tripTitleText isExclusiveTouch]) {
-        [tripTitleText resignFirstResponder];
-    }
-    
-
-    
-}
-
--(BOOL) textFieldShouldReturn:(UITextField *)textField{
-    
-    [textField resignFirstResponder];
-    return YES;
-}
-
-- (void)textFieldDidBeginEditing:(UITextField *)textField{
-    
-    if (textField.tag == TAG_quickChatText) {
-        //
-    }else{
-        textField.backgroundColor = [UIColor whiteColor];
-        textField.layer.borderColor = [[UIColor blackColor]CGColor];
-    }
-    
-}
-
-- (void)textFieldDidEndEditing:(UITextField *)textField{
-    
-    if (textField.tag == TAG_quickChatText) {
-        //
-    }else{
-        
-        textField.backgroundColor = [UIColor clearColor];
-        textField.layer.borderColor = [[UIColor clearColor]CGColor];
-        
-        if ([textField.text isEqualToString:@""]) {
-            textField.text = _tripInfo[@"tripTitle"];
-        }else{
-            NSString *string = textField.text;
-            [_tripInfo setObject:string forKey:@"tripTitle"];
-            [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
-        }
-    }
-    
-    
-    
-}
-
-#pragma mark - Notification 
--(void)didReceiveChatRoomMessage:(NSNotification *)notification{
-    
-    NSDictionary *userInfo = [notification userInfo];
-    NSString *receivedMessage = userInfo[@"aps"][@"alert"];
-    
-    NSLog(@"%@", receivedMessage);
-}
 
 
 #pragma mark 
-#pragma mark - 同夥模式
-#pragma mark - Chat room actions
+#pragma mark - ...同夥模式...
+#pragma mark - 加入Chat room actions
 /*
  流程：
  
@@ -2054,65 +1985,6 @@ idleAtCameraPosition:(GMSCameraPosition *)position
             [self presentViewController:noRoomExist animated:YES completion:nil];
             
         }];
-        
-//        [fireBaseAdp queryRoomByRoomID:roomCodeTF.text success:^(FDataSnapshot *snapshot) {
-//            
-//            //房間存在, 創造member
-//            [fireBaseAdp createMemberByUUID:_userInfo[@"UUID"] andNickname:_userInfo[@"nickName"] andRoomID:roomCodeTF.text isHost:NO success:^{
-//                //
-//                
-//                //開啟setting VC
-//                NSLog(@"Member 創立成功, 開啟setting VC");
-//                [self showChatRoomSettingVC];
-//                
-//            } failure:^{
-//                //
-//                NSLog(@"Member 創立失敗");
-//                
-//            }];
-//            
-//        } failure:^{
-//            
-//            //房間不存在
-//            UIAlertController *noRoomExist = [UIAlertController alertControllerWithTitle:@"錯誤" message:@"查無此聊天室" preferredStyle:UIAlertControllerStyleAlert];
-//            UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"瞭解" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-//                //
-//            }];
-//            [noRoomExist addAction:cancelAction];
-//            [self presentViewController:noRoomExist animated:YES completion:nil];
-//
-//        }];
-
-        
-        
-        
-        
-//        PFQuery *query = [PFQuery queryWithClassName:@"Rooms"];
-//        [query whereKey:@"objectId" equalTo:roomCodeTF.text];
-//        [query findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
-//            
-//            [self indicatorStop];
-//            if (objects.count ==0) {
-//                
-//                // 房間不存在, show alert
-//                UIAlertController *noRoomExist = [UIAlertController alertControllerWithTitle:@"錯誤" message:@"查無此聊天室" preferredStyle:UIAlertControllerStyleAlert];
-//                
-//                UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"瞭解" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-//                    //
-//                }];
-//                [noRoomExist addAction:cancelAction];
-//                [self presentViewController:noRoomExist animated:YES completion:nil];
-//                
-//            }else{
-//                //房間存在, 創造member
-//                [self createMemberWhereUserID:_userInfo[@"userID"] andNickname:_userInfo[@"nickName"] inTheRoom:roomCodeTF.text isHost:NO];
-//            }
-//            
-//        }];
-        
-        
-        
-        
     }];
     
     
@@ -2125,124 +1997,29 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 }
 
 -(void)showChatRoomSettingVC{
- 
-    
+
     CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
     vc.delegate = self ;
     [self presentViewController:vc animated:YES completion:nil];
-
-    
-    
-//    [[CHFIreBaseAdaptor sharedInstance] queryMemberByRoomID:_roomID success:^(FDataSnapshot *snapshot) {
-//        
-//        // Query members
-//        NSDictionary *dic = snapshot.value;
-//        NSMutableArray *memberAry = [NSMutableArray arrayWithArray:[dic allValues]];
-//        //        NSArray *keyAry = [dic allKeys];
-//        
-//        
-//        //        [keyAry enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL * _Nonnull stop) {
-//        //            [memberAry addObject:dic[key]];
-//        //        }];
-//        
-//        CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
-//        vc.chatRoomMembers = memberAry;
-//        [self presentViewController:vc animated:YES completion:nil];
-//        vc.roomIDLabel.text =_roomID;
-//        
-//    } failure:^{
-//        //
-//    }];
-    
-    
-    
-//    [fireBaseAdp queryMemberByRoomID:_roomID success:^(FDataSnapshot *snapshot) {
-//        
-//        // Query members
-//        NSDictionary *dic = snapshot.value;
-//        NSMutableArray *memberAry = [NSMutableArray arrayWithArray:[dic allValues]];
-////        NSArray *keyAry = [dic allKeys];
-//        
-//
-////        [keyAry enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL * _Nonnull stop) {
-////            [memberAry addObject:dic[key]];
-////        }];
-//        
-//        CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
-//        vc.chatRoomMembers = memberAry;
-//        [self presentViewController:vc animated:YES completion:nil];
-//        vc.roomIDLabel.text =_roomID;
-//        
-//    } failure:^{
-//        //
-//    }];
 }
 
-
-//parse
-//-(void)showChatRoomSettingVC{
-//    
-//    [self indicatorStart];
-//    
-//    // Query members
-//    PFQuery *queryResult = [PFQuery queryWithClassName:@"Member"];
-//    
-//    // query all members
-//    [queryResult whereKey:@"roomID" equalTo:_roomID];
-//    [queryResult findObjectsInBackgroundWithBlock:^(NSArray * _Nullable objects, NSError * _Nullable error) {
-//        
-//        [self indicatorStop];
-//
-//        if (!error) {
-//            if (objects.count !=0) {
-//                
-//                CHChatRoomSettingVC *vc = [[CHChatRoomSettingVC alloc]init];
-//                vc.chatRoomMembers = [NSMutableArray arrayWithArray:objects];
-//                [self presentViewController:vc animated:YES completion:nil];
-//                
-//                vc.roomIDLabel.text =_roomID;
-//    
-//            }
-//        }else{
-//            NSLog(@"Error:%@",error.description);
-//        }
-//        
-//        
-//        
-//        
-//    }];
-//
-//}
-
-
-#pragma mark - ChatRoom delegate
+#pragma mark - ChatRoomSetting delegate
 
 -(void)didLeftSettingVC{
     
     NSLog(@"left Setting View");
     
+    // ...顯示quick chat
     _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
     
     [self quickChatTextInit];
 
-    receivedMsg = [NSTimer scheduledTimerWithTimeInterval:10.0f
-                                                   target:self selector:@selector(locationManager: didUpdateLocations:) userInfo:nil repeats:YES];
     
-    
-    if ([_roomInfo[@"isShowOnMap"] boolValue]) {
-        
-       [receivedMsg isValid];
-//        [self addMemberMarker];
-    }else{
-       [receivedMsg invalidate];
-    }
-
-    
-    
+    // ...展示member
+    [self updateDeviceLocationToServer];
 }
 
-
-///!!!:開始更新member marker on map
+#pragma mark - member markers
 -(void)removeMemberMarker{
     
     // ... remove member marker
@@ -2250,29 +2027,25 @@ idleAtCameraPosition:(GMSCameraPosition *)position
         obj.map = nil;
     }];
     
-    [memberMarkers removeAllObjects];
+//    [memberMarkers removeAllObjects];
 }
 
 -(void)addMemberMarker{
-    
     
     // ... remove member marker
     [self removeMemberMarker];
     
     [[CHFIreBaseAdaptor sharedInstance] queryMemberByRoomID:_roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
         
-        NSLog(@"success");
-        
         if ([snapshot.value isEqual:[NSNull null]]) {
-            
-            //not exsit
-            
+            NSLog(@"no member for member marker");
         }else{
-            
-            //exsit
+            NSLog(@"Start to build member marker");
             
             NSDictionary *members = snapshot.value;
             memberMarkers = [[NSMutableArray alloc]init];
+            
+            __block int colorCount = 0;
             
             [members enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, NSDictionary *member, BOOL * _Nonnull stop) {
                 
@@ -2282,16 +2055,20 @@ idleAtCameraPosition:(GMSCameraPosition *)position
                 
                 // 建立 member markers
                 CLLocationCoordinate2D position = CLLocationCoordinate2DMake(lat,lon);
-                GMSMarker *marker = [GMSMarker markerWithPosition:position];
-                marker.title = member[@"userNickname"];
-                marker.snippet = @"User";
+                GMSMarker *marker  = [GMSMarker markerWithPosition:position];
+                marker.snippet     = member[@"userNickname"];
+                marker.userData    = member[@"uuid"];
+                marker.map         = ([member[@"isShareGPS"] boolValue])? _mapView : nil;
                 marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
-                marker.userData = member[@"uuid"];
-                
-                marker.map = (member[@"isShowOnMap"])? _mapView : nil;
+
+                UIImage *img       = [UIImage imageNamed:[NSString stringWithFormat:@"s1_%d.png",colorCount]];
+                img = [self imageWithImage:img scaledToSize:CGSizeMake(MEMBER_MapMarker_SIZE, MEMBER_MapMarker_SIZE)];
+                marker.icon        = img;
+                marker.groundAnchor = CGPointMake(0.5, 0.5);//調整圖片位置
                 [memberMarkers addObject:marker];
                 
-                
+                colorCount +=1;
+                colorCount = (colorCount >5)? 0:colorCount;
                 
             }];
             
@@ -2308,18 +2085,18 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     
 }
 
+//quick msg on marker
 -(void)addMsgOnMemberMarker{
     
     [[CHFIreBaseAdaptor sharedInstance]queryMsgRegularlyByRoomID:_roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
         
-        //
-        NSLog(@"");
         NSDictionary *dic = snapshot.value;
         
         [memberMarkers enumerateObjectsUsingBlock:^(GMSMarker *marker, NSUInteger idx, BOOL * _Nonnull stop) {
             
             if ([marker.userData isEqualToString:dic[@"uuid"]]) {
                 marker.title = dic[@"message"];
+//                _mapView.selectedMarker = marker;
                 [self mapView:_mapView didTapMarker:marker];
             }
             
@@ -2378,9 +2155,9 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     if (![quickChat.text isEqualToString:@""]) {
        
         [[CHFIreBaseAdaptor sharedInstance] createMsgByUUID:_userInfo[@"UUID"] andMSg:quickChat.text andRoomID:_roomInfo[@"roomID"] success:^{
-            NSLog(@"create msg success");
+            NSLog(@"create quick msg success");
         } failure:^{
-            NSLog(@"create msg Fail!!");
+            NSLog(@"create quick msg Fail!!");
         }];
         
         quickChat.text = @"";
@@ -2426,8 +2203,9 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     }];
 }
 
-
 #pragma mark
+#pragma mark - ...旅程模式...
+
 #pragma mark - Trip data
 -(void)showReadTripCodeVC{
     
@@ -2441,17 +2219,18 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     NSLog(@"Start to load trip data");
     
     //建立table
-    CHMoveableTableView *moveTV = [(CHMoveableTableView *)_mapDisplayView viewWithTag:401];
+    CHMoveableTableView *moveTV = [(CHMoveableTableView *)_mapDisplayView viewWithTag:TAG_moveTV];
     
     if (moveTV) {
         [moveTV removeFromSuperview];
     }
     
-    float tableWidth = 88;
+    float tableWidth = WIDTH_moveTV;
     float tableHeight = _mapDisplayView.frame.size.height - (54 + IMAGEHEIGHT +44);
     
     moveTV = [[CHMoveableTableView alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - tableWidth, 54, tableWidth, tableHeight)];
-    moveTV.tag = 401;
+    
+    moveTV.tag = TAG_moveTV;
     [_mapDisplayView addSubview:moveTV];
     moveTV.chDelegate = self;
     
@@ -2534,6 +2313,21 @@ idleAtCameraPosition:(GMSCameraPosition *)position
     
 }
 
+#pragma mark
+#pragma mark - 其他
+
+-(UIImage *)imageWithImage:(UIImage *)image scaledToSize:(CGSize)newSize {
+    //UIGraphicsBeginImageContext(newSize);
+    // In next line, pass 0.0 to use the current device's pixel scaling factor (and thus account for Retina resolution).
+    // Pass 1.0 to force exact pixel size.
+    UIGraphicsBeginImageContextWithOptions(newSize, NO, 0.0);
+    [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
+
 #pragma mark - indicator setting
 -(void)indicatorSetting
 {
@@ -2551,7 +2345,7 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 {
     
     UIView *view = [[UIView alloc] initWithFrame:self.view.frame];
-    [view setTag:203];
+    [view setTag:TAG_indicator_maskView];
     [view setBackgroundColor:[UIColor blackColor]];
     [view setAlpha:0.8];
     [self.view addSubview:view];
@@ -2562,11 +2356,75 @@ idleAtCameraPosition:(GMSCameraPosition *)position
 
 - (void)indicatorStop
 {
-    UIView *view = (UIView *)[self.view viewWithTag:203];
+    UIView *view = (UIView *)[self.view viewWithTag:TAG_indicator_maskView];
     [view removeFromSuperview];
     
     [activityIndicator stopAnimating];
 }
+
+#pragma mark - UIText hide keyboard & Delegates
+
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:TAG_tripTitleText];
+    
+    //touch other view
+    if (![tripTitleText isExclusiveTouch]) {
+        [tripTitleText resignFirstResponder];
+    }
+    
+    
+    
+}
+
+-(BOOL) textFieldShouldReturn:(UITextField *)textField{
+    
+    [textField resignFirstResponder];
+    return YES;
+}
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField{
+    
+    if (textField.tag == TAG_quickChatText) {
+        //
+    }else{
+        textField.backgroundColor = [UIColor whiteColor];
+        textField.layer.borderColor = [[UIColor blackColor]CGColor];
+    }
+    
+}
+
+- (void)textFieldDidEndEditing:(UITextField *)textField{
+    
+    if (textField.tag == TAG_quickChatText) {
+        //
+    }else{
+        
+        textField.backgroundColor = [UIColor clearColor];
+        textField.layer.borderColor = [[UIColor clearColor]CGColor];
+        
+        if ([textField.text isEqualToString:@""]) {
+            textField.text = _tripInfo[@"tripTitle"];
+        }else{
+            NSString *string = textField.text;
+            [_tripInfo setObject:string forKey:@"tripTitle"];
+            [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
+        }
+    }
+    
+    
+    
+}
+
+#pragma mark - Notification
+-(void)didReceiveChatRoomMessage:(NSNotification *)notification{
+    
+    NSDictionary *userInfo = [notification userInfo];
+    NSString *receivedMessage = userInfo[@"aps"][@"alert"];
+    
+    NSLog(@"%@", receivedMessage);
+}
+
 
 @end
 

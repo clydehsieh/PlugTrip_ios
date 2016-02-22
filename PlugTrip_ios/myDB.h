@@ -26,17 +26,19 @@
 - (void)deleteTripInfo:(NSString *)rowid;
 
 
-
-- (id)queryCust;
-- (id)queryCustName:(NSString *)custname;
-- (NSString *)newCustNo;
-
-- (void)insertCustNo:(NSString *)custno andCustName:(NSString *)custname andCustTel:(NSString *)custtel andCustAddr:(NSString *)custaddr andCustEmail:(NSString *)custemail;
-- (void)updateCustNo:(NSString *)custno andCustName:(NSString *)custname andCustTel:(NSString *)custtel andCustAddr:(NSString *)custaddr andCustEmail:(NSString *)custemail;
-- (void)deleteCustNo:(NSString *)custno;
-
-- (void)insertCustDict:(NSDictionary *)dictCust;
-
-
+//
+//- (id)queryCust;
+//- (id)queryCustName:(NSString *)custname;
+//- (NSString *)newCustNo;
+//
+//- (void)insertCustNo:(NSString *)custno andCustName:(NSString *)custname andCustTel:(NSString *)custtel andCustAddr:(NSString *)custaddr andCustEmail:(NSString *)custemail;
+//- (void)updateCustNo:(NSString *)custno andCustName:(NSString *)custname andCustTel:(NSString *)custtel andCustAddr:(NSString *)custaddr andCustEmail:(NSString *)custemail;
+//- (void)deleteCustNo:(NSString *)custno;
+//
+//- (void)insertCustDict:(NSDictionary *)dictCust;
 
 @end
+
+//NSString *const tableName_tripPhoto = @"Trip_Photo_Info";
+//NSString *const tableName_userGPS = @"user_GPS";
+

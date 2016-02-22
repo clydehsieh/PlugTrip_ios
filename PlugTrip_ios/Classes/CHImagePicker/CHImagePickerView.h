@@ -10,6 +10,9 @@
 #import <Photos/Photos.h>
 #import "CHImagePickerHeaderView.h"
 #import "CHImagePickerViewCell.h"
+#import "myDB.h"
+//#import "CHMapViewVC.h"
+
 
 @protocol CHImagePickerViewDelegate <NSObject>
 
@@ -20,31 +23,29 @@
 
 
 @interface CHImagePickerView : UIView  <UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout>
-{
-    __block NSMutableArray *allAssetArray;//row data
-    NSUserDefaults *prefs;
-    BOOL isPickAllImage;
-}
+
 
 - (id)initWithFrame:(CGRect)frame owner:(id)owner;
+- (void)loadPhotosFromAlbum;
 - (void)loadPhotosFromAlbumAndCompareWithAssets:(NSMutableArray *)AssetArray;//撈本機相簿
 - (void)loadPhotosFromAssetArray:(NSMutableArray *)AssetArray;//撈外部資料
 
 @property (nonatomic, assign) id<CHImagePickerViewDelegate> delegate;
 
 @property (assign, nonatomic) IBOutlet UICollectionView *imageDisplayView;
-//@property (nonatomic) IBOutlet UIButton *autoUpdateSwitchBtn;
-//@property (weak, nonatomic) IBOutlet UISwitch *autoUpdateSwitchBtn;
-@property (weak, nonatomic) IBOutlet UISwitch *isShowImagesOnMap;
+
 
 @property (nonatomic) BOOL isAutoUpdate;
 
-@property (nonatomic) PHAsset *pickedAsset;
-@property (nonatomic) NSMutableArray *allAssetGroups ;//依照日期區分group,並存入, 後續一個日期對應一個section
 
-@property (nonatomic) NSMutableArray *sectionPickedStatus;//每個section全選狀態,0不是,1是全選
-@property (nonatomic) NSMutableArray *pickedCountForSection;//每個section中已選取數量
 
-@property (nonatomic) NSMutableArray *pickedAssets;//存入選取的照片, 後續用delegate傳出
+// btns & switchs
+@property (weak, nonatomic) IBOutlet UIButton *starNewBtn;
+@property (weak, nonatomic) IBOutlet UIButton *okBtn;
+@property (weak, nonatomic) IBOutlet UIButton *cancelBtn;
+@property (weak, nonatomic) IBOutlet UIButton *allPickBtn;
+@property (weak, nonatomic) IBOutlet UISwitch *isShowImagesOnMap;
+
+
 
 @end

@@ -45,6 +45,7 @@
     _tableView.autoresizingMask	= UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	
     [self addSubview:_tableView];
+   
 }
 
 - (void)setFrame:(CGRect)frame {
@@ -213,5 +214,41 @@
     return cell;
 }
 
+// DidScroll 時動作
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    if ([self.delegate respondsToSelector:@selector(scrollViewDidScroll:)]) {
+        [self.delegate scrollViewDidScroll:scrollView];
+    }
+    
+}
+
+// DidScroll動畫結束後
+-(void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView{
+    
+    NSLog(@"DidEndScrollingAnimation");
+    
+}
+
+// 停止scroll時動作
+-(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
+    
+    if ([self.delegate respondsToSelector:@selector(scrollViewDidEndScrolling:)]) {
+        [self.delegate scrollViewDidEndScrolling:scrollView];
+    }
+}
+
+// 手指離開後, 還在scroll:decelerate
+-(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{
+    
+    if (!decelerate) {
+        if ([self.delegate respondsToSelector:@selector(scrollViewDidEndScrolling:)]) {
+            [self.delegate scrollViewDidEndScrolling:scrollView];
+        }
+    }
+    
+}
 @end
+
+
+
 

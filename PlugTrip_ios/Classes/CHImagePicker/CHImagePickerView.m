@@ -5,12 +5,30 @@
 //  Created by Chin-Hui Hsieh  on 10/29/15.
 //  Copyright © 2015 Chin-Hui Hsieh. All rights reserved.
 //
-/*
- 
- 
- */
-
 #import "CHImagePickerView.h"
+
+@interface CHImagePickerView()
+{
+    NSMutableArray *localDBPhotoIDs;
+    __block NSMutableArray *allAssetArray;//row data
+    
+    NSInteger allImgCounts;//camera roll內所有照片數量
+    
+    NSMutableArray *allAssetGroups ;//camera roll內所有照片, 依照日期分到各個section
+    
+    NSMutableArray *pickedCountForSection;//每個section中已選取數量
+    
+    PHAsset *pickedAsset;
+    NSMutableArray *sectionPickedStatus;//每個section全選狀態,0不是,1是全選
+    NSMutableArray *pickedAssets;//存入選取的照片, 後續用delegate傳出
+    
+    NSUserDefaults *prefs;
+    BOOL isPickAllImage;
+    
+    
+}
+
+@end
 
 @implementation CHImagePickerView
 
@@ -22,20 +40,23 @@
         
         self.frame = frame;
         
-        //initialize
+        // ...init
+        // 全部相機底片資料
         allAssetArray = [NSMutableArray new];
-        prefs = [NSUserDefaults standardUserDefaults];
-        isPickAllImage= YES;
-        _pickedAsset = [[PHAsset alloc]init];
-        _pickedAssets = [[NSMutableArray alloc]init];
-        _pickedCountForSection = [[NSMutableArray alloc]init];
-//       [_autoUpdateSwitchBtn setOn:[[[NSUserDefaults standardUserDefaults] objectForKey:@"autoUpdate"] boolValue]];
-       [_isShowImagesOnMap setOn:[[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue]];
-        
-//        [self loadPhotos];
-//        [self scrollViewSetting];
-//        [self btnSetting];
     
+        //
+        [self loadDBPhotoID];
+        
+        //用於cell選取與否判斷
+        pickedAsset = [[PHAsset alloc]init];
+        pickedAssets = [[NSMutableArray alloc]init];
+        
+        isPickAllImage= YES;
+        
+       [_isShowImagesOnMap setOn:[[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue]];
+
+        [self btnInit];
+        
     }
     
     return self;
@@ -43,11 +64,51 @@
     
 }
 
+-(void)btnInit{
+    
+    NSDictionary *tripInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults] objectForKey:@"tripInfo"]];
+    BOOL isTripCreate = [[tripInfo objectForKey:@"isTripCreate"] boolValue];
+    
+    // ...按鈕初始顯示
+    // 未建立local旅程
+    _starNewBtn.hidden  = (isTripCreate)? YES: NO;
+    // 已建立local旅程
+    _okBtn.hidden       = (isTripCreate)? NO :YES;
+    _cancelBtn.hidden   = (isTripCreate)? NO :YES;
+    
+    
+    // ...layout setting
+    _allPickBtn.layer.cornerRadius = 5.0f;
+    _allPickBtn.layer.borderColor  = [UIColor lightGrayColor].CGColor;
+    _allPickBtn.layer.borderWidth  = 2.0f;
+    
+}
+
+-(void)scrollViewSetting
+{
+    [self.imageDisplayView registerNib:[UINib nibWithNibName:@"CHImagePickerViewCell" bundle:nil] forCellWithReuseIdentifier:@"cell"];
+    [self.imageDisplayView registerNib:[UINib nibWithNibName:@"CHImagePickerHeaderView" bundle:nil] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"headerView"];
+    self.imageDisplayView.delegate = self;
+    self.imageDisplayView.dataSource = self;
+    self.imageDisplayView.backgroundColor = [UIColor clearColor];
+    self.imageDisplayView.allowsMultipleSelection = YES;
+    
+}
+
+//建立imgPicker 方式
+
+-(void)loadPhotosFromAlbum{
+    
+    [self loadDBPhotoID];
+    [self loadPhotos];
+    [self scrollViewSetting];
+    
+}
 
 -(void)loadPhotosFromAlbumAndCompareWithAssets:(NSMutableArray *)AssetArray
 {
     if (AssetArray) {
-        _pickedAssets = AssetArray;
+        pickedAssets = AssetArray;
     }
     
     [self loadPhotos];
@@ -60,7 +121,7 @@
     allAssetArray = AssetArray;
     
     //依照日期分類
-    _allAssetGroups = [[NSMutableArray alloc]init];
+    allAssetGroups = [[NSMutableArray alloc]init];
     
     while ([allAssetArray count]>0)
     {
@@ -88,15 +149,72 @@
              }
          }];
         
-        [_allAssetGroups addObject:tempArray];
+        [allAssetGroups addObject:tempArray];
         
     };
-    
-    
+
     [self scrollViewSetting];
 }
 
-#pragma mark - loading Photos
+
+
+
+#pragma mark - Photos process
+
+-(void)savePickedPhotoToDB{
+    
+    NSString *tableName_tripPhoto = @"Trip_Photo_Info";
+    
+    //Clear the table
+    [[myDB sharedInstance] deleteTable:tableName_tripPhoto];
+    [[myDB sharedInstance] createTripTable:tableName_tripPhoto];
+    
+    //ready to save to database
+    __block NSString *imagePath = [[NSString alloc]init];
+    __block NSString *imageLatitude     = [[NSString alloc]init];
+    __block NSString *imageLongtitude   = [[NSString alloc]init];
+    NSString *comment           = [[NSString alloc]init];
+    NSString *voicePath         = [[NSString alloc]init];
+    NSString *hiddenState       = [[NSString alloc]init];
+    
+    
+    PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localDBPhotoIDs options:nil];
+    
+    [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
+        
+        imageLatitude   = [NSString stringWithFormat:@"%f",asset.location.coordinate.latitude];
+        imageLongtitude = [NSString stringWithFormat:@"%f",asset.location.coordinate.longitude];
+        imagePath       = asset.localIdentifier;
+        
+        //存入table
+        [[myDB sharedInstance]insertTable:tableName_tripPhoto andImageLatitude:imageLatitude andImageLongtitude:imageLongtitude ImagePath:imagePath andComments:comment andVoicePath:voicePath andHiddenState:hiddenState];
+        
+    }];
+    
+    NSLog(@"save photo to DB success");
+}
+
+-(void)loadDBPhotoID{
+    
+    NSString *tableName_tripPhoto = @"Trip_Photo_Info";
+    
+    localDBPhotoIDs = [NSMutableArray new];
+    
+    //從資料庫撈assets
+    NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
+    queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName_tripPhoto];
+    
+    if (queryTableResult) {
+        
+        // ...撈localIdentifer資料
+        [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
+            [localDBPhotoIDs addObject:dict[@"imagePath"]];
+        }];
+    }
+    
+    NSLog(@"選取照片數：%lu",(unsigned long)localDBPhotoIDs.count);
+}
+
 -(void)loadPhotos
 {
     //照片全部取出來
@@ -110,8 +228,6 @@
     [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL *stop) {
         [allAssetArray addObject:asset];
     }];
-    
-    
     
     //MyCam Album
     NSString *string = @"MyCam";
@@ -131,11 +247,11 @@
          }];
      }];
     
-    
+    //相機所有照片數量
+    allImgCounts = allAssetArray.count;
     
     //依照日期分類
-    _allAssetGroups = [[NSMutableArray alloc]init];
-    
+    allAssetGroups = [[NSMutableArray alloc]init];
     while ([allAssetArray count]>0)
     {
         NSMutableArray *tempArray = [[NSMutableArray alloc]init];
@@ -161,42 +277,48 @@
                  [allAssetArray removeObject:asset];
              }
          }];
-        
-        [_allAssetGroups addObject:tempArray];
-        
+    
+        [allAssetGroups addObject:tempArray];
     };
     
+    //各個section已被選取的數量
+    pickedCountForSection = [[NSMutableArray alloc]init];
+    [allAssetGroups enumerateObjectsUsingBlock:^(NSArray *array, NSUInteger idx, BOOL * _Nonnull stop) {
+        
+        __block int sectionCount = 0;
+        
+        [array enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
+            
+            if ([localDBPhotoIDs containsObject:asset.localIdentifier]) {
+                sectionCount +=1;
+            }
+        }];
+        
+        [pickedCountForSection addObject:[NSNumber numberWithInt:sectionCount]];
+    }];
     
+    NSLog(@"%lu",(unsigned long)pickedCountForSection.count);
+  
 }
 
--(void)scrollViewSetting
-{
-    [self.imageDisplayView registerNib:[UINib nibWithNibName:@"CHImagePickerViewCell" bundle:nil] forCellWithReuseIdentifier:@"cell"];
-    [self.imageDisplayView registerNib:[UINib nibWithNibName:@"CHImagePickerHeaderView" bundle:nil] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"headerView"];
-    self.imageDisplayView.delegate = self;
-    self.imageDisplayView.dataSource = self;
-    self.imageDisplayView.backgroundColor = [UIColor clearColor];
-    self.imageDisplayView.allowsMultipleSelection = YES;
 
-}
 
 #pragma mark - collection view delegate
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
 {
-    _sectionPickedStatus = [[NSMutableArray alloc]init];
+    sectionPickedStatus = [[NSMutableArray alloc]init];
     
-    [_allAssetGroups enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop)
+    [allAssetGroups enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop)
     {
-        [_sectionPickedStatus addObject:@0];
-        [_pickedCountForSection addObject:@0];
+        [sectionPickedStatus addObject:@0];
     }];
     
-    return [_allAssetGroups count];
+    return [allAssetGroups count];
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    return [_allAssetGroups[section] count];
+    return [allAssetGroups[section] count];
 }
 
 // header or footer setting
@@ -219,7 +341,7 @@
         //title setting
         UILabel *label = (UILabel *)[header viewWithTag:1];
         
-        PHAsset *asset = _allAssetGroups[indexPath.section][0];
+        PHAsset *asset = allAssetGroups[indexPath.section][0];
         NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
         [dateFormat setDateFormat:@"YYYY-MM-dd"];
         NSString *lastDate = [dateFormat stringFromDate:asset.creationDate];
@@ -265,26 +387,19 @@
     cell.layer.borderColor = [[UIColor blackColor] CGColor];
     
     // 右上小圖顯示選取,如果已經選取, 則打勾
-    _pickedAsset = _allAssetGroups[indexPath.section][indexPath.row];
+    PHAsset *asset = allAssetGroups[indexPath.section][indexPath.row];
     UIImageView *view = (UIImageView *)[cell viewWithTag:1];
-    if ([_pickedAssets containsObject:_pickedAsset])
-    {
+    
+    if ([localDBPhotoIDs containsObject:asset.localIdentifier]) {
+        
+        //layout setting
         view.hidden = NO;
-    }else
-    {
+        cell.selected = YES;
+        [collectionView selectItemAtIndexPath:indexPath animated:nil scrollPosition:UICollectionViewScrollPositionNone];
+    }else{
         view.hidden =  YES;
     }
-
-//    if (cell.selected) {
-//        
-//        view.hidden =  NO;//show
-//    }
-//    else
-//    {
-//        view.hidden = YES;//hide
-//    }
-    
-    
+   
     // 放置圖片
     UIImageView *imageView = (UIImageView*)[cell viewWithTag:2];
     
@@ -293,7 +408,7 @@
     
     // PHAsset turn to UIImage
     [[PHImageManager defaultManager]
-     requestImageForAsset:_allAssetGroups[indexPath.section][indexPath.row]
+     requestImageForAsset:asset
      targetSize:retinaSquare
      contentMode:PHImageContentModeAspectFill
      options:nil
@@ -309,67 +424,169 @@
     
 }
 
-//選照片時, show右上角小圖,將圖存入矩陣
 -(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath  {
-    
-    UICollectionViewCell *cell =[collectionView cellForItemAtIndexPath:indexPath];
-    
-    _pickedAsset = _allAssetGroups[indexPath.section][indexPath.row];
-    
-    if (![_pickedAssets containsObject:_pickedAsset])
-    {
-        [_pickedAssets addObject:_pickedAsset];
-        
-        
-    }
-    
-    UIImageView *view = (UIImageView *)[cell viewWithTag:1];
-    view.hidden = NO;
-    
-    NSInteger pickedCount = [_pickedCountForSection[indexPath.section] integerValue];
-    pickedCount+=1;
-    _pickedCountForSection[indexPath.section] = [NSNumber numberWithInteger:pickedCount];
-    
-    if ([_pickedCountForSection[indexPath.section] integerValue] == [_allAssetGroups[indexPath.section] count]) {
-        _sectionPickedStatus[indexPath.section] = @1;
-        
-//        [_imageDisplayView reloadSections:[NSIndexSet indexSetWithIndex:indexPath.section]];
-        
-    }
 
-    NSLog(@"\nPicked number:%@\nsectionStatus:%@",_pickedCountForSection[indexPath.section],_sectionPickedStatus[indexPath.section]);
+
+        CHImagePickerViewCell *cell = (CHImagePickerViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
+    
+        //選取小勾勾
+        UIImageView *view = (UIImageView *)[cell viewWithTag:1];
+        view.hidden = NO;
+    
+        //cell上的照片asset
+        PHAsset *asset =  allAssetGroups[indexPath.section][indexPath.row];
+    
+        if (![localDBPhotoIDs containsObject:asset.localIdentifier]) {
+    
+            //新增
+            [localDBPhotoIDs addObject:asset.localIdentifier];
+    
+            //更新section資訊
+            NSInteger selectedCount = [pickedCountForSection[indexPath.section] integerValue];
+            selectedCount +=1;
+            pickedCountForSection[indexPath.section] = [NSNumber numberWithInteger:selectedCount] ;
+        }
+        
+        NSLog(@"選取照片數：%lu",(unsigned long)localDBPhotoIDs.count);
     
 }
 
-//取消照片時, hide右上角小圖,將圖移出矩陣
 -(void)collectionView:(UICollectionView *)collectionView didDeselectItemAtIndexPath:(NSIndexPath *)indexPath {
+
+    CHImagePickerViewCell *cell = (CHImagePickerViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
     
-    UICollectionViewCell *cell =[collectionView cellForItemAtIndexPath:indexPath];
-    
-    _pickedAsset = _allAssetGroups[indexPath.section][indexPath.row];
-    
-    if ([_pickedAssets containsObject:_pickedAsset]) {
-         [_pickedAssets removeObject:_pickedAsset];
-    }
-   
+    //選取小勾勾
     UIImageView *view = (UIImageView *)[cell viewWithTag:1];
     view.hidden = YES;
     
-    NSInteger pickedCount = [_pickedCountForSection[indexPath.section] integerValue];
-    pickedCount-=1;
-    _pickedCountForSection[indexPath.section] = [NSNumber numberWithInteger:pickedCount];
+    //cell上的照片asset
+    PHAsset *asset =  allAssetGroups[indexPath.section][indexPath.row];
     
-    _sectionPickedStatus[indexPath.section] = @0;
+    if ([localDBPhotoIDs containsObject:asset.localIdentifier]) {
+        
+        //減少
+        [localDBPhotoIDs removeObject:asset.localIdentifier];
+        
+        //更新section資訊
+        NSInteger selectedCount = [pickedCountForSection[indexPath.section] integerValue];
+        selectedCount -=1;
+        pickedCountForSection[indexPath.section] = [NSNumber numberWithInteger:selectedCount] ;
+    }
     
-    NSLog(@"\nPicked number:%@\nsectionStatus:%@",_pickedCountForSection[indexPath.section],_sectionPickedStatus[indexPath.section]);
+    NSLog(@"選取照片數：%lu",(unsigned long)localDBPhotoIDs.count);
+    
+//    //移動至選取區域
+//    [_imageDisplayView scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionCenteredVertically animated:NO];
+//    
+//    CHImagePickerViewCell *cell = (CHImagePickerViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
+//    
+//    if (!cell) {
+//        [_imageDisplayView layoutIfNeeded];
+//        cell = (CHImagePickerViewCell *)[collectionView cellForItemAtIndexPath:indexPath];
+//    }
+//    
+//    //取消選取小勾勾
+//    UIImageView *view = (UIImageView *)[cell viewWithTag:1];
+//    view.hidden = YES;
+//    
+//    if ([localDBPhotoIDs containsObject:cell.imgLocalID]) {
+//        
+//        //減少
+//        [localDBPhotoIDs removeObject:cell.imgLocalID];
+//        
+//        //更新section資訊
+//        NSInteger selectedCount = [pickedCountForSection[indexPath.section] integerValue];
+//        selectedCount -=1;
+//        pickedCountForSection[indexPath.section] = [NSNumber numberWithInteger:selectedCount] ;
+//    }
+//    
+//    NSLog(@"選取照片數：%lu",(unsigned long)localDBPhotoIDs.count);
+    
+}
+
+-(BOOL)isSectionImgAllPicled{
+    
+    return YES;
+}
+
+-(void)pickAllSectionImages:(UITapGestureRecognizer *)recognizer
+{
+    // ...section 全選
+    
+    UICollectionReusableView *header = (UICollectionReusableView *)recognizer.view.superview;
+    
+    NSInteger section = header.tag / 100;
+    
+    if ([pickedCountForSection[section] integerValue] == [allAssetGroups[section] count]) {
+        
+        //取消所有cell
+        for (int i =0; i< [allAssetGroups[section] count]; i++)
+            {
+                NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:section];
+
+                [self collectionView:_imageDisplayView didDeselectItemAtIndexPath:indexPath];
+            }
+        
+    }else{
+        
+        //選所有cell
+        for (int i =0; i< [allAssetGroups[section] count]; i++)
+        {
+            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:section];
+            
+            [self collectionView:_imageDisplayView didSelectItemAtIndexPath:indexPath];
+            
+            
+        }
+        
+    }
+
+    
+}
+
+- (IBAction)allPickBtn:(UIButton *)sender {
+    
+    // ... camera roll 全選
+   
+    if (localDBPhotoIDs.count == allImgCounts) {
+        
+         // 全取消
+        [allAssetGroups enumerateObjectsUsingBlock:^(NSArray *group, NSUInteger section, BOOL * _Nonnull stop) {
+            
+            [group enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger row, BOOL * _Nonnull stop) {
+                
+                NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:section];
+                
+                [self collectionView:_imageDisplayView didDeselectItemAtIndexPath:indexPath];
+                
+            }];
+        }];
+        
+    }else{
+        
+        // 全選
+        [allAssetGroups enumerateObjectsUsingBlock:^(NSArray *group, NSUInteger section, BOOL * _Nonnull stop) {
+            
+            [group enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger row, BOOL * _Nonnull stop) {
+                
+                NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:section];
+                
+                [self collectionView:_imageDisplayView didSelectItemAtIndexPath:indexPath];
+                
+            }];
+        }];
+    }
+    
+    NSLog(@"選取照片數：%lu",(unsigned long)localDBPhotoIDs.count);
+    
+
     
 }
 
 
+#pragma mark - Btn Actions
 
-#pragma mark - Actions
-
-- (IBAction)backBtnAction:(id)sender {
+- (IBAction)cancelBtnAction:(id)sender {
     
     NSLog(@"Cancel");
     
@@ -382,58 +599,16 @@
 
 - (IBAction)okBtnAction:(id)sender {
     
-    if (_pickedAssets.count >0) {
-        
-        if ([self.delegate respondsToSelector:@selector(finishedPickingImages:)]) {
-            [self.delegate finishedPickingImages:_pickedAssets];
-
-        }
-    }
+    [self savePickedPhotoToDB];
+    NSLog(@"選取了( %lu )張照片", (unsigned long)[localDBPhotoIDs count]);
     
-    NSLog(@"ok with Picked num:%lu", (unsigned long)[_pickedAssets count]);
+    if ([self.delegate respondsToSelector:@selector(finishedPickingImages:)]) {
+        [self.delegate finishedPickingImages:nil];
+    }
     
     [self removeFromSuperview];
 }
-- (IBAction)allPickBtn:(UIButton *)sender {
-    
-    if (isPickAllImage) {
-        [_allAssetGroups enumerateObjectsUsingBlock:^(NSMutableArray *sectionArray, NSUInteger section, BOOL * _Nonnull stop) {
-            [sectionArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                if (![_pickedAssets containsObject:obj]) {
-                    [_pickedAssets addObject:obj];
-                    
-                    
-                    [_imageDisplayView selectItemAtIndexPath:[NSIndexPath indexPathForItem:idx inSection:section] animated:YES scrollPosition:UICollectionViewScrollPositionNone];
-                    
-                    [_imageDisplayView.delegate collectionView:_imageDisplayView didSelectItemAtIndexPath:[NSIndexPath indexPathForItem:idx inSection:section]];
-                }
-            }];
-        }];
-        
-        isPickAllImage=NO;
-        
-    }else{
-        [_allAssetGroups enumerateObjectsUsingBlock:^(NSMutableArray *sectionArray, NSUInteger section, BOOL * _Nonnull stop) {
-            [sectionArray enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                if ([_pickedAssets containsObject:obj]) {
-                    [_pickedAssets removeObject:obj];
-                    
-                    [_imageDisplayView deselectItemAtIndexPath:[NSIndexPath indexPathForItem:idx inSection:section] animated:YES];
-                    
-                    [_imageDisplayView.delegate collectionView:_imageDisplayView didDeselectItemAtIndexPath:[NSIndexPath indexPathForItem:idx inSection:section]];
-                }
-            }];
-        }];
-        
-        isPickAllImage=YES;
-    }
-    
-    
-    
-    
-}
 
-///!!!:wait coding
 - (IBAction)changeAutoUpdateState:(id)sender {
 
     [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:_isShowImagesOnMap.isOn] forKey:@"isShowImagesOnMap"];
@@ -448,52 +623,7 @@
     
 }
 
-//判斷該欄照片全選or not
--(void)pickAllSectionImages:(UITapGestureRecognizer *)recognizer
-{
-    UICollectionReusableView *header = (UICollectionReusableView *)recognizer.view.superview;
-    
-    NSInteger indexPathSection = header.tag / 100;
-    
-    if ([_sectionPickedStatus[indexPathSection] isEqual:@1])
-    {
-        
-        for (int i =0; i< [_allAssetGroups[indexPathSection] count]; i++)
-        {
-            if ([_pickedAssets containsObject:_allAssetGroups[indexPathSection][i]]) {
-                [_pickedAssets removeObject:_allAssetGroups[indexPathSection][i]];
-           
-                [_imageDisplayView deselectItemAtIndexPath:[NSIndexPath indexPathForItem:i inSection:indexPathSection] animated:YES];
-                
-                [_imageDisplayView.delegate collectionView:_imageDisplayView didDeselectItemAtIndexPath:[NSIndexPath indexPathForItem:i inSection:indexPathSection]];
-                
-            }
-            
-        }
-    }
-    else
-    {
-        
-        for (int i =0; i< [_allAssetGroups[indexPathSection] count]; i++)
-        {
-            if (![_pickedAssets containsObject:_allAssetGroups[indexPathSection][i]]) {
-                [_pickedAssets addObject:_allAssetGroups[indexPathSection][i]];
-                
-                
-                [_imageDisplayView selectItemAtIndexPath:[NSIndexPath indexPathForItem:i inSection:indexPathSection] animated:YES scrollPosition:UICollectionViewScrollPositionNone];
-                
-                [_imageDisplayView.delegate collectionView:_imageDisplayView didSelectItemAtIndexPath:[NSIndexPath indexPathForItem:i inSection:indexPathSection]];
-                
-                
-            }
-            
-        }
-        
-    }
 
-    
-    
-}
 
 /*
 // Only override drawRect: if you perform custom drawing.

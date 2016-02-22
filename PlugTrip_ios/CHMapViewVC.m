@@ -44,29 +44,29 @@
 
  */
 
-#define TAG_menuBtn       101
-#define TAG_modeBtn       102
-#define TAG_addPhotoBtn   103
-#define TAG_chatRoomBtn   104
-#define TAG_modeBtnBackgroundView 201
-#define TAG_coverTripTitleView    202
-#define TAG_indicator_maskView    203
-#define TAG_quickChatView         204
-#define TAG_tripTitleText 301
-#define TAG_quickChatText 302
-#define TAG_moveTV 401
-#define TAG_horizontalView_CellImgView   501
-#define TAG_horizontalView_CellLabel     502
-
-#define WIDTH_moveTV 88
-#define IMAGEHEIGHT    50
-#define MODEBTN_WIDTH  80.0
-#define MODEBTN_HEIGHT 44.0
-#define MEMBER_MapMarker_SIZE 20
-
-
-#define BOTTOM_VIEW_FRAME1 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH, IMAGEHEIGHT)
-#define BOTTOM_VIEW_FRAME2 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH*2, IMAGEHEIGHT)
+//#define TAG_menuBtn       101
+//#define TAG_modeBtn       102
+//#define TAG_addPhotoBtn   103
+//#define TAG_chatRoomBtn   104
+//#define TAG_modeBtnBackgroundView 201
+//#define TAG_coverTripTitleView    202
+//#define TAG_indicator_maskView    203
+//#define TAG_quickChatView         204
+//#define TAG_tripTitleText 301
+//#define TAG_quickChatText 302
+//#define TAG_moveTV 401
+//#define TAG_horizontalView_CellImgView   501
+//#define TAG_horizontalView_CellLabel     502
+//
+//#define WIDTH_moveTV 88
+//#define IMAGEHEIGHT    50
+//#define MODEBTN_WIDTH  80.0
+//#define MODEBTN_HEIGHT 44.0
+//#define MEMBER_MapMarker_SIZE 20
+//
+//
+//#define BOTTOM_VIEW_FRAME1 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH, IMAGEHEIGHT)
+//#define BOTTOM_VIEW_FRAME2 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH*2, IMAGEHEIGHT)
 
 
 
@@ -86,8 +86,9 @@
     UIActivityIndicatorView *activityIndicator;
     
     //紀錄mode
-    NSMutableArray *localImages;
-    NSMutableArray *localImgMarkers;
+    NSMutableArray *localImgData_orderByDate;
+//    NSMutableArray *localImages;
+//    NSMutableArray *localImgMarkers;
     NSTimer *receivedMsg;
     
     //夥伴mode
@@ -100,6 +101,12 @@
     
     //通用(紀錄&旅程)
     EasyTableView *horizontalView;
+    
+    
+    //縮放cell
+    CGFloat ratio;
+    CGFloat horizonTVOffset;
+    NSIndexPath *resizeIndexPath;
 }
 
 @end
@@ -140,6 +147,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     // to receive push notification info
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveChatRoomMessage:) name:@"ChatRoomInfo" object:nil];
+
     
     [self indicatorSetting];
     
@@ -170,6 +178,8 @@ NSString *const tableName_userGPS = @"user_GPS";
     
         _isInitialLayout = YES;
     }
+    
+    
 }
 
 - (void)viewWillDisappear:(BOOL)animated{
@@ -192,7 +202,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     if ([_tripInfo count]==0) {
         _tripInfo = [[NSMutableDictionary alloc]init];
-        [_tripInfo setObject:@"New Trip"            forKey:@"tripTitle"];
+        [_tripInfo setObject:@"未命名"            forKey:@"tripTitle"];
         [_tripInfo setObject:[NSNumber numberWithBool:NO] forKey:@"isTripCreate"];
         [_tripInfo setObject:[NSNumber numberWithBool:NO] forKey:@"isSavedOnline"];
         [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
@@ -483,6 +493,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
+///!!!:待刪除
 #pragma mark - CHScrollView
 -(void)initScrollView
 {
@@ -520,7 +531,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     if (_isShowImagesOnMap) {
         NSInteger tag = selectedView.tag-1;
-        [self mapView:_mapView didTapMarker:localImgMarkers[tag]];
+//        [self mapView:_mapView didTapMarker:localImgMarkers[tag]];
         NSLog(@"\nYou selected chScollView the no.%ld Image",(long)selectedView.tag);
     }else{
         //無marker, 不動作
@@ -529,15 +540,35 @@ NSString *const tableName_userGPS = @"user_GPS";
 }
 
 #pragma mark - horizontalView (EasyTableview) delegate
+
 -(void)initHorizontalView{
 
-    EasyTableView *view	= [[EasyTableView alloc] initWithFrame:BOTTOM_VIEW_FRAME2 ofWidth:IMAGEHEIGHT];
+    EasyTableView *view;
+    view = (EasyTableView *)[_mapDisplayView viewWithTag:TAG_horizonTableView];
+    if (view) {
+        [view removeFromSuperview];
+    }
+    
+    if (_currentModeType ==1 || _currentModeType == 0) {
+        view	= [[EasyTableView alloc] initWithFrame:BOTTOM_VIEW_FRAME2 ofWidth:IMAGEHEIGHT];
+        horizonTVOffset = IMAGEHEIGHT*2.5;
+    }else if (_currentModeType ==3){
+        view	= [[EasyTableView alloc] initWithFrame:BOTTOM_VIEW_FRAME1 ofWidth:IMAGEHEIGHT];
+        horizonTVOffset = IMAGEHEIGHT*3.5;
+    }
+    
+    
+//    EasyTableView *view	= [[EasyTableView alloc] initWithFrame:BOTTOM_VIEW_FRAME2 ofWidth:IMAGEHEIGHT];
     horizontalView  = view;
+    horizontalView.tag = TAG_horizonTableView;
     horizontalView.delegate= self;
     horizontalView.tableView.backgroundColor= [UIColor clearColor];
     horizontalView.tableView.allowsSelection= YES;
     horizontalView.tableView.separatorColor	= [UIColor darkGrayColor];
     horizontalView.autoresizingMask			= UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
+    ratio = 2;
+//    horizonTVOffset = IMAGEHEIGHT*2.5;
+    [horizontalView.tableView setContentInset:UIEdgeInsetsMake(horizonTVOffset,0,horizonTVOffset/2,0)];
     [_mapDisplayView addSubview:horizontalView];
     
 }
@@ -545,10 +576,13 @@ NSString *const tableName_userGPS = @"user_GPS";
 - (NSUInteger)numberOfSectionsInEasyTableView:(EasyTableView*)easyTableView{
     
     if (_currentModeType == 1) {
-        return 1;
+        return [localImgData_orderByDate count];
+        
     }else if(_currentModeType == 3 ){
+        
         return [dlTripItemsMarkers count];
     }else{
+        
         return 0;
     }
     
@@ -557,10 +591,14 @@ NSString *const tableName_userGPS = @"user_GPS";
 - (NSInteger)easyTableView:(EasyTableView *)easyTableView numberOfRowsInSection:(NSInteger)section{
 
     if (_currentModeType == 1) {
-        return [localImages count];
+        NSArray *items = localImgData_orderByDate[section][@"items"];
+        return [items count];
+        
     }else if(_currentModeType == 3 ){
+        
         return [dlTripItemsMarkers[section] count];
     }else{
+        
         return 0;
     }
     
@@ -581,7 +619,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         cell.backgroundColor = [UIColor clearColor];
         
-        float downsize = 5;
+        float downsize = cell.frame.size.height*0.3;
         CGRect imgViewRect		= CGRectMake(downsize, downsize, cell.frame.size.width - downsize*2, cell.frame.size.height - downsize*2);
         
         // ImgView
@@ -613,15 +651,14 @@ NSString *const tableName_userGPS = @"user_GPS";
         
     }
     
-   
-    
-    
     // ... LOAD DATA ...
     
     // ImgView
     if (_currentModeType == 1) {
         
-        imgView.image = localImages[indexPath.row];
+        NSDictionary *item = localImgData_orderByDate[indexPath.section][@"items"][indexPath.row];
+        
+        imgView.image = item[@"image"];
         
     }else if(_currentModeType == 3 ){
         
@@ -643,27 +680,34 @@ NSString *const tableName_userGPS = @"user_GPS";
 //}
 - (void)easyTableView:(EasyTableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
 
-    NSLog(@"did select%ld",(long)indexPath.row);
+    NSLog(@"did select(section:%ld,row%ld)",(long)indexPath.section,(long)indexPath.row);
     
     if (_currentModeType == 1) {
-        //紀錄模式
         
-        if (localImgMarkers.count !=0) {
-            [self mapView:_mapView didTapMarker:localImgMarkers[indexPath.row]];
+        //紀錄模式
+        _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
+        if (_isShowImagesOnMap) {
+            
+            CLLocation *posi = localImgData_orderByDate[indexPath.section][@"items"][indexPath.row][@"position"];
+            CLLocationCoordinate2D position = [posi coordinate];
+            
+            if (position.latitude ==0 || position.longitude ==0) {
+                
+                [self showImgNoLocationAlert:nil];
+                
+            }else{
+                
+                GMSCameraPosition *tapedLocation = [GMSCameraPosition cameraWithLatitude:position.latitude
+                                                                               longitude:position.longitude
+                                                                                    zoom:_mapView.camera.zoom];
+                [_mapView setCamera:tapedLocation];
+                
+                
+            }
         }
-//        //是否有show照片
-//        _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
-//        if (_isShowImagesOnMap) {
-//            
-//            [self mapView:_mapView didTapMarker:localImgMarkers[indexPath.row]];
-//   
-//        }else{
-//            //不動作
-//        }
         
     }else if(_currentModeType == 3 ){
         //旅程模式
-        
         [self mapView:_mapView didTapMarker:dlTripItemsMarkers[indexPath.section][indexPath.row]];
         
     }else{
@@ -671,7 +715,46 @@ NSString *const tableName_userGPS = @"user_GPS";
         //
     }
     
+    [horizontalView.tableView scrollToRowAtIndexPath:indexPath
+                                    atScrollPosition:UITableViewScrollPositionTop animated:YES];
+    
 }
+
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView{
+
+    if (scrollView.contentOffset.y + horizonTVOffset >= -IMAGEHEIGHT/2) {
+        
+        //計算放大倍率
+        CGFloat contentOffsetY = fabs(scrollView.contentOffset.y + horizonTVOffset);
+        while (contentOffsetY > IMAGEHEIGHT) {
+            contentOffsetY -= IMAGEHEIGHT;
+        }
+        
+        //變更大小cell位置
+        contentOffsetY -= IMAGEHEIGHT/2;
+        ratio = fabs(contentOffsetY)/(IMAGEHEIGHT/2);
+        
+        CGPoint location = CGPointMake(0, scrollView.contentOffset.y + horizonTVOffset + IMAGEHEIGHT/2);
+        resizeIndexPath    = [horizontalView.tableView indexPathForRowAtPoint:location];
+        
+        
+        UITableViewCell *cell = [horizontalView.tableView cellForRowAtIndexPath:resizeIndexPath];
+        UIImageView *imgView  = (UIImageView*)[cell viewWithTag:TAG_horizontalView_CellImgView];
+        
+        float downsize = cell.frame.size.height*(0.3 - 0.3*ratio) ;
+        CGRect imgViewRect		= CGRectMake(downsize, downsize, cell.frame.size.width - downsize*2, cell.frame.size.height - downsize*2);
+        imgView.frame = imgViewRect;
+        
+        NSLog(@"offset:%f,indexRow:%ld, Ratio:%f",(scrollView.contentOffset.y + horizonTVOffset),(long)resizeIndexPath.row,ratio);
+    }
+}
+
+-(void)scrollViewDidEndScrolling:(UIScrollView *)scrollView{
+    
+    [self easyTableView:horizontalView didSelectRowAtIndexPath:resizeIndexPath];
+        
+}
+
 
 #pragma mark - Button
 -(void)initButtons{
@@ -736,112 +819,57 @@ NSString *const tableName_userGPS = @"user_GPS";
 
 -(void)didSelectModeBtn:(UIButton *)sender{
     
+    
     if (_currentModeType == 0) {
         
+        _currentModeType += 1;
+        [self updateModeBtnState];
         [self showImagePickerAlert];
-        
-//        //點選"分析"按鈕時, 跳出照片
-////        [self setImagePicker:_pickedAssets];
-//        
-//        UIAlertController * alert=   [UIAlertController
-//                                      alertControllerWithTitle:@""
-//                                      message:@"是否取用相簿照片"
-//                                      preferredStyle:UIAlertControllerStyleAlert];
-//        
-//        UIAlertAction* yesButton = [UIAlertAction
-//                                    actionWithTitle:@"Yes"
-//                                    style:UIAlertActionStyleDefault
-//                                    handler:^(UIAlertAction * action)
-//                                    {
-//                                        
-//                                        //
-//                                        switch ([PHPhotoLibrary authorizationStatus]) {
-//                                            case PHAuthorizationStatusAuthorized:
-//                                                [self setImagePicker:_pickedAssets];
-//                                                break;
-//                                                
-//                                            default:
-//                                                [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
-//                                                    switch (status) {
-//                                                        case PHAuthorizationStatusAuthorized:
-//                                                        case PHAuthorizationStatusNotDetermined:
-//                                                            [self setImagePicker:_pickedAssets];
-//                                                            break;
-//                                                            
-//                                                        case PHAuthorizationStatusDenied:
-//                                                        case PHAuthorizationStatusRestricted:
-//                                                        {
-//                                                            //Tell user access to the photos are restricted
-//                                                            UIAlertController * alertForRestricted=   [UIAlertController
-//                                                                                          alertControllerWithTitle:@"錯誤"
-//                                                                                          message:@"無法訪問相簿,請至設定開啟權限"
-//                                                                                          preferredStyle:UIAlertControllerStyleAlert];
-//                                                            
-//                                                            UIAlertAction *okBtn = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-//                                                                [alertForRestricted dismissViewControllerAnimated:YES completion:nil];
-//                                                            }];
-//                                                            
-//                                                            [alertForRestricted addAction:okBtn];
-//                    
-//                                                            [self presentViewController:alertForRestricted animated:YES completion:nil];
-//                                                        }
-//                                                            break;
-//                                                            
-//                                                        default:
-//                                                            break;
-//                                                    }
-//                                                }];
-//                                                break;
-//                                        }
-//                                        
-//                                        
-//                                        [alert dismissViewControllerAnimated:YES completion:nil];
-//                                        
-//                                    }];
-//        
-//        UIAlertAction* noButton = [UIAlertAction
-//                                   actionWithTitle:@"No"
-//                                   style:UIAlertActionStyleDefault
-//                                   handler:^(UIAlertAction * action)
-//                                   {
-//                                       
-//                                       [alert dismissViewControllerAnimated:YES completion:nil];
-//                                       
-//                                   }];
-//        
-//        [alert addAction:yesButton];
-//        [alert addAction:noButton];
-//        
-//        [self presentViewController:alert animated:YES completion:nil];
 
-    }else if(_currentModeType == 1){
-        //紀錄
-        NSLog(@"紀錄mode");
+    }else {
         
-        //開啟相簿
-        [self setImagePicker:_pickedAssets];
+        // 如果超過mode3則從1開始
+        _currentModeType += 1;
+        _currentModeType = (_currentModeType >3)? 1 :_currentModeType;
+        [self updateModeBtnState];
         
-    }else if(_currentModeType == 2){
-        //同夥
-        NSLog(@"同夥mode");
+        UIView *quickChatView = (UIView *)[_mapDisplayView viewWithTag:TAG_quickChatView];
+        [quickChatView removeFromSuperview];
         
-    }else if(_currentModeType == 3){
-        //旅程
-        NSLog(@"旅程mode");
+        
+        if(_currentModeType == 1){
+            //紀錄
+            NSLog(@"紀錄mode");
+            
+            //直接匯入data
+            [self loadDBPhotos];
+            
+        }else if(_currentModeType == 2){
+            //同夥
+            NSLog(@"同夥mode");
+            
+            //直接略過setting VC開始執行
+            [self didLeftSettingVC];
+            
+        }else if(_currentModeType == 3){
+            //旅程
+            NSLog(@"旅程mode");
+            
+            [self loadJsonTripData];
+            [self didLoadTripDate:nil];
+            
+        }
         
     }
     
-    [self updateModeBtnState];
     
-//    _currentModeType +=1;
-//    if (_currentModeType >= [_modes count]) {
-//        _currentModeType = 0;
-//    }
-//    
-//    [sender setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
+    
 }
 
 -(void)updateModeBtnState{
+    
+    //淨空map
+    [_mapView clear];
     
     //
     UIButton *modeBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_modeBtn];
@@ -858,6 +886,9 @@ NSString *const tableName_userGPS = @"user_GPS";
     chatRoomBtn.hidden = (_currentModeType == 2)? NO: YES;
 
     
+    UIView *quickChatView = (UIView *)[_mapDisplayView viewWithTag:TAG_quickChatView];
+    [quickChatView removeFromSuperview];
+    
     
 }
 
@@ -866,9 +897,10 @@ NSString *const tableName_userGPS = @"user_GPS";
     NSLog(@"Adding photo");
     
     UIImagePickerController *imgPicker = [[UIImagePickerController alloc] init];
-    imgPicker.sourceType = UIImagePickerControllerCameraDeviceFront;
+//    imgPicker.sourceType = UIImagePickerControllerCameraDeviceFront;
+    imgPicker.sourceType = UIImagePickerControllerSourceTypeCamera;
     imgPicker.delegate = self;
-    [self presentViewController:imgPicker animated:YES completion:^{
+    [self presentViewController:imgPicker animated:NO completion:^{
         //
     }];
     
@@ -930,9 +962,9 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     UIView *quickChatView = (UIView *)[_mapDisplayView viewWithTag:TAG_quickChatView];
     [quickChatView removeFromSuperview];
-    
-  
 }
+
+
 
 #pragma mark
 #pragma mark - ...地圖相關設定...
@@ -958,16 +990,15 @@ NSString *const tableName_userGPS = @"user_GPS";
 }
 
 //僅紀錄create marker方式
--(void)createMarker{
+-(void)createMarker:(CLLocationCoordinate2D)position{
     
-    CLLocationCoordinate2D position = CLLocationCoordinate2DMake(24.081446, 120.538854);
     GMSMarker *marker = [GMSMarker markerWithPosition:position];
     marker.title            =[NSString stringWithFormat:@"Marker title"];
     marker.snippet          = @"Marker snippet";
     marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
     marker.map              = _mapView;
     marker.icon             = [UIImage imageNamed:@"house"];
-    [localImgMarkers addObject:marker];
+//    [localImgMarkers addObject:marker];
 }
 
 //tap map時的反應
@@ -981,20 +1012,34 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     mapView.selectedMarker = marker;
     
-    GMSCameraPosition *tapedLocation = [GMSCameraPosition cameraWithLatitude:marker.position.latitude
-                                                                   longitude:marker.position.longitude
-                                                                        zoom:_mapView.camera.zoom];
-    NSLog(@"\nTapped image\nimageLatitue:%f,imageLongtitude:%f",marker.position.latitude,marker.position.longitude
-          );
-    [_mapView setCamera:tapedLocation];
+    if (marker.position.latitude!=0 && marker.position.longitude!=0) {
+        GMSCameraPosition *tapedLocation = [GMSCameraPosition cameraWithLatitude:marker.position.latitude
+                                                                       longitude:marker.position.longitude
+                                                                            zoom:_mapView.camera.zoom];
+        NSLog(@"\nTapped image\nimageLatitue:%f,imageLongtitude:%f",marker.position.latitude,marker.position.longitude
+              );
+        [_mapView setCamera:tapedLocation];
+        return YES;
+        
+    }else{
+        
+        _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
+        
+        if (_currentModeType ==1 && _isShowImagesOnMap) {
+            [self showImgNoLocationAlert:nil];
+        }
+
+        return NO;
+    }
     
-    return YES;
+
 }
 
 //map 移動前的反應
 - (void)mapView:(GMSMapView *)mapView willMove:(BOOL)gesture
 {
     //
+
 }
 
 //map 移動時的反應
@@ -1003,12 +1048,23 @@ NSString *const tableName_userGPS = @"user_GPS";
     //
     UITextField *tripTitleText = (UITextField *)[_mapDisplayView viewWithTag:TAG_tripTitleText];
     [tripTitleText resignFirstResponder];
+
+    //
+    [_mapView clear];
+    
+    if (_currentModeType == 1) {
+        [self createImgMarkerIdleAtCameraPosition:position];
+    }
     
 }
 
 //map 停止時的反應
 - (void)mapView:(GMSMapView *)mapView idleAtCameraPosition:(GMSCameraPosition *)position{
     //
+    
+//    if (_currentModeType == 1) {
+//        [self createImgMarkerIdleAtCameraPosition:position];
+//    }
 }
 
 #pragma mark - GPS & locationManager
@@ -1025,7 +1081,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         ///!!!:週期性更新GPS location
         receivedMsg = [NSTimer scheduledTimerWithTimeInterval:5.0f
                                                        target:self selector:@selector(updateDeviceLoctionData) userInfo:nil repeats:YES];
-        [receivedMsg isValid];
+//        [receivedMsg isValid];
     }
 }
 
@@ -1140,7 +1196,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     //
 //    NSMutableArray *images = [[NSMutableArray alloc] init];
-    localImgMarkers = [[NSMutableArray alloc]init];
+//    localImgMarkers = [[NSMutableArray alloc]init];
     
     [_mapView clear];
     
@@ -1203,94 +1259,200 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     
     if (queryTableResult) {
-        //        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+        // ...撈localIdentifer資料
         [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
             [localIdentifier addObject:dict[@"imagePath"]];
         }];
         
-        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
-        //從assets解析出照片images
-        localImages         = [[NSMutableArray alloc]init];
-        localImgMarkers     = [[NSMutableArray alloc]init];
-        _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
-
-        [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
-            
-            //顯示ImgMarker
-            if (_isShowImagesOnMap) {
-                // 建立local img markers
-                CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
-                
-                GMSMarker *marker = [GMSMarker markerWithPosition:position];
-                marker.title =[NSString stringWithFormat:@"%lu",(unsigned long)idx];
-                marker.snippet = @"Imgs";
-                marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
-                marker.map = _mapView;
-                [localImgMarkers addObject:marker];
-            }
-            
-            // 取 local imgs,
-            UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
-            NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
-            CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
-            [[PHImageManager defaultManager]
-             requestImageForAsset:asset
-             targetSize:retinaSquare
-             contentMode:PHImageContentModeAspectFill
-             options:nil
-             resultHandler:^(UIImage *result, NSDictionary *info) {
-                 
-                 [localImages addObject:result];
-             }];
-            
-            
-        }];
+        // ...設定排序方式 -- 日期
+        PHFetchOptions *allPhotosfetchOption = [[PHFetchOptions alloc]init];
+        allPhotosfetchOption.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
         
-        [horizontalView.tableView reloadData];
-        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
-        [self easyTableView:horizontalView didSelectRowAtIndexPath:indexPath];
+        //  ...搜尋結果
+        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:allPhotosfetchOption];
+        
+        // ... 依日期分section
+        localImgData_orderByDate = [NSMutableArray arrayWithArray:[self orderImgByDate:result]];
+        
+        // ...將取得的localImg 建立tableview
+        [self initHorizontalView];
+        [self scrollViewDidScroll:horizontalView.tableView];
 
     }
+    
+}
 
+-(NSArray *)orderImgByDate:(PHFetchResult *)result{
+  
+    NSMutableArray *rowData = [[NSMutableArray alloc]init];
+    NSMutableArray *orderedData = [[NSMutableArray alloc]init];
+    
+    [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL *stop) {
+        [rowData addObject:asset];
+    }];
+    
+    //依照日期分類
+    while ([rowData count]>0)
+    {
+        NSMutableArray *tempArray = [[NSMutableArray alloc]init];
+        
+        PHAsset *firstAsset = rowData[0];
+        NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
+        [dateFormat setDateFormat:@"YYYY-MM-dd"];
+        NSString *lastDate = [dateFormat stringFromDate:firstAsset.creationDate];
+        
+        [rowData enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop)
+         {
+             if ([[dateFormat stringFromDate:asset.creationDate] isEqualToString:lastDate])
+             {
+                 [tempArray addObject:asset];
+                 
+             }
+         }];
+        
+        //當天結果
+        NSMutableDictionary *day_result = [[NSMutableDictionary alloc]init];
+        NSMutableArray *day_items = [[NSMutableArray alloc]init];
+        
+        [tempArray enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop)
+         {
+             //移除已經選取的資料
+             if ([rowData containsObject:asset])
+             {
+                 [rowData removeObject:asset];
+             }
+             
+             // img location
+             CLLocation *position = [[CLLocation alloc] initWithLatitude:asset.location.coordinate.latitude longitude:asset.location.coordinate.longitude];
+//             CLLocationCoordinate2D coord = [position coordinate];
+             
+             // 取 local imgs,
+             UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
+             NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
+             CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
+             [[PHImageManager defaultManager]
+              requestImageForAsset:asset
+              targetSize:retinaSquare
+              contentMode:PHImageContentModeAspectFill
+              options:nil
+              resultHandler:^(UIImage *imgResult, NSDictionary *info) {
+                  
+//                  NSMutableDictionary *dayItem = [[NSMutableDictionary alloc]init];
+//                  [dayItem setObject:imgResult forKey:@"image"];
+//                  [dayItem setObject:position  forKey:@"position"];
+                  NSDictionary *dayItem = [NSDictionary dictionaryWithObjectsAndKeys:
+                                          imgResult,@"image",
+                                          position,@"position",
+                                          nil];
+
+                  [day_items addObject:dayItem];
+              }];
+             
+         }];
+        [day_result setObject:day_items forKey:@"items"];
+        [day_result setObject:lastDate forKey:@"date"];
+        
+        [orderedData addObject:day_result];
+    };
+    
+    NSLog(@"%lu",(unsigned long)orderedData.count);
+    
+    return orderedData;
+}
+
+-(void)createImgMarkerIdleAtCameraPosition:(GMSCameraPosition *)cameraPosition{
+    
+    __block int createdMarkerCount = 0;
+    
+    [localImgData_orderByDate enumerateObjectsUsingBlock:^(NSDictionary *day, NSUInteger indexSection, BOOL * _Nonnull stop) {
+        
+        [day enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            if ([key isEqualToString:@"items"]) {
+                NSArray *items = obj;
+                
+                [items enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger indexRow, BOOL * _Nonnull stop) {
+                    //
+                    //目前視窗範圍
+                    GMSVisibleRegion visibleRegion = _mapView.projection.visibleRegion;
+                    GMSCoordinateBounds *bounds = [[GMSCoordinateBounds alloc] initWithRegion: visibleRegion];
+ 
+                    // 建立local img markers
+                    CLLocation *loc = item[@"position"];
+                    CLLocationCoordinate2D position = [loc coordinate];
+                    
+                    if([bounds containsCoordinate:position]) {
+                        
+                        GMSMarker *marker = [GMSMarker markerWithPosition:position];
+                        marker.title =[NSString stringWithFormat:@"%lu - %lu",(unsigned long)indexSection,(unsigned long)indexRow];
+                        marker.snippet = @"Imgs";
+                        marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+                        marker.map = _mapView;
+                        marker.userData = [NSIndexPath indexPathForRow:indexRow inSection:indexSection];
+                        
+                        createdMarkerCount +=1;
+//                        float camLat = cameraPosition.target.latitude;
+//                        float camLog = cameraPosition.target.longitude;
+//                        float marLat = position.latitude;
+//                        float marLog = position.longitude;
+//                        
+//                        if (camLat == marLat && camLog == marLog) {
+//                            _mapView.selectedMarker = marker;
+//                        }
+                        
+                    }
+                }];
+            }
+        }];
+    
+    }];
+    
+    NSLog(@"地圖上有%d個marker",createdMarkerCount);
+    
+    
+    
+    
+    
+    
+    
+    
+//    //從資料庫撈assets
+//    NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
+//    NSMutableArray *localIdentifier =[[NSMutableArray alloc]init];
+//    queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName_tripPhoto];
+//    
+//    
 //    if (queryTableResult) {
-//        //        PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
+//        // ...撈localIdentifer資料
 //        [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
-//            
 //            [localIdentifier addObject:dict[@"imagePath"]];
 //        }];
 //        
-//        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:nil];
+//        // ...用localIdentifer資料, 撈照片assets資檔案, 依日期排序
+//        PHFetchOptions *allPhotosfetchOption = [[PHFetchOptions alloc]init];
+//        allPhotosfetchOption.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
+//        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:allPhotosfetchOption];
 //        
-//        _pickedAssets = [[NSMutableArray alloc]init];
+//        //目前視窗範圍
+//        GMSVisibleRegion visibleRegion = _mapView.projection.visibleRegion;
+//        GMSCoordinateBounds *bounds = [[GMSCoordinateBounds alloc] initWithRegion: visibleRegion];
 //        
+//        // ...assets資料, 對每一筆asset做處理(取image, 取座標製作marker)
 //        [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
 //            
-//            [_pickedAssets addObject:asset];
+//            // 建立local img markers
+//            CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
 //            
+//            if([bounds containsCoordinate:position]) {
+//                GMSMarker *marker = [GMSMarker markerWithPosition:position];
+//                marker.title =[NSString stringWithFormat:@"%lu",(unsigned long)idx];
+//                marker.snippet = @"Imgs";
+//                marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+//                marker.map = _mapView;
+//                
+//            }
+//
 //        }];
 //    }
-//    
-//    //從assets解析出照片images
-//    NSMutableArray *images = [[NSMutableArray alloc]init];
-//    
-//    for (int i = 0; i < [_pickedAssets count]; i++)
-//    {
-//        UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
-//        NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
-//        CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
-//        [[PHImageManager defaultManager]
-//         requestImageForAsset:_pickedAssets[i]
-//         targetSize:retinaSquare
-//         contentMode:PHImageContentModeAspectFill
-//         options:nil
-//         resultHandler:^(UIImage *result, NSDictionary *info) {
-//             
-//             [images addObject:result];
-//             
-//         }];
-//    }
-//    //展示照片scroll view
-//    [self showImageDisplayScrollViewWithImages:images];
     
 }
 
@@ -1382,8 +1544,9 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     CHImagePickerView *imagePicker = [[CHImagePickerView alloc]initWithFrame:frame owner:self];
 
-    
-    [imagePicker loadPhotosFromAlbumAndCompareWithAssets:assetArray];
+    [imagePicker loadPhotosFromAlbum];
+
+//    [imagePicker loadPhotosFromAlbumAndCompareWithAssets:assetArray];
 //    if (assetArray)
 //        [imagePicker loadPhotosFromAssetArray:assetArray];
 //    else
@@ -1401,16 +1564,16 @@ NSString *const tableName_userGPS = @"user_GPS";
 
 -(void)finishedPickingImages:(NSMutableArray *)assets{
     
-    //存照片
-    _pickedAssets = assets;
-    [self savePickedPhotoToDB];
-    
     //建立旅程, 如已經存在, 直接開照片
     BOOL isTripCreate = [[_tripInfo objectForKey:@"isTripCreate"]boolValue];
+    
     if (!isTripCreate) {
         
-        [self tripInfoUpdateObjec:[NSNumber numberWithBool:YES] forKey:@"isTripCreate"];
+        // ...update tripInfo
+        [_tripInfo setObject:[NSNumber numberWithBool:YES] forKey:@"isTripCreate"];
+        [[NSUserDefaults standardUserDefaults] setObject:_tripInfo forKey:@"tripInfo"];
        
+        // ...when trip create, start to init created state
         [self updateTripCreateState];
 
     }else{
@@ -1567,25 +1730,53 @@ NSString *const tableName_userGPS = @"user_GPS";
 }
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
     
+    
     UIImage *img = [info objectForKey:@"UIImagePickerControllerOriginalImage"];
     
     // Save image
     UIImageWriteToSavedPhotosAlbum(img, self, nil, nil);
     
+    //圖庫選圖完之後，自動關閉圖庫
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    
+    [self indicatorStart];
+    
     //等1秒後,
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
         
+        
+        
         // get camera roll
         PHAssetCollection *cameraRoll = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeSmartAlbumUserLibrary options:nil].lastObject;
+        
+        // get new asset
         PHAsset *asset = [[PHAsset fetchAssetsInAssetCollection:cameraRoll options:nil] lastObject];
-        [_pickedAssets addObject:asset];
-        [self finishedPickingImages:_pickedAssets];
+        
+        //ready to save to database
+        __block NSString *imagePath = [[NSString alloc]init];
+        __block NSString *imageLatitude     = [[NSString alloc]init];
+        __block NSString *imageLongtitude   = [[NSString alloc]init];
+        NSString *comment           = [[NSString alloc]init];
+        NSString *voicePath         = [[NSString alloc]init];
+        NSString *hiddenState       = [[NSString alloc]init];
+    
+        imageLatitude   = [NSString stringWithFormat:@"%f",asset.location.coordinate.latitude];
+        imageLongtitude = [NSString stringWithFormat:@"%f",asset.location.coordinate.longitude];
+        imagePath       = asset.localIdentifier;
+        
+        //存入table
+        [[myDB sharedInstance]insertTable:tableName_tripPhoto andImageLatitude:imageLatitude andImageLongtitude:imageLongtitude ImagePath:imagePath andComments:comment andVoicePath:voicePath andHiddenState:hiddenState];
+        [self loadDBPhotos];
+        NSLog(@"save adding photo to DB success");
+        
+        [self indicatorStop];
+//        [_pickedAssets addObject:asset];
+//        [self finishedPickingImages:_pickedAssets];
         
     });
     
     //圖庫選圖完之後，自動關閉圖庫
-    [picker dismissViewControllerAnimated:YES completion:nil];
-    
+//    [picker dismissViewControllerAnimated:YES completion:nil];
     
 }
 
@@ -1660,8 +1851,6 @@ NSString *const tableName_userGPS = @"user_GPS";
             
             NSLog(@"member uuid重複");
         }
-        
-        
         
     } failure:^{
         //不存在member
@@ -2216,9 +2405,10 @@ NSString *const tableName_userGPS = @"user_GPS";
 
 -(void)didLoadTripDate:(id)tripData{
     
+    ///!!!: wait for coding:下載旅程資料
     NSLog(@"Start to load trip data");
     
-    //建立table
+    // ...建立 右側table
     CHMoveableTableView *moveTV = [(CHMoveableTableView *)_mapDisplayView viewWithTag:TAG_moveTV];
     
     if (moveTV) {
@@ -2234,7 +2424,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     [_mapDisplayView addSubview:moveTV];
     moveTV.chDelegate = self;
     
-    // fed data
+    //  fed data
     [moveTV setObjects:[NSMutableArray arrayWithArray:tripData[@"total"]]];
     
 }
@@ -2292,9 +2482,12 @@ NSString *const tableName_userGPS = @"user_GPS";
         
     }];
     
-    [horizontalView.tableView reloadData];
-    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
-    [self easyTableView:horizontalView didSelectRowAtIndexPath:indexPath];
+    [self initHorizontalView];
+//    [horizontalView.tableView reloadData];
+    [self scrollViewDidScroll:horizontalView.tableView];
+
+//    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+//    [self easyTableView:horizontalView didSelectRowAtIndexPath:indexPath];
 }
 
 #pragma mark
@@ -2310,6 +2503,36 @@ NSString *const tableName_userGPS = @"user_GPS";
     [alert addAction:cancel];
     [self presentViewController:alert animated:YES completion:nil];
 
+    
+}
+
+-(void)showImgNoLocationAlert:(NSError *)error{
+    
+    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width*0.3, self.view.frame.size.width*0.1)];
+
+    label.center                = self.view.center;
+    CGPoint newCenter           = label.center;
+    newCenter.y-= 100;
+    
+    label.text = @"照片無座標";
+    label.layer.borderColor     = [UIColor lightGrayColor].CGColor;
+    label.layer.borderWidth     = 2.0f;
+    label.layer.cornerRadius    = 5.0f;
+    label.textAlignment = NSTextAlignmentCenter;
+//    label.textColor = [UIColor whiteColor];
+    
+    [self.view addSubview:label];
+    
+    [UIView animateWithDuration:1.0 animations:^{
+        
+        label.center = newCenter;
+        label.alpha  = 0;
+        
+    } completion:^(BOOL finished) {
+      
+        [label removeFromSuperview];
+    }];
+    
     
 }
 
@@ -2423,6 +2646,24 @@ NSString *const tableName_userGPS = @"user_GPS";
     NSString *receivedMessage = userInfo[@"aps"][@"alert"];
     
     NSLog(@"%@", receivedMessage);
+}
+
+
+-(void)alertDisconnectToServer{
+    
+    NSString *msg = @"連線錯誤";
+    
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"錯誤" message:msg preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction *confirmBtn = [UIAlertAction actionWithTitle:@"了解" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        NSLog(@"Join chat room  Action");
+        
+        [self showJoinAlert];
+        
+    }];
+    
+    [alert addAction:confirmBtn];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 

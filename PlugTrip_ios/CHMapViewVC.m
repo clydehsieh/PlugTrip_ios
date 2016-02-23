@@ -89,11 +89,11 @@
     NSMutableArray *localImgData_orderByDate;
 //    NSMutableArray *localImages;
 //    NSMutableArray *localImgMarkers;
-    NSTimer *receivedMsg;
+    NSTimer *uploadDeviceGPS;
     
     //夥伴mode
-    
     NSMutableArray *memberMarkers;
+    NSTimer *updateMemberLocation;
     
     //旅程mode
     NSMutableArray *dlTripItems;
@@ -896,15 +896,12 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
    
-    
-    
     //淨空map
     [_mapView clear];
     
     //
     UIButton *modeBtn               = (UIButton *)[_mapDisplayView viewWithTag:TAG_modeBtn];
     [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
-    
    
     UIView *modeBtnBackgroundView   = (UIView *)[_mapDisplayView viewWithTag:TAG_modeBtnBackgroundView];
     modeBtnBackgroundView.hidden    = (_currentModeType == 0)? YES: NO;
@@ -925,6 +922,8 @@ NSString *const tableName_userGPS = @"user_GPS";
     [hideMoveTVBtn removeFromSuperview];
     
     horizontalView.hidden           = (_currentModeType== 1)? NO:YES;
+    
+    [updateMemberLocation invalidate];
     
 }
 
@@ -1092,7 +1091,10 @@ NSString *const tableName_userGPS = @"user_GPS";
     [tripTitleText resignFirstResponder];
 
     //
-    [_mapView clear];
+    if(_currentModeType !=2){
+        [_mapView clear];
+    }
+    
     
     if (_currentModeType == 1) {
         [self createImgMarkerIdleAtCameraPosition:position];
@@ -1111,6 +1113,8 @@ NSString *const tableName_userGPS = @"user_GPS";
 //    }
 }
 
+#pragma mark
+#pragma mark - 上傳資料
 #pragma mark - GPS & locationManager
 -(void)locationManagerSetting{
     
@@ -1123,9 +1127,12 @@ NSString *const tableName_userGPS = @"user_GPS";
         [_locationManager requestAlwaysAuthorization];
         
         ///!!!:週期性更新GPS location
-        receivedMsg = [NSTimer scheduledTimerWithTimeInterval:5.0f
+        [[myDB sharedInstance] createGPSTable:tableName_userGPS];
+        uploadDeviceGPS = [NSTimer scheduledTimerWithTimeInterval:10.0f
                                                        target:self selector:@selector(updateDeviceLoctionData) userInfo:nil repeats:YES];
-//        [receivedMsg isValid];
+        
+        [uploadDeviceGPS isValid];
+        NSLog(@"開始 upload Device GPS");
     }
 }
 
@@ -1139,43 +1146,35 @@ NSString *const tableName_userGPS = @"user_GPS";
 //存裝置位置至local db
 -(void)updateDeviceLoctionData{
     
+    // ...更新到local資料庫
     [[myDB sharedInstance]insertGPSTable:tableName_userGPS
                              andLatitude:[NSString stringWithFormat:@"%f",
                                           _locationManager.location.coordinate.latitude]
                            andLongtitude:[NSString stringWithFormat:@"%f",_locationManager.location.coordinate.longitude]];
     
-    //    NSLog(@"\n更新DB的LOC:(%f,%f)",_locationManager.location.coordinate.latitude,_locationManager.location.coordinate.longitude);
-    
-    ///!!!:同夥模式, 且允許顯示地圖member marker
-    if ([_roomInfo[@"isShowOnMap"] boolValue]== YES && _currentModeType == 2) {
-        [self updateDeviceLocationToServer];
-    }
-    
-    //    [self drawPolyLinesOnMap];
-}
-
-//存裝置位置至server
--(void)updateDeviceLocationToServer{
-    
+    // ...更新到online資料庫
     double lat = _locationManager.location.coordinate.latitude;
     double lon = _locationManager.location.coordinate.longitude;
     
-    NSLog(@"\nServer的LOC:(%f,%f)",_locationManager.location.coordinate.latitude,_locationManager.location.coordinate.longitude);
-    
-    //update server
     [[CHFIreBaseAdaptor sharedInstance]updateMemberBykey:@"lastGPSLocation" andValue:[NSArray arrayWithObjects:[NSNumber numberWithDouble:lat],[NSNumber numberWithDouble:lon],nil] success:^(FDataSnapshot *snapshot) {
         
-        [self addMemberMarker];
+        NSLog(@"個人位置上傳成功");
+        NSLog(@"%f",_locationManager.location.coordinate.latitude);
         
     } failure:^{
         
         //
-        NSLog(@"");
+        NSLog(@"個人位置上傳失敗");
     }];
+    
+//    NSLog(@"\n更新DB的LOC:(%f,%f)",_locationManager.location.coordinate.latitude,_locationManager.location.coordinate.longitude);
+
 }
 
 //locationManager更新位置時反應
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
+    
+//    [self updateDeviceLoctionData];
     
     //    NSLog(@"\nUpdateLOC:(%f,%f)",_locationManager.location.coordinate.latitude,_locationManager.location.coordinate.longitude);
 }
@@ -1227,8 +1226,8 @@ NSString *const tableName_userGPS = @"user_GPS";
     [[myDB sharedInstance] deleteTable:tableName_tripPhoto];
     [[myDB sharedInstance] createTripTable:tableName_tripPhoto];
     
-    [[myDB sharedInstance] deleteTable:tableName_userGPS];
-    [[myDB sharedInstance] createGPSTable:tableName_userGPS];
+//    [[myDB sharedInstance] deleteTable:tableName_userGPS];
+//    [[myDB sharedInstance] createGPSTable:tableName_userGPS];
     
     //ready to save to database
     __block NSString *imagePath = [[NSString alloc]init];
@@ -1409,7 +1408,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     return orderedData;
 }
 
-#pragma mark - Img marker
+#pragma mark - marker_Image
 -(void)createImgMarkerIdleAtCameraPosition:(GMSCameraPosition *)cameraPosition{
     
     __block int createdMarkerCount = 0;
@@ -2204,16 +2203,181 @@ NSString *const tableName_userGPS = @"user_GPS";
         // ...顯示quick chat
         [self quickChatTextInit];
  
-        //顯示聊天室按鈕
+        // ...顯示聊天室按鈕
         UIButton *chatRoomBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_chatRoomBtn];
         chatRoomBtn.hidden    = NO;
         
-        // ...展示member
-        [self updateDeviceLocationToServer];
+        // ...Member marker setting
+        //member marker initital
+        [self memberMarkerInit];
+        
+        //start to auto update marker location
+        updateMemberLocation =[NSTimer scheduledTimerWithTimeInterval:5.0f
+                                                               target:self selector:@selector(updateMemberMarker) userInfo:nil repeats:YES];
+        //btn 切換mode時取消
+        [updateMemberLocation isValid];
     }
 }
 
-#pragma mark - member markers
+#pragma mark - marker_member 
+
+-(void)memberMarkerInit{
+    
+    //搜尋房間內所有member資料
+    [[CHFIreBaseAdaptor sharedInstance] queryMemberByRoomID:_roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
+        
+
+        if ([snapshot.value isEqual:[NSNull null]]) {
+            
+            //房間搜尋沒資料
+            NSLog(@"no member for member marker");
+        }else{
+            
+            //房間搜尋沒資料
+            NSLog(@"Start to build member marker");
+            
+            NSDictionary *members = snapshot.value;
+            memberMarkers = [[NSMutableArray alloc]init];
+            
+            __block int colorCount = 0;
+            
+            [members enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, NSDictionary *member, BOOL * _Nonnull stop) {
+                
+                NSArray *locGPS = member[@"lastGPSLocation"];
+                float lat = [locGPS[0] floatValue];
+                float lon = [locGPS[1] floatValue];
+                
+                // 建立 member markers
+                CLLocationCoordinate2D position = CLLocationCoordinate2DMake(lat,lon);
+                GMSMarker *marker  = [GMSMarker markerWithPosition:position];
+                marker.snippet     = member[@"userNickname"];
+                marker.userData    = member;
+                marker.map         = ([member[@"isShareGPS"] boolValue])? _mapView : nil;
+                marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+                
+                UIImage *img       = [UIImage imageNamed:[NSString stringWithFormat:@"s1_%d.png",colorCount]];
+                img = [self imageWithImage:img scaledToSize:CGSizeMake(MEMBER_MapMarker_SIZE, MEMBER_MapMarker_SIZE)];
+                marker.icon        = img;
+                marker.groundAnchor = CGPointMake(0.5, 0.5);//調整圖片位置
+                [memberMarkers addObject:marker];
+                
+                colorCount +=1;
+                colorCount = (colorCount >5)? 0:colorCount;
+                
+            }];
+            
+            NSLog(@"memberMarke 有%ld個",memberMarkers.count);
+        }
+        
+        
+    } failure:^{
+        //
+        NSLog(@"fail");
+        
+    }];
+    
+    
+}
+
+-(void)updateMemberMarker{
+    
+    NSMutableArray *newMemberMarkerArray = [[NSMutableArray alloc]init];
+    
+    //搜尋房間內所有member資料
+    [[CHFIreBaseAdaptor sharedInstance] queryMemberByRoomID:_roomInfo[@"roomID"] success:^(FDataSnapshot *snapshot) {
+
+        if ([snapshot.value isEqual:[NSNull null]]) {
+            
+            //房間搜尋沒資料
+            NSLog(@"no member for member marker");
+        }else{
+            
+            //房間搜尋沒資料
+            NSLog(@"Start to update member marker");
+ 
+            NSDictionary *members = snapshot.value;
+            
+            [members enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, NSDictionary *member, BOOL * _Nonnull stop) {
+                
+                __block BOOL isMemberUpdated = NO;
+                
+                NSArray *locGPS = member[@"lastGPSLocation"];
+                CLLocationCoordinate2D position = CLLocationCoordinate2DMake([locGPS[0] floatValue],[locGPS[1] floatValue]);
+
+                //跟舊有的marker比對, 如果位置有改, 則移動
+                [memberMarkers enumerateObjectsUsingBlock:^(GMSMarker *marker, NSUInteger idx, BOOL * _Nonnull stop) {
+                    
+                    NSDictionary *oldMemberdata = marker.userData;
+                    
+                    if ([oldMemberdata[@"uuid"] isEqualToString:member[@"uuid"]]) {
+                        [CATransaction begin];
+                        [CATransaction setAnimationDuration:2.0];
+                        marker.position = position;
+                        [CATransaction commit];
+                        
+                        [newMemberMarkerArray addObject:marker];
+                        
+                        isMemberUpdated = YES;
+                    }
+                }];
+                
+                //沒有被更新表示是新增的, 新增marker
+                if (!isMemberUpdated) {
+                    // 建立 member markers
+                    GMSMarker *newMarker  = [GMSMarker markerWithPosition:position];
+                    newMarker.snippet     = member[@"userNickname"];
+                    newMarker.userData    = member;
+                    newMarker.map         = _mapView;
+                    newMarker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+                    UIImage *img       = [UIImage imageNamed:[NSString stringWithFormat:@"s1_5.png"]];
+                    img = [self imageWithImage:img scaledToSize:CGSizeMake(MEMBER_MapMarker_SIZE, MEMBER_MapMarker_SIZE)];
+                    newMarker.icon        = img;
+                    newMarker.groundAnchor = CGPointMake(0.5, 0.5);//調整圖片位置
+                    [newMemberMarkerArray addObject:newMarker];
+                }
+            }];
+            
+            NSLog(@"更新前memberMarke 有%ld個",memberMarkers.count);
+            memberMarkers = newMemberMarkerArray;
+            NSLog(@"更新後memberMarke 有%ld個",memberMarkers.count);
+            
+            // ...更新後, 確認是否要顯示在地圖上
+            [self checkMemberShowOnMap];
+            
+        }
+    } failure:^{
+        //
+        NSLog(@"fail");
+        
+    }];
+    
+}
+
+-(void)checkMemberShowOnMap{
+    
+    [memberMarkers enumerateObjectsUsingBlock:^(GMSMarker *marker, NSUInteger idx, BOOL * _Nonnull stop) {
+        
+        // ...是否顯示memver
+        
+        if ([_roomInfo[@"isShowOnMap"] boolValue]) {
+            
+            //顯示marker
+            
+            // ...member是否願意分享位置
+            NSDictionary *memberInfo = marker.userData;
+            marker.map         = ([memberInfo[@"isShareGPS"] boolValue])? _mapView : nil;
+        
+        }else{
+            
+            //不顯示marker
+            marker.map = nil;
+        }
+        
+    }];
+}
+
+
+
 -(void)removeMemberMarker{
     
     // ... remove member marker
@@ -2519,7 +2683,7 @@ NSString *const tableName_userGPS = @"user_GPS";
 //
 //}
 
-#pragma mark - Img marker
+#pragma mark - marker_Trip
 -(void)createTripItemMarkerIdleAtCameraPosition:(GMSCameraPosition *)cameraPosition{
     
     __block int createdMarkerCount = 0;

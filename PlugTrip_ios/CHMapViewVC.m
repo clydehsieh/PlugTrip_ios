@@ -530,7 +530,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     _isShowImagesOnMap = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowImagesOnMap"] boolValue];
     
     if (_isShowImagesOnMap) {
-        NSInteger tag = selectedView.tag-1;
+//        NSInteger tag = selectedView.tag-1;
 //        [self mapView:_mapView didTapMarker:localImgMarkers[tag]];
         NSLog(@"\nYou selected chScollView the no.%ld Image",(long)selectedView.tag);
     }else{
@@ -551,10 +551,8 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     if (_currentModeType ==1 || _currentModeType == 0) {
         view	= [[EasyTableView alloc] initWithFrame:BOTTOM_VIEW_FRAME2 ofWidth:IMAGEHEIGHT];
-        horizonTVOffset = IMAGEHEIGHT*2.5;
     }else if (_currentModeType ==3){
         view	= [[EasyTableView alloc] initWithFrame:BOTTOM_VIEW_FRAME1 ofWidth:IMAGEHEIGHT];
-        horizonTVOffset = IMAGEHEIGHT*3.5;
     }
     
     
@@ -564,11 +562,11 @@ NSString *const tableName_userGPS = @"user_GPS";
     horizontalView.delegate= self;
     horizontalView.tableView.backgroundColor= [UIColor clearColor];
     horizontalView.tableView.allowsSelection= YES;
-    horizontalView.tableView.separatorColor	= [UIColor darkGrayColor];
+//    horizontalView.tableView.separatorColor	= [UIColor darkGrayColor];
     horizontalView.autoresizingMask			= UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     ratio = 2;
-//    horizonTVOffset = IMAGEHEIGHT*2.5;
-    [horizontalView.tableView setContentInset:UIEdgeInsetsMake(horizonTVOffset,0,horizonTVOffset/2,0)];
+    horizonTVOffset = 0;
+    [horizontalView.tableView setContentInset:UIEdgeInsetsMake(horizonTVOffset,0,horizontalView.frame.size.width/2,0)];
     [_mapDisplayView addSubview:horizontalView];
     
 }
@@ -580,7 +578,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         
     }else if(_currentModeType == 3 ){
         
-        return [dlTripItemsMarkers count];
+        return [dlTripItems count];
     }else{
         
         return 0;
@@ -595,14 +593,47 @@ NSString *const tableName_userGPS = @"user_GPS";
         return [items count];
         
     }else if(_currentModeType == 3 ){
-        
-        return [dlTripItemsMarkers[section] count];
+        return [dlTripItems[section] count];
     }else{
         
         return 0;
     }
+}
+
+
+
+- (UIView*)easyTableView:(EasyTableView*)easyTableView viewForHeaderInSection:(NSInteger)section{
+    
+    static NSString *headerViewIdentifier = @"EasyTableViewHeader";
+    
+    //init cell
+    UITableViewHeaderFooterView *header = [easyTableView.tableView dequeueReusableHeaderFooterViewWithIdentifier:headerViewIdentifier];
+    
+    if (!header) {
+        header = [[UITableViewHeaderFooterView alloc] initWithReuseIdentifier:headerViewIdentifier];
+        header.frame = CGRectMake(0, 0, WIDTH_horizonTV_header, IMAGEHEIGHT);
+        
+//        header.backgroundColor = [UIColor yellowColor];
+        
+        UILabel *textSection = [[UILabel alloc] init];
+        textSection.transform = CGAffineTransformMakeRotation(-M_PI/2);
+        textSection.frame     = CGRectMake(0, 0, WIDTH_horizonTV_header, IMAGEHEIGHT);
+        textSection.center    = header.center;
+        textSection.backgroundColor = [UIColor yellowColor];
+        textSection.text = [NSString stringWithFormat:@"Day%ld",(long)section+1];
+        textSection.font = [UIFont systemFontOfSize:20.0f];
+        [header addSubview:textSection];
+        
+    }else{
+        
+        
+    }
+
+    return header;
     
 }
+
+
 - (UITableViewCell *)easyTableView:(EasyTableView *)easyTableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
 
     static NSString *cellIdentifier = @"EasyTableViewCell";
@@ -674,10 +705,6 @@ NSString *const tableName_userGPS = @"user_GPS";
 }
 
 
-//
-//- (NSUInteger)numberOfSectionsInEasyTableView:(EasyTableView*)easyTableView{
-//    
-//}
 - (void)easyTableView:(EasyTableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
 
     NSLog(@"did select(section:%ld,row%ld)",(long)indexPath.section,(long)indexPath.row);
@@ -734,7 +761,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         contentOffsetY -= IMAGEHEIGHT/2;
         ratio = fabs(contentOffsetY)/(IMAGEHEIGHT/2);
         
-        CGPoint location = CGPointMake(0, scrollView.contentOffset.y + horizonTVOffset + IMAGEHEIGHT/2);
+        CGPoint location = CGPointMake(0, scrollView.contentOffset.y + horizonTVOffset + IMAGEHEIGHT*0.5 +WIDTH_horizonTV_header);
         resizeIndexPath    = [horizontalView.tableView indexPathForRowAtPoint:location];
         
         
@@ -855,40 +882,49 @@ NSString *const tableName_userGPS = @"user_GPS";
             //旅程
             NSLog(@"旅程mode");
             
-            [self loadJsonTripData];
-            [self didLoadTripDate:nil];
-            
+            if (dlTripItems && [dlTripItems count]>0) {
+                [self didLoadTripDate:dlTripItems];
+            }
         }
         
+        
     }
-    
-    
-    
 }
 
+
 -(void)updateModeBtnState{
+    
+    _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
+   
+    
     
     //淨空map
     [_mapView clear];
     
     //
-    UIButton *modeBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_modeBtn];
+    UIButton *modeBtn               = (UIButton *)[_mapDisplayView viewWithTag:TAG_modeBtn];
     [modeBtn setTitle:_modes[_currentModeType] forState:UIControlStateNormal];
     
    
-    UIView *modeBtnBackgroundView = (UIView *)[_mapDisplayView viewWithTag:TAG_modeBtnBackgroundView];
-    modeBtnBackgroundView.hidden = (_currentModeType == 0)? YES: NO;
+    UIView *modeBtnBackgroundView   = (UIView *)[_mapDisplayView viewWithTag:TAG_modeBtnBackgroundView];
+    modeBtnBackgroundView.hidden    = (_currentModeType == 0)? YES: NO;
     
-    UIButton *addPhotoBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_addPhotoBtn];
-    addPhotoBtn.hidden = (_currentModeType == 1)? NO: YES;
+    UIButton *addPhotoBtn           = (UIButton *)[_mapDisplayView viewWithTag:TAG_addPhotoBtn];
+    addPhotoBtn.hidden              = (_currentModeType == 1)? NO: YES;
 
-    UIButton *chatRoomBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_chatRoomBtn];
-    chatRoomBtn.hidden = (_currentModeType == 2)? NO: YES;
-
+    UIButton *chatRoomBtn           = (UIButton *)[_mapDisplayView viewWithTag:TAG_chatRoomBtn];
+    chatRoomBtn.hidden              =  YES;
     
-    UIView *quickChatView = (UIView *)[_mapDisplayView viewWithTag:TAG_quickChatView];
+    UIView *quickChatView           = (UIView *)[_mapDisplayView viewWithTag:TAG_quickChatView];
     [quickChatView removeFromSuperview];
     
+    CHMoveableTableView *moveTV     = (CHMoveableTableView *)[_mapDisplayView viewWithTag:TAG_moveTV];
+    [moveTV removeFromSuperview];
+    
+    UIButton *hideMoveTVBtn         = (UIButton *)[_mapDisplayView viewWithTag:TAG_hideMoveTVBtn];
+    [hideMoveTVBtn removeFromSuperview];
+    
+    horizontalView.hidden           = (_currentModeType== 1)? NO:YES;
     
 }
 
@@ -927,12 +963,13 @@ NSString *const tableName_userGPS = @"user_GPS";
 -(void)didSelectTheMenu:(UIButton *)btn;
 {
     [_mapView clear];
+    BOOL shouldUpdate;
     
     // Change mode button
     switch (btn.tag) {
         case 1:
             //紀錄mode
-            _currentModeType = 1;
+            shouldUpdate = (_currentModeType == 1)? NO:YES;
             
             //開啟相簿
             [self setImagePicker:_pickedAssets];
@@ -940,16 +977,18 @@ NSString *const tableName_userGPS = @"user_GPS";
             break;
         case 2:
             //同夥mode
-            _currentModeType = 2;
+//            _currentModeType = 2;
+            shouldUpdate = (_currentModeType == 2)? NO:YES;
             [self joinChatingRoom];
             break;
             
         case 3:
             //旅程mode
-            _currentModeType = 3;
+//            _currentModeType = 3;
+            shouldUpdate = (_currentModeType == 3)? NO:YES;
             
             ///!!!:wait coding
-            [self loadJsonTripData];
+//            [self loadJsonTripData];
             [self showReadTripCodeVC];
             
             break;
@@ -957,9 +996,12 @@ NSString *const tableName_userGPS = @"user_GPS";
             break;
     }
     
-    [self updateModeBtnState];
     
-    
+    if (shouldUpdate) {
+        _currentModeType = (int)btn.tag  ;
+        [self updateModeBtnState];
+    }
+
     UIView *quickChatView = (UIView *)[_mapDisplayView viewWithTag:TAG_quickChatView];
     [quickChatView removeFromSuperview];
 }
@@ -1054,6 +1096,8 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     if (_currentModeType == 1) {
         [self createImgMarkerIdleAtCameraPosition:position];
+    }else if (_currentModeType == 3){
+        [self createTripItemMarkerIdleAtCameraPosition:position];
     }
     
 }
@@ -1266,7 +1310,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         
         // ...設定排序方式 -- 日期
         PHFetchOptions *allPhotosfetchOption = [[PHFetchOptions alloc]init];
-        allPhotosfetchOption.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
+        allPhotosfetchOption.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:YES]];
         
         //  ...搜尋結果
         PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:allPhotosfetchOption];
@@ -1278,6 +1322,7 @@ NSString *const tableName_userGPS = @"user_GPS";
         [self initHorizontalView];
         [self scrollViewDidScroll:horizontalView.tableView];
 
+        
     }
     
 }
@@ -1330,25 +1375,29 @@ NSString *const tableName_userGPS = @"user_GPS";
              UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(0, 200, 300 , 300)];
              NSInteger retinaMultiplier = [UIScreen mainScreen].scale;
              CGSize retinaSquare = CGSizeMake(imageView.bounds.size.width * retinaMultiplier, imageView.bounds.size.height * retinaMultiplier);
+            
+             PHImageRequestOptions *option = [PHImageRequestOptions new];
+             option.synchronous = YES;
+             
              [[PHImageManager defaultManager]
               requestImageForAsset:asset
               targetSize:retinaSquare
               contentMode:PHImageContentModeAspectFill
-              options:nil
+              options:option
               resultHandler:^(UIImage *imgResult, NSDictionary *info) {
                   
-//                  NSMutableDictionary *dayItem = [[NSMutableDictionary alloc]init];
-//                  [dayItem setObject:imgResult forKey:@"image"];
-//                  [dayItem setObject:position  forKey:@"position"];
-                  NSDictionary *dayItem = [NSDictionary dictionaryWithObjectsAndKeys:
-                                          imgResult,@"image",
-                                          position,@"position",
-                                          nil];
-
-                  [day_items addObject:dayItem];
+                  NSMutableDictionary *dayItem = [[NSMutableDictionary alloc]init];
+                  [dayItem setObject:imgResult forKey:@"image"];
+                  [dayItem setObject:position  forKey:@"position"];
+//                  NSDictionary *dayItem = [NSDictionary dictionaryWithObjectsAndKeys:
+//                                          imgResult,@"image",
+//                                          position,@"position",
+//                                          nil];
+                 [day_items addObject:dayItem];
               }];
              
          }];
+        
         [day_result setObject:day_items forKey:@"items"];
         [day_result setObject:lastDate forKey:@"date"];
         
@@ -1360,6 +1409,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     return orderedData;
 }
 
+#pragma mark - Img marker
 -(void)createImgMarkerIdleAtCameraPosition:(GMSCameraPosition *)cameraPosition{
     
     __block int createdMarkerCount = 0;
@@ -1407,53 +1457,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     }];
     
     NSLog(@"地圖上有%d個marker",createdMarkerCount);
-    
-    
-    
-    
-    
-    
-    
-    
-//    //從資料庫撈assets
-//    NSMutableArray *queryTableResult=[[NSMutableArray alloc]init];
-//    NSMutableArray *localIdentifier =[[NSMutableArray alloc]init];
-//    queryTableResult = [[myDB sharedInstance]queryWithTableName:tableName_tripPhoto];
-//    
-//    
-//    if (queryTableResult) {
-//        // ...撈localIdentifer資料
-//        [queryTableResult enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
-//            [localIdentifier addObject:dict[@"imagePath"]];
-//        }];
-//        
-//        // ...用localIdentifer資料, 撈照片assets資檔案, 依日期排序
-//        PHFetchOptions *allPhotosfetchOption = [[PHFetchOptions alloc]init];
-//        allPhotosfetchOption.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
-//        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:localIdentifier options:allPhotosfetchOption];
-//        
-//        //目前視窗範圍
-//        GMSVisibleRegion visibleRegion = _mapView.projection.visibleRegion;
-//        GMSCoordinateBounds *bounds = [[GMSCoordinateBounds alloc] initWithRegion: visibleRegion];
-//        
-//        // ...assets資料, 對每一筆asset做處理(取image, 取座標製作marker)
-//        [result enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL * _Nonnull stop) {
-//            
-//            // 建立local img markers
-//            CLLocationCoordinate2D position = CLLocationCoordinate2DMake(asset.location.coordinate.latitude, asset.location.coordinate.longitude);
-//            
-//            if([bounds containsCoordinate:position]) {
-//                GMSMarker *marker = [GMSMarker markerWithPosition:position];
-//                marker.title =[NSString stringWithFormat:@"%lu",(unsigned long)idx];
-//                marker.snippet = @"Imgs";
-//                marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
-//                marker.map = _mapView;
-//                
-//            }
-//
-//        }];
-//    }
-    
+  
 }
 
 
@@ -1878,14 +1882,8 @@ NSString *const tableName_userGPS = @"user_GPS";
                 
                 NSLog(@"New user create Failuer");
             }];
-            
         }];
-        
-        
-        
-        
     }];
-    
     
 }
 
@@ -2198,14 +2196,21 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     NSLog(@"left Setting View");
     
-    // ...顯示quick chat
     _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
     
-    [self quickChatTextInit];
-
-    
-    // ...展示member
-    [self updateDeviceLocationToServer];
+    NSString *roomID = _roomInfo[@"roomID"];
+    if (roomID && ![roomID isEqualToString:@""]) {
+        
+        // ...顯示quick chat
+        [self quickChatTextInit];
+ 
+        //顯示聊天室按鈕
+        UIButton *chatRoomBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_chatRoomBtn];
+        chatRoomBtn.hidden    = NO;
+        
+        // ...展示member
+        [self updateDeviceLocationToServer];
+    }
 }
 
 #pragma mark - member markers
@@ -2403,29 +2408,85 @@ NSString *const tableName_userGPS = @"user_GPS";
     [self presentViewController:vc animated:YES completion:nil];
 }
 
+// CHReadTripCodeVC delegate
+
 -(void)didLoadTripDate:(id)tripData{
     
-    ///!!!: wait for coding:下載旅程資料
-    NSLog(@"Start to load trip data");
+    // ...下載Json data
+    dlTripItems = tripData;
     
-    // ...建立 右側table
-    CHMoveableTableView *moveTV = [(CHMoveableTableView *)_mapDisplayView viewWithTag:TAG_moveTV];
+    // ...建立HorizonView
+    [self initHorizontalView];
+    [horizontalView reload];
+    [self scrollViewDidScroll:horizontalView.tableView];
     
-    if (moveTV) {
-        [moveTV removeFromSuperview];
-    }
-    
-    float tableWidth = WIDTH_moveTV;
-    float tableHeight = _mapDisplayView.frame.size.height - (54 + IMAGEHEIGHT +44);
-    
-    moveTV = [[CHMoveableTableView alloc]initWithFrame:CGRectMake(_mapDisplayView.frame.size.width - tableWidth, 54, tableWidth, tableHeight)];
-    
+
+    // ...建立CHMoveableTableView
+    //clear view
+    CHMoveableTableView *moveTV = (CHMoveableTableView *)[_mapDisplayView viewWithTag:TAG_moveTV];
+    UIButton *hideMoveTVBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_hideMoveTVBtn];
+    [moveTV removeFromSuperview];
+    [hideMoveTVBtn removeFromSuperview];
+
+    // ... 建立Table
+    moveTV = [[CHMoveableTableView alloc]initWithFrame:MOVEABLE_TABLE_FRAME];
     moveTV.tag = TAG_moveTV;
     [_mapDisplayView addSubview:moveTV];
     moveTV.chDelegate = self;
     
     //  fed data
-    [moveTV setObjects:[NSMutableArray arrayWithArray:tripData[@"total"]]];
+    [moveTV setObjects:[NSMutableArray arrayWithArray:dlTripItems]];
+    
+    
+    // ...建立hidden BTN
+    hideMoveTVBtn = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, 50, 50)];
+    hideMoveTVBtn.tag = TAG_hideMoveTVBtn;
+    hideMoveTVBtn.center = moveTV.center;
+    CGRect newFrame = hideMoveTVBtn.frame;
+    newFrame = CGRectMake(newFrame.origin.x - newFrame.size.width/2 - moveTV.frame.size.width/2, newFrame.origin.y, newFrame.size.width, newFrame.size.height);
+    hideMoveTVBtn.frame = newFrame;
+    [hideMoveTVBtn setTitle:@"Hide" forState:UIControlStateNormal];
+    hideMoveTVBtn.layer.cornerRadius = 2.0f;
+    hideMoveTVBtn.layer.borderColor  = [UIColor lightGrayColor].CGColor;
+    hideMoveTVBtn.layer.borderWidth  = 1.0f;
+    [hideMoveTVBtn addTarget:self action:@selector(changeMoveTVState:) forControlEvents:UIControlEventTouchDown];
+    [_mapDisplayView addSubview:hideMoveTVBtn];
+}
+
+-(void)backBtnAction{
+    
+    if (dlTripItems && [dlTripItems count]>0) {
+        [self didLoadTripDate:dlTripItems];
+    }
+}
+
+-(void)changeMoveTVState:(UIButton *)sender{
+    
+    CHMoveableTableView *moveTV = (CHMoveableTableView *)[_mapDisplayView viewWithTag:TAG_moveTV];
+    UIButton *hideMoveTVBtn = (UIButton *)[_mapDisplayView viewWithTag:TAG_hideMoveTVBtn];
+    float changeValue = 0;
+    NSString *newTitle ;
+    
+    if ([sender.titleLabel.text isEqualToString:@"Hide"]) {
+        changeValue = 1.0;
+        newTitle = @"Show";
+    }else{
+        changeValue = -1.0;
+        newTitle = @"Hide";
+    }
+   
+    
+    [UIView animateWithDuration:0.5 animations:^{
+        
+        moveTV.frame        = CGRectOffset(moveTV.frame, moveTV.frame.size.width * changeValue, 0);
+        hideMoveTVBtn.frame = CGRectOffset(hideMoveTVBtn.frame, moveTV.frame.size.width * changeValue, 0);
+        hideMoveTVBtn.userInteractionEnabled = NO;
+        
+    } completion:^(BOOL finished) {
+        
+        [hideMoveTVBtn setTitle:newTitle forState:UIControlStateNormal];
+        hideMoveTVBtn.userInteractionEnabled = YES;
+    }];
     
 }
 
@@ -2435,62 +2496,89 @@ NSString *const tableName_userGPS = @"user_GPS";
     
 }
 
--(void)loadJsonTripData{
-    
-    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"plugtrip" ofType:@"json"];
-    
-    // Load the file into an NSData object called JSONData
-    
-    NSError *error = nil;
-    
-    NSData *JSONData = [NSData dataWithContentsOfFile:filePath options:NSDataReadingMappedIfSafe error:&error];
-    
-    // Create an Objective-C object from JSON Data
-    
-    id JSONObject = [NSJSONSerialization
-                     JSONObjectWithData:JSONData
-                     options:NSJSONReadingAllowFragments
-                     error:&error];
-    NSLog(@"%@",JSONObject);
-    
-    
-    // Making markers on map
-    
-    NSArray *total = JSONObject[@"total"];
+//-(void)loadJsonTripData{
+//    
+//    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"plugtrip" ofType:@"json"];
+//    
+//    // Load the file into an NSData object called JSONData
+//    
+//    NSError *error = nil;
+//    
+//    NSData *JSONData = [NSData dataWithContentsOfFile:filePath options:NSDataReadingMappedIfSafe error:&error];
+//    
+//    // Create an Objective-C object from JSON Data
+//    
+//    id JSONObject = [NSJSONSerialization
+//                     JSONObjectWithData:JSONData
+//                     options:NSJSONReadingAllowFragments
+//                     error:&error];
+//    NSLog(@"%@",JSONObject);
+//    
+//    
+//    dlTripItems = [NSMutableArray arrayWithArray:JSONObject[@"total"]];
+//
+//}
 
-    dlTripItemsMarkers = [[NSMutableArray alloc]init];
+#pragma mark - Img marker
+-(void)createTripItemMarkerIdleAtCameraPosition:(GMSCameraPosition *)cameraPosition{
     
-    [total enumerateObjectsUsingBlock:^(NSDictionary *day, NSUInteger idx, BOOL * _Nonnull stop) {
+    __block int createdMarkerCount = 0;
+
+    [dlTripItems enumerateObjectsUsingBlock:^(NSDictionary *day, NSUInteger indexSection, BOOL * _Nonnull stop) {
         
-        NSArray *items = day[@"items"];
-        NSMutableArray *day_markers = [[NSMutableArray alloc]init];
-        
-        [items enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger idx, BOOL * _Nonnull stop) {
+        [day enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             
-            CLLocationCoordinate2D position = CLLocationCoordinate2DMake([item[@"lat"] floatValue], [item[@"lon"] floatValue]);
-            GMSMarker *marker = [GMSMarker markerWithPosition:position];
-            marker.title   = [NSString stringWithFormat:@"%@",item[@"title"]];
-            marker.snippet = [NSString stringWithFormat:@"%@",item[@"text"]];
-            marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
-            marker.map = _mapView;
+            if ([key isEqualToString:@"items"]) {
+                NSArray *items = obj;
+                
+                [items enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger indexRow, BOOL * _Nonnull stop) {
+                    
+                    //
+                    //目前視窗範圍
+                    GMSVisibleRegion visibleRegion = _mapView.projection.visibleRegion;
+                    GMSCoordinateBounds *bounds = [[GMSCoordinateBounds alloc] initWithRegion: visibleRegion];
+                    
+                    // 建立local img markers
+                    CLLocationCoordinate2D position = CLLocationCoordinate2DMake([item[@"lat"] floatValue], [item[@"lon"] floatValue]);
+                 
+                    if([bounds containsCoordinate:position]) {
+                        
+                        GMSMarker *marker = [GMSMarker markerWithPosition:position];
+                        marker.title =item[@"title"];
+                        marker.snippet = [NSString stringWithFormat:@"Trip%lu - %lu",(unsigned long)indexSection,(unsigned long)indexRow];
+                        marker.infoWindowAnchor = CGPointMake(0.5, 0.5);
+                        marker.map = _mapView;
+                        marker.userData = [NSIndexPath indexPathForRow:indexRow inSection:indexSection];
+
+                        //                        float camLat = cameraPosition.target.latitude;
+                        //                        float camLog = cameraPosition.target.longitude;
+                        //                        float marLat = position.latitude;
+                        //                        float marLog = position.longitude;
+                        //
+                        //                        if (camLat == marLat && camLog == marLog) {
+                        //                            _mapView.selectedMarker = marker;
+                        //                        }
+                        
+                        createdMarkerCount += 1;
+                    }
+                }];
+ 
+            }
             
-            [day_markers addObject:marker];
             
         }];
         
-        [dlTripItemsMarkers addObject:day_markers];
-        
     }];
     
-    [self initHorizontalView];
-//    [horizontalView.tableView reloadData];
-    [self scrollViewDidScroll:horizontalView.tableView];
-
-//    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
-//    [self easyTableView:horizontalView didSelectRowAtIndexPath:indexPath];
+    NSLog(@"地圖上有%d個marker",createdMarkerCount);
+    
 }
 
+
+
 #pragma mark
+#pragma mark - 其他
+
 #pragma mark - Alerts
 -(void)showOfflineAlert:(NSError *)error{
     
@@ -2502,14 +2590,14 @@ NSString *const tableName_userGPS = @"user_GPS";
     
     [alert addAction:cancel];
     [self presentViewController:alert animated:YES completion:nil];
-
+    
     
 }
 
 -(void)showImgNoLocationAlert:(NSError *)error{
     
     UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width*0.3, self.view.frame.size.width*0.1)];
-
+    
     label.center                = self.view.center;
     CGPoint newCenter           = label.center;
     newCenter.y-= 100;
@@ -2519,7 +2607,7 @@ NSString *const tableName_userGPS = @"user_GPS";
     label.layer.borderWidth     = 2.0f;
     label.layer.cornerRadius    = 5.0f;
     label.textAlignment = NSTextAlignmentCenter;
-//    label.textColor = [UIColor whiteColor];
+    //    label.textColor = [UIColor whiteColor];
     
     [self.view addSubview:label];
     
@@ -2529,16 +2617,14 @@ NSString *const tableName_userGPS = @"user_GPS";
         label.alpha  = 0;
         
     } completion:^(BOOL finished) {
-      
+        
         [label removeFromSuperview];
     }];
     
     
 }
 
-#pragma mark
-#pragma mark - 其他
-
+#pragma mark - 調整照片大小
 -(UIImage *)imageWithImage:(UIImage *)image scaledToSize:(CGSize)newSize {
     //UIGraphicsBeginImageContext(newSize);
     // In next line, pass 0.0 to use the current device's pixel scaling factor (and thus account for Retina resolution).

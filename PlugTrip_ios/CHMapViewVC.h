@@ -27,6 +27,7 @@
 #define TAG_modeBtn       102
 #define TAG_addPhotoBtn   103
 #define TAG_chatRoomBtn   104
+#define TAG_hideMoveTVBtn 105
 #define TAG_modeBtnBackgroundView 201
 #define TAG_coverTripTitleView    202
 #define TAG_indicator_maskView    203
@@ -38,12 +39,16 @@
 #define TAG_horizontalView_CellImgView   501
 #define TAG_horizontalView_CellLabel     502
 
-#define WIDTH_moveTV 88
+//Frame setting
 #define IMAGEHEIGHT    50
+#define WIDTH_horizonTV_header    20
 #define MODEBTN_WIDTH  80.0
 #define MODEBTN_HEIGHT 44.0
 #define MEMBER_MapMarker_SIZE 20
 
+#define WIDTH_moveTV  88
+#define HEIGHT_moveTV _mapDisplayView.frame.size.height - (54 + IMAGEHEIGHT +44)
+#define MOVEABLE_TABLE_FRAME CGRectMake(_mapDisplayView.frame.size.width - WIDTH_moveTV, 54, WIDTH_moveTV, HEIGHT_moveTV)
 
 #define BOTTOM_VIEW_FRAME1 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH, IMAGEHEIGHT)
 #define BOTTOM_VIEW_FRAME2 CGRectMake(0, _mapDisplayView.frame.size.height-IMAGEHEIGHT, _mapDisplayView.frame.size.width-MODEBTN_WIDTH*2, IMAGEHEIGHT)

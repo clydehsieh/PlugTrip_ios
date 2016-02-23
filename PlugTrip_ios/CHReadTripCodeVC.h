@@ -11,7 +11,7 @@
 @protocol CHReadTripCodeVCDelegate <NSObject>
 
 -(void)didLoadTripDate:(id)tripData;
-
+-(void)backBtnAction;
 @end
 
 

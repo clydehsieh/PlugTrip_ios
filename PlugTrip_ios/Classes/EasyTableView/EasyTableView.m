@@ -37,7 +37,6 @@
 
 - (void)setTableView:(UITableView *)tableView {
     _tableView = tableView;
-    
     self.orientation = _orientation;
     
     _tableView.delegate			= self;
@@ -160,7 +159,7 @@
 - (UIView*)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     if ([self.delegate respondsToSelector:@selector(easyTableView:viewForHeaderInSection:)]) {
 		UIView *sectionView = [self.delegate easyTableView:self viewForHeaderInSection:section];
-		
+        
 		return [self viewToHoldSectionView:sectionView];
     }
     return nil;

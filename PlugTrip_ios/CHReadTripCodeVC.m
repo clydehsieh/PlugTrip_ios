@@ -40,9 +40,10 @@
                      options:NSJSONReadingAllowFragments
                      error:&error];
     
+    
     //傳值
     [self dismissViewControllerAnimated:YES completion:^{
-        [self.delegate didLoadTripDate:JSONObject];
+        [self.delegate didLoadTripDate:JSONObject[@"total"]];
     }];
     
 }
@@ -52,6 +53,10 @@
 #pragma Btn Actions
 
 - (IBAction)backBtnAction:(id)sender {
+    if ([_delegate respondsToSelector:@selector(backBtnAction)]) {
+        [_delegate backBtnAction];
+        
+    }
     
     [self dismissViewControllerAnimated:YES completion:nil];
 }

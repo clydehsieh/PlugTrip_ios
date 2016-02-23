@@ -61,7 +61,6 @@
     
     if (objects) {
         
-        
         _objects = [[NSMutableArray alloc]init];
         
         [objects enumerateObjectsUsingBlock:^(NSDictionary  *obj, NSUInteger idx, BOOL * _Nonnull stop) {

@@ -330,14 +330,6 @@ static NSString *cellIdentifier = @"cell";
 
 - (IBAction)backBtnAction:(id)sender {
     
-//    [self dismissViewControllerAnimated:YES completion:^{
-//
-//        if ([self.delegate respondsToSelector:@selector(didLeftSettingVC)]) {
-//            [self.delegate didLeftSettingVC];
-//        }
-//        
-//    }];
-    
     if ([self.delegate respondsToSelector:@selector(didLeftSettingVC)]) {
         [self.delegate didLeftSettingVC];
         
@@ -355,6 +347,10 @@ static NSString *cellIdentifier = @"cell";
     [[CHFIreBaseAdaptor sharedInstance] deleteMemberByRoomID:_roomInfo[@"roomID"] andUUID:_userInfo[@"UUID"] success:^{
         //
         NSLog(@"Delete success");
+         _roomInfo = [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]objectForKey: @"roomInfo"]];
+        [_roomInfo removeObjectForKey:@"roomID"];
+        [[NSUserDefaults standardUserDefaults] setObject:_roomInfo forKey:@"roomInfo"];
+        
         [self dismissViewControllerAnimated:YES completion:nil];
         
     } failure:^{
